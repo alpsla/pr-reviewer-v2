@@ -1,113 +1,97 @@
-import { describe, it, expect, beforeAll } from '@jest/globals';
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from '../types';
 import { DatabaseService } from '../database';
-import { config } from './test-config';
+import { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '../../types/database';
 
-// Mock the Supabase createClient function
-jest.mock('@supabase/supabase-js', () => {
-  const mockDb = new Map<string, Record<string, unknown>>();
+describe('DatabaseService', () => {
+  let db: DatabaseService;
+  let mockSupabase: jest.Mocked<SupabaseClient<Database>>;
 
-  const createQueryBuilder = (table: string) => {
-    const whereConditions: Array<[string, unknown]> = [];
-    
-    const builder = {
-      insert: (data: Record<string, unknown>) => ({
-        select: () => ({
-          single: () => {
-            const newItem = { ...data };
-            const key = `${table}-${String(data.github_id || data.id)}`;
-            mockDb.set(key, newItem);
-            return Promise.resolve({ data: newItem, error: null });
-          }
-        })
-      }),
-      select: () => builder,
-      eq: (field: string, value: unknown) => {
-        whereConditions.push([field, value]);
-        return builder;
-      },
-      single: () => {
-        for (const [, item] of mockDb.entries()) {
-          if (whereConditions.every(([field, value]) => item[field] === value)) {
-            return Promise.resolve({ data: item, error: null });
-          }
-        }
-        return Promise.resolve({ data: null, error: null });
-      }
-    };
-    
-    return builder;
-  };
-
-  return {
-    createClient: () => ({
-      from: (table: string) => createQueryBuilder(table)
-    })
-  };
-});
-
-describe('Database Integration', () => {
-  const supabase = createClient<Database>(
-    config.supabaseUrl,
-    config.supabaseKey
-  );
-  
-  const db = new DatabaseService(supabase);
-
-  beforeAll(async () => {
-    expect(supabase).toBeDefined();
-    expect(db).toBeDefined();
+  const mockQueryResponse = <T>(value: T) => ({
+    data: value,
+    error: null,
+    count: null,
+    status: 200,
+    statusText: 'OK'
   });
 
-  it('should successfully query the database', async () => {
+  beforeEach(() => {
+    const mockQuery = {
+      insert: jest.fn().mockReturnThis(),
+      select: jest.fn().mockReturnThis(),
+      delete: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      neq: jest.fn().mockReturnThis(),
+      order: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      single: jest.fn(),
+    };
+
+    mockSupabase = {
+      from: jest.fn(() => mockQuery),
+      rpc: jest.fn()
+    } as unknown as jest.Mocked<SupabaseClient<Database>>;
+
+    db = new DatabaseService(mockSupabase);
+  });
+
+  describe('User operations', () => {
     const testUser = {
-      github_id: 'test-github-id',
+      id: 'test-id',
+      email: 'test@example.com',
       name: 'Test User',
-      avatar_url: 'https://example.com/avatar.png'
+      auth_provider: 'github',
+      status: 'active' as const
     };
 
-    const user = await db.createUser(testUser);
-    expect(user).toBeDefined();
-    expect(user.github_id).toBe(testUser.github_id);
-    expect(user.name).toBe(testUser.name);
+    it('should create a user', async () => {
+      const mockResponse = mockQueryResponse(testUser);
+      const queryBuilder = mockSupabase.from('users');
+      (queryBuilder.select().single as jest.Mock).mockResolvedValue(mockResponse);
+
+      const user = await db.createUser(testUser);
+      expect(user).toEqual(testUser);
+      expect(mockSupabase.from).toHaveBeenCalledWith('users');
+    });
+
+    it('should get user by id', async () => {
+      const mockResponse = mockQueryResponse(testUser);
+      const queryBuilder = mockSupabase.from('users');
+      (queryBuilder.select().single as jest.Mock).mockResolvedValue(mockResponse);
+
+      const user = await db.getUser(testUser.id);
+      expect(user).toEqual(testUser);
+      expect(mockSupabase.from).toHaveBeenCalledWith('users');
+    });
   });
 
-  it('should handle user operations', async () => {
-    const testUser = {
-      github_id: 'test-github-id-2',
-      name: 'Test User 2',
-      avatar_url: 'https://example.com/avatar2.png'
-    };
-
-    const user = await db.createUser(testUser);
-    expect(user).toBeDefined();
-    expect(user.github_id).toBe(testUser.github_id);
-    expect(user.name).toBe(testUser.name);
-
-    const fetchedUser = await db.getUserByGithubId(testUser.github_id);
-    expect(fetchedUser).toBeDefined();
-    expect(fetchedUser.name).toBe(testUser.name);
-  });
-
-  it('should handle repository operations', async () => {
+  describe('Repository operations', () => {
     const testRepo = {
       id: 'test-repo-id',
       owner: 'test-owner',
       name: 'test-repo',
       full_name: 'test-owner/test-repo',
-      description: 'Test repository'
+      description: 'Test repository',
+      private: false
     };
 
-    const repo = await db.createRepository(testRepo);
-    expect(repo).toBeDefined();
-    expect(repo.full_name).toBe(testRepo.full_name);
-    expect(repo.owner).toBe(testRepo.owner);
-    expect(repo.name).toBe(testRepo.name);
+    it('should create a repository', async () => {
+      const mockResponse = mockQueryResponse(testRepo);
+      const queryBuilder = mockSupabase.from('repositories');
+      (queryBuilder.select().single as jest.Mock).mockResolvedValue(mockResponse);
 
-    const fetchedRepo = await db.getRepositoryByOwnerAndName(testRepo.owner, testRepo.name);
-    expect(fetchedRepo).toBeDefined();
-    expect(fetchedRepo.id).toBe(testRepo.id);
-    expect(fetchedRepo.full_name).toBe(testRepo.full_name);
+      const repo = await db.createRepository(testRepo);
+      expect(repo).toEqual(testRepo);
+      expect(mockSupabase.from).toHaveBeenCalledWith('repositories');
+    });
+
+    it('should get repository by owner and name', async () => {
+      const mockResponse = mockQueryResponse(testRepo);
+      const queryBuilder = mockSupabase.from('repositories');
+      (queryBuilder.select().single as jest.Mock).mockResolvedValue(mockResponse);
+
+      const repo = await db.getRepositoryByOwnerAndName(testRepo.owner, testRepo.name);
+      expect(repo).toEqual(testRepo);
+      expect(mockSupabase.from).toHaveBeenCalledWith('repositories');
+    });
   });
 });

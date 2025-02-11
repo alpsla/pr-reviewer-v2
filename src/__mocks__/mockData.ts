@@ -1,44 +1,23 @@
-import type { MockData } from '../types/database';
+import type { Database } from '../types/database';
 
-export const mockData: MockData = {
+export const mockData = {
   users: {
-    id: 'user-123',
-    github_id: '12345',
+    id: 'test-user-id',
     email: 'test@example.com',
     name: 'Test User',
-    avatar_url: 'https://example.com/avatar.png',
-    aud: 'authenticated',
-    created_at: '2024-02-07T00:00:00.000Z',
-    role: 'authenticated',
-    updated_at: '2024-02-07T00:00:00.000Z',
-    app_metadata: {
-      provider: 'azure',
-      provider_token: 'test-token'
-    },
-    user_metadata: {
-      full_name: 'Test User',
-      avatar_url: 'https://example.com/avatar.png'
-    }
-  },
-  repositories: {
-    id: 'repo-123',
-    owner: 'test-owner',
-    name: 'test-repo',
-    full_name: 'test-owner/test-repo',
-    description: 'Test repository'
-  },
-  pull_requests: {
-    id: 'pr-123',
-    number: 1,
-    title: 'Test PR',
-    repository_id: 'repo-123',
-    status: 'open',
-    author: 'test-user'
-  },
-  analysis_queue: {
-    id: 'job-123',
-    status: 'pending',
-    pull_request_id: 'pr-123',
-    created_at: new Date().toISOString()
+    auth_provider: 'github',
+    status: 'active' as const,
+    github_id: 'test-github-id',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  } satisfies Database['public']['Tables']['users']['Row'],
+
+  sessions: {
+    id: 'test-session-id',
+    access_token: 'test-access-token',
+    refresh_token: 'test-refresh-token',
+    expires_in: 3600,
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    token_type: 'bearer'
   }
 };

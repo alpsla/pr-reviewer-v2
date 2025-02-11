@@ -11,19 +11,22 @@ import {
   GitHubAuthScopes,
   GitLabAuthScopes,
   MicrosoftAuthScopes,
+  GoogleAuthScopes,
   AuthProviderConfig,
   scopesToArray,
   OAuthResponse
 } from './types';
 import { DatabaseService } from '../supabase/database';
 import { AuthError } from '../errors';
+import { EmailAuthService, EmailAuthConfig } from './email-auth';
 import type { Database } from '../types/database';
 
 export class AuthService {
   constructor(
     private supabase: SupabaseClient<Database>,
     private db: DatabaseService,
-    private config: AuthProviderConfig
+    private config: AuthProviderConfig,
+    private emailConfig?: EmailAuthConfig
   ) {}
 
   async signInWithGitHub(options: Omit<AuthOptions, 'scopes'> & { scopes?: GitHubAuthScopes[] } = {}): Promise<AuthResponse> {
@@ -42,6 +45,12 @@ export class AuthService {
     const defaultScopes = this.config.defaultScopes?.microsoft ?? ['openid', 'email', 'profile'] as MicrosoftAuthScopes[];
     const scopesToUse = options.scopes ?? defaultScopes;
     return this.signInWithProvider('azure', options, scopesToUse, scopesToArray);
+  }
+
+  async signInWithGoogle(options: Omit<AuthOptions, 'scopes'> & { scopes?: GoogleAuthScopes[] } = {}): Promise<AuthResponse> {
+    const defaultScopes = this.config.defaultScopes?.google ?? ['openid', 'email', 'profile'] as GoogleAuthScopes[];
+    const scopesToUse = options.scopes ?? defaultScopes;
+    return this.signInWithProvider('google', options, scopesToUse, scopesToArray);
   }
 
   private async signInWithProvider<T>(
@@ -98,6 +107,22 @@ export class AuthService {
       }
       throw new AuthError(`Failed to sign in with ${provider}`, error);
     }
+  }
+
+  async signInWithEmail(email: string): Promise<void> {
+    if (!this.emailConfig) {
+      throw new AuthError('Email authentication not configured');
+    }
+    const emailAuth = new EmailAuthService(this.supabase, this.db, this.emailConfig);
+    return emailAuth.sendMagicLink(email);
+  }
+
+  async verifyEmailLink(token: string): Promise<AuthResponse> {
+    if (!this.emailConfig) {
+      throw new AuthError('Email authentication not configured');
+    }
+    const emailAuth = new EmailAuthService(this.supabase, this.db, this.emailConfig);
+    return emailAuth.verifyMagicLink(token);
   }
 
   async signOut(): Promise<void> {
@@ -174,7 +199,9 @@ export class AuthService {
       name: user.user_metadata.full_name,
       avatarUrl: user.user_metadata.avatar_url,
       providerToken: user.app_metadata.provider_token,
-      providerScopes: user.app_metadata.scopes ? user.app_metadata.scopes.split(' ') : []
+      providerScopes: user.app_metadata.scopes ? user.app_metadata.scopes.split(' ') : [],
+      auth_provider: provider,
+      status: 'active'
     };
   
     return enhancedUser;
@@ -186,13 +213,15 @@ export class AuthService {
     const { full_name, avatar_url } = user.user_metadata;
     
     if (full_name || avatar_url) {
-      const userData = {
-        github_id: user.id,
+      await this.db.createUser({
+        id: user.id,
+        email: user.email ?? '',
         name: full_name ?? user.email?.split('@')[0] ?? 'Unknown User',
-        avatar_url: avatar_url ?? '',
-      };
-
-      await this.db.createUser(userData);
+        avatar_url: avatar_url,
+        github_id: user.id,
+        auth_provider: 'github',
+        status: 'active'
+      });
     }
   }
 }
