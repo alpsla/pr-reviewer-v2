@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.jest-cache/
+coverage/
+*.log
+.env
+.env.local
