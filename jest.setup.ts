@@ -1,14 +1,17 @@
-// Set environment variables for testing
-process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://localhost:54321';
-process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
-process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
-process.env.NODE_ENV = 'test';
+import '@testing-library/jest-dom';
+import 'cross-fetch/polyfill';
+import path from 'path';
+import dotenv from 'dotenv';
 
-// Global test cleanup
-beforeEach(() => {
-  jest.clearAllMocks();
+// Load environment variables from root .env file
+dotenv.config({ path: path.resolve(__dirname, '.env') });
+
+// Global beforeAll setup
+beforeAll(() => {
+  // Add any global setup here
 });
 
-afterEach(() => {
-  jest.resetAllMocks();
+// Global afterAll cleanup
+afterAll(() => {
+  // Add any global cleanup here
 });

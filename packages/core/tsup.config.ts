@@ -1,15 +1,17 @@
-import { defineConfig } from "tsup";
+import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ["src/index.ts"],
-  format: ["cjs", "esm"],
+  entry: ['src/index.ts'],
+  format: ['cjs', 'esm'],
   dts: true,
-  clean: true,
-  external: ["react", "fsevents"],
+  splitting: false,
   sourcemap: true,
-  noExternal: ["src/**"],
-  esbuildOptions(options) {
-    options.platform = "node";
-    options.target = "node14";
-  },
+  clean: true,
+  external: [
+    '@octokit/rest',
+    '@octokit/types',
+    '@octokit/auth-token',
+    '@octokit/plugin-paginate-rest',
+    '@octokit/plugin-rest-endpoint-methods'
+  ]
 });
