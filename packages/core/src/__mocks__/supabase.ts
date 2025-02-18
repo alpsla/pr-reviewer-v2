@@ -1,39 +1,41 @@
-import { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "../types/database";
+import type { Session } from '@supabase/supabase-js';
+
+export interface MockClient {
+  auth: {
+    signInWithOAuth: jest.Mock;
+    signInWithOtp: jest.Mock;
+    verifyOtp: jest.Mock;
+    refreshSession: jest.Mock;
+    signOut: jest.Mock;
+    getSession: jest.Mock;
+    getUser: jest.Mock;
+    onAuthStateChange: jest.Mock;
+  };
+}
 
 export class MockSupabaseClient {
-  readonly supabaseUrl = "http://localhost:54321";
-  readonly supabaseKey = "test-key";
-  readonly auth = {
+  auth = {
+    signInWithOAuth: jest.fn(),
     signInWithOtp: jest.fn(),
     verifyOtp: jest.fn(),
     refreshSession: jest.fn(),
     signOut: jest.fn(),
     getSession: jest.fn(),
     getUser: jest.fn(),
-    onAuthStateChange: jest.fn(() => ({
-      data: { subscription: { unsubscribe: jest.fn() } },
-    })),
-    signInWithOAuth: jest.fn(),
+    onAuthStateChange: jest.fn((callback) => {
+      this.authStateCallback = callback;
+      return {
+        data: { subscription: { unsubscribe: jest.fn() } },
+        error: null,
+      };
+    }),
   };
 
-  private mockQueryBuilder = {
-    insert: jest.fn().mockReturnThis(),
-    select: jest.fn().mockReturnThis(),
-    delete: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    single: jest.fn().mockReturnThis(),
-    order: jest.fn().mockReturnThis(),
-    limit: jest.fn().mockReturnThis(),
-    execute: jest.fn(),
-  };
+  private authStateCallback?: (event: string, session: Session | null) => void;
 
-  from = jest.fn(() => this.mockQueryBuilder);
-  rpc = jest.fn();
+  triggerAuthChange(event: string, session: Session | null) {
+    if (this.authStateCallback) {
+      this.authStateCallback(event, session);
+    }
+  }
 }
-
-export type MockClient = MockSupabaseClient & SupabaseClient<Database>;
-
-export const createMockSupabaseClient = (): MockClient => {
-  return new MockSupabaseClient() as MockClient;
-};

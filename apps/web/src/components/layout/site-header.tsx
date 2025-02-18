@@ -1,4 +1,5 @@
 import Link from "next/link";
+
 import { ProvidersMenu } from "@/components/auth/providers-menu";
 
 export function SiteHeader() {

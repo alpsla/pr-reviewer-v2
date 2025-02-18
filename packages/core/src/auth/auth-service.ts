@@ -9,13 +9,14 @@ import {
   MicrosoftAuthScopes,
   GoogleAuthScopes,
   AuthProviderConfig,
-  scopesToArray,
-  OAuthResponse,
+  AuthSession,
 } from "./types";
 import { DatabaseService } from "../supabase/database";
 import { AuthError } from "../errors";
+import { getDefaultAuthConfig } from './config';
 import { EmailAuthService, EmailAuthConfig } from "./email-auth";
-import type { Database } from "../types/database";
+import { logger } from "../utils/logger";
+import type { Database } from "../types/database/types";
 
 export class AuthService {
   constructor(
@@ -28,47 +29,44 @@ export class AuthService {
   async signInWithGitHub(
     options: Omit<AuthOptions, "scopes"> & { scopes?: GitHubAuthScopes[] } = {},
   ): Promise<AuthResponse> {
+    logger.log('Starting GitHub sign-in');
     const defaultScopes =
       this.config.defaultScopes?.github ??
       (["read:user", "repo"] as GitHubAuthScopes[]);
     const scopesToUse = options.scopes ?? defaultScopes;
-    return this.signInWithProvider(
+    return this.signInWithProvider<GitHubAuthScopes>(
       "github",
       options,
-      scopesToUse,
-      scopesToArray,
+      scopesToUse
     );
   }
 
   async signInWithGitLab(
     options: Omit<AuthOptions, "scopes"> & { scopes?: GitLabAuthScopes[] } = {},
   ): Promise<AuthResponse> {
+    logger.log('Starting GitLab sign-in');
     const defaultScopes =
       this.config.defaultScopes?.gitlab ??
-      (["api", "read_user"] as GitLabAuthScopes[]);
+      (["read_api", "read_user", "profile"] as GitLabAuthScopes[]);
     const scopesToUse = options.scopes ?? defaultScopes;
-    return this.signInWithProvider(
+    return this.signInWithProvider<GitLabAuthScopes>(
       "gitlab",
       options,
-      scopesToUse,
-      scopesToArray,
+      scopesToUse
     );
   }
 
   async signInWithMicrosoft(
-    options: Omit<AuthOptions, "scopes"> & {
-      scopes?: MicrosoftAuthScopes[];
-    } = {},
+    options: Omit<AuthOptions, "scopes"> & { scopes?: MicrosoftAuthScopes[] } = {},
   ): Promise<AuthResponse> {
     const defaultScopes =
       this.config.defaultScopes?.microsoft ??
       (["openid", "email", "profile"] as MicrosoftAuthScopes[]);
     const scopesToUse = options.scopes ?? defaultScopes;
-    return this.signInWithProvider(
+    return this.signInWithProvider<MicrosoftAuthScopes>(
       "azure",
       options,
-      scopesToUse,
-      scopesToArray,
+      scopesToUse
     );
   }
 
@@ -79,68 +77,11 @@ export class AuthService {
       this.config.defaultScopes?.google ??
       (["openid", "email", "profile"] as GoogleAuthScopes[]);
     const scopesToUse = options.scopes ?? defaultScopes;
-    return this.signInWithProvider(
+    return this.signInWithProvider<GoogleAuthScopes>(
       "google",
       options,
-      scopesToUse,
-      scopesToArray,
+      scopesToUse
     );
-  }
-
-  private async signInWithProvider<T>(
-    provider: Provider,
-    options: Omit<AuthOptions, "scopes">,
-    scopes: T[],
-    scopeConverter: (scopes: T[]) => string[],
-  ): Promise<AuthResponse> {
-    try {
-      const { refreshToken = true } = options;
-
-      const result = (await this.supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: options.redirectTo,
-          scopes: scopes ? scopeConverter(scopes).join(" ") : undefined,
-          queryParams: {
-            refresh_token: refreshToken ? "true" : "false",
-          },
-        },
-      })) as OAuthResponse;
-
-      if (!result) {
-        throw new Error(`No response from ${provider} OAuth provider`);
-      }
-      const { data, error } = result;
-
-      if (error || !data) {
-        throw error || new Error("No data returned from OAuth provider");
-      }
-
-      if (data.url) {
-        return {
-          session: null,
-          user: null,
-        };
-      }
-
-      if (data.session) {
-        await this.updateUserProfile(data.session.user);
-        return {
-          user: await this.enhanceUser(data.session.user),
-          session: data.session,
-        };
-      }
-
-      return {
-        session: null,
-        user: null,
-      };
-    } catch (error) {
-      if (process.env.NODE_ENV !== "test") {
-        console.error("Sign in error:", error);
-      }
-      throw new AuthError(`Failed to sign in with ${provider}`, error);
-    }
   }
 
   async signInWithEmail(email: string): Promise<void> {
@@ -167,16 +108,18 @@ export class AuthService {
     return emailAuth.verifyMagicLink(token);
   }
 
-  async signOut(): Promise<void> {
+  async signOut(userId: string): Promise<void> {
     try {
       const { error } = await this.supabase.auth.signOut();
       if (error) {
         throw new AuthError("Failed to sign out", error);
       }
+
+      await this.db.updateUser(userId, {
+        status: "inactive",
+      });
     } catch (error) {
-      if (process.env.NODE_ENV !== "test") {
-        console.error("Sign out error:", error);
-      }
+      logger.error("Sign out error:", error);
       throw new AuthError("Failed to sign out", error);
     }
   }
@@ -199,12 +142,10 @@ export class AuthService {
       const enhancedUser = await this.enhanceUser(session.user);
       return {
         user: enhancedUser,
-        session: session,
+        session,
       };
     } catch (error) {
-      if (process.env.NODE_ENV !== "test") {
-        console.error("Get session error:", error);
-      }
+      logger.error("Get session error:", error);
       throw new AuthError("Failed to get session", error);
     }
   }
@@ -220,9 +161,7 @@ export class AuthService {
 
       return this.enhanceUser(user);
     } catch (error) {
-      if (process.env.NODE_ENV !== "test") {
-        console.error("Get user error:", error);
-      }
+      logger.error("Get user error:", error);
       return null;
     }
   }
@@ -236,6 +175,90 @@ export class AuthService {
         callback(null);
       }
     });
+  }
+
+  private async signInWithProvider<T extends string>(
+    provider: Provider,
+    options: Omit<AuthOptions, "scopes">,
+    scopes: T[],
+  ): Promise<AuthResponse> {
+    try {
+      logger.log('SignInWithProvider:', { provider, options, scopes });
+
+      const { refreshToken = true } = options;
+      const redirectTo = options.redirectTo || (
+        this.config.urlConfig 
+          ? this.config.urlConfig.redirectUrl
+          : getDefaultAuthConfig().redirectUrl
+      );
+
+      logger.log('Configured options:', { redirectTo, refreshToken });
+
+      const oauthOptions = {
+        provider,
+        options: {
+          redirectTo,
+          scopes: scopes.join(" "),
+          queryParams: {
+            refresh_token: refreshToken ? "true" : "false",
+          },
+        },
+      };
+
+      logger.log('OAuth request:', oauthOptions);
+
+      const result = await this.supabase.auth.signInWithOAuth(oauthOptions);
+
+      logger.log('OAuth response:', result);
+
+      if (!result) {
+        logger.error('No result from OAuth provider');
+        throw new Error(`No response from ${provider} OAuth provider`);
+      }
+
+      const { data, error } = result;
+
+      if (error) {
+        logger.error('OAuth error:', error);
+        throw error;
+      }
+
+      if (!data) {
+        logger.error('No data in OAuth response');
+        throw new Error("No data returned from OAuth provider");
+      }
+
+      // Check if it's a URL response (most common during redirect flow)
+      if ('url' in data && data.url) {
+        logger.log('Redirecting to OAuth URL:', data.url);
+        return {
+          session: null,
+          user: null,
+        };
+      }
+
+      // Check if it's a session response
+      if ('session' in data && data.session && 'user' in data && data.user) {
+        logger.log('Got session from OAuth');
+        const sessionData = data.session as AuthSession;
+        const userData = data.user as User;
+        await this.updateUserProfile(userData);
+        const user = await this.enhanceUser(userData);
+        return {
+          user,
+          session: sessionData,
+        };
+      }
+
+      logger.log('No URL or session in OAuth response');
+      return {
+        session: null,
+        user: null,
+      };
+    } catch (error) {
+      logger.error('Sign in error:', error);
+      throw new AuthError(`Failed to sign in with ${provider}`, error as Error);
+    }
   }
 
   private async enhanceUser(user: User): Promise<AuthUser> {

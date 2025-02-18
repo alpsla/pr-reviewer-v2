@@ -30,13 +30,11 @@ export class EmailAuthService {
 
   async sendMagicLink(email: string): Promise<void> {
     try {
+      // Simplify the OTP request to reduce potential config issues
       const { error } = await this.supabase.auth.signInWithOtp({
         email,
         options: {
           emailRedirectTo: this.config.redirectTo,
-          data: {
-            emailTemplate: this.config.emailTemplate,
-          },
         },
       });
 
@@ -50,50 +48,70 @@ export class EmailAuthService {
 
   async verifyMagicLink(token: string): Promise<AuthResponse> {
     try {
+      // First, try token_hash verification (Supabase magic link format)
       const { data, error } = await this.supabase.auth.verifyOtp({
         token_hash: token,
         type: "magiclink",
       });
 
-      if (error || !data.session || !data.user) {
-        throw new AuthError("Invalid or expired magic link", error);
+      // If magic link verification fails, try regular OTP verification
+      if (error) {
+        const otpResult = await this.supabase.auth.verifyOtp({
+          token_hash: token,
+          type: "email",
+        });
+        
+        if (otpResult.error || !otpResult.data.session || !otpResult.data.user) {
+          throw new AuthError("Invalid or expired magic link", otpResult.error || error);
+        }
+        
+        // Use the OTP result data
+        return this.processAuthData(otpResult.data);
       }
 
-      // Create or update user in our database
-      const user = await this.db.createUser({
-        id: data.user.id,
-        email: data.user.email!,
-        name:
-          data.user.user_metadata.full_name ??
-          data.user.email?.split("@")[0] ??
-          "Unknown User",
-        auth_provider: "email",
-        status: "active",
-      });
-
-      if (!data.session) {
+      if (!data.session || !data.user) {
         throw new AuthError("No session created");
       }
 
-      // Create session
-      const session: AuthSession = {
-        access_token: data.session.access_token,
-        refresh_token: data.session.refresh_token,
-        expires_in: 3600,
-        expires_at:
-          Math.floor(Date.now() / 1000) +
-          (this.config.tokenExpiryMinutes || this.defaultTokenExpiry) * 60,
-        token_type: "bearer",
-        user: data.user as AuthUser,
-      };
-
-      return {
-        user,
-        session,
-      };
+      return this.processAuthData(data);
     } catch (error) {
       throw new AuthError("Invalid or expired magic link", error);
     }
+  }
+
+  private async processAuthData(data: { session: any, user: any }): Promise<AuthResponse> {
+    // Create or update user in our database
+    if (!data.user || !data.session) {
+      throw new AuthError("Invalid authentication data");
+    }
+    
+    const user = await this.db.createUser({
+      id: data.user.id,
+      email: data.user.email!,
+      name:
+        data.user.user_metadata.full_name ??
+        data.user.email?.split("@")[0] ??
+        "Unknown User",
+      auth_provider: "email",
+      status: "active",
+    });
+
+    // Create session
+    const session: AuthSession = {
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+      expires_in: 3600,
+      expires_at:
+        Math.floor(Date.now() / 1000) +
+        (this.config.tokenExpiryMinutes || this.defaultTokenExpiry) * 60,
+      token_type: "bearer",
+      user: data.user as AuthUser,
+    };
+
+    return {
+      user,
+      session,
+    };
   }
 
   async refreshToken(refreshToken: string): Promise<AuthSession> {
@@ -121,21 +139,5 @@ export class EmailAuthService {
     }
   }
 
-  async signOut(sessionId: string): Promise<void> {
-    try {
-      const { error } = await this.supabase.auth.signOut();
 
-      if (error) {
-        throw new AuthError("Failed to sign out", error);
-      }
-
-      // Update user status in database
-      await this.db.updateUser(sessionId, {
-        status: "inactive",
-        last_sign_in: undefined,
-      });
-    } catch (error) {
-      throw new AuthError("Failed to sign out", error);
-    }
-  }
 }

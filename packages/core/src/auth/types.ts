@@ -1,6 +1,10 @@
 import type { Session, User } from "@supabase/supabase-js";
 
-export type AuthProvider = "github" | "azure" | "google" | "email";
+export type AuthProvider = "github" | "gitlab" | "google" | "microsoft" | "email";
+
+export interface AuthUrlConfig {
+  redirectUrl: string;
+}
 
 export interface AuthUser extends User {
   provider?: AuthProvider;
@@ -9,15 +13,8 @@ export interface AuthUser extends User {
   avatarUrl?: string;
   providerScopes?: string[];
   providerToken?: string;
-  auth_provider: string;
+  auth_provider: AuthProvider;
   status: "active" | "inactive";
-}
-
-export interface UserMetadata {
-  provider_token?: string;
-  provider?: AuthProvider;
-  full_name?: string;
-  avatar_url?: string;
 }
 
 export interface AuthSession extends Session {
@@ -26,10 +23,13 @@ export interface AuthSession extends Session {
 
 export type GitLabAuthScopes =
   | "api"
+  | "read_api"
   | "read_user"
-  | "write_repository"
   | "read_repository"
-  | "profile";
+  | "write_repository"
+  | "profile"
+  | "email"
+  | "openid";
 
 export type GitHubAuthScopes = "repo" | "read:user" | "user:email" | "workflow";
 
@@ -57,28 +57,12 @@ export interface DefaultScopes {
 export interface AuthProviderConfig {
   provider: AuthProvider;
   defaultScopes?: DefaultScopes;
+  urlConfig?: AuthUrlConfig;
 }
-
-export type OAuthResponse = {
-  data: {
-    url?: string;
-    session?: Session;
-    user?: AuthUser;
-  };
-  error: Error | null;
-};
 
 export interface AuthOptions {
   redirectTo?: string;
-  refreshToken?: string;
-}
-
-export interface MicrosoftAuthOptions extends AuthOptions {
-  scopes?: MicrosoftAuthScopes[];
-}
-
-export interface GoogleAuthOptions extends AuthOptions {
-  scopes?: GoogleAuthScopes[];
+  refreshToken?: boolean;
 }
 
 export interface AuthResponse {
@@ -86,29 +70,22 @@ export interface AuthResponse {
   session: AuthSession | null;
 }
 
-export type MicrosoftAuthResponse = AuthResponse;
-export type GithubAuthResponse = AuthResponse;
-export type GoogleAuthResponse = AuthResponse;
+// Define possible shapes of OAuth response
+export type OAuthResponseWithUrl = {
+  url: string;
+  provider?: string;
+  session?: undefined;
+  user?: undefined;
+};
 
-export interface GithubAuthOptions extends AuthOptions {
-  scopes?: GitHubAuthScopes[];
-}
+export type OAuthResponseWithSession = {
+  session: Session;
+  user: User;
+  url?: undefined;
+  provider?: string;
+};
 
-// Utility functions
-export function scopesToArray(scopes: string[] | undefined): string[] {
-  return scopes ?? [];
-}
-
-export function gitlabScopesToArray(scopes: GitLabAuthScopes[]): string[] {
-  return scopesToArray(scopes);
-}
-
-export function microsoftScopesToArray(
-  scopes: MicrosoftAuthScopes[],
-): string[] {
-  return scopesToArray(scopes);
-}
-
-export function googleScopesToArray(scopes: GoogleAuthScopes[]): string[] {
-  return scopesToArray(scopes);
-}
+export type OAuthResponse = {
+  data: OAuthResponseWithUrl | OAuthResponseWithSession | null;
+  error: Error | null;
+};
