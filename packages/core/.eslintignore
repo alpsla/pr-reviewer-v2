@@ -1,0 +1,4 @@
+# Ignore test files for stricter linting rules
+src/__tests__/**/*
+**/*.test.*
+**/__mocks__/**/*

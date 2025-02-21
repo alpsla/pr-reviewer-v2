@@ -1,51 +1,37 @@
-// Re-export analysis types
-export * from "./analysis";
-export * from "./github";
+/**
+ * Core shared types
+ */
 
-// Common API Types
+// Re-export database types
+export * from './database';
+
+// API response types
 export interface APIResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  metadata?: {
-    timestamp: string;
-    version: string;
-  };
+  data: T | null;
+  error: Error | null;
 }
 
-// Database Types
-export interface DatabaseUser {
-  id: string;
-  github_id: number;
-  github_login: string;
-  email: string | null;
-  created_at: Date;
-  updated_at: Date;
-  preferences?: {
-    notifications: boolean;
-    theme: "light" | "dark" | "system";
-    language: string;
-  };
-}
-
-// Pagination Types
+// Common pagination types
 export interface PaginationParams {
-  page: number;
-  limit: number;
+  page?: number;
+  perPage?: number;
 }
 
-export interface PaginatedResponse<T> extends APIResponse<T> {
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+export interface PaginationMeta {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
 }
 
-// Error Types
-export interface APIError {
-  code: string;
-  message: string;
-  details?: unknown;
+export interface PaginatedResult<T> {
+  data: T[];
+  pagination: PaginationMeta;
 }
+
+// Re-export provider-specific types
+export * from './github';
+
+// Re-export analysis types
+export * from './analysis';

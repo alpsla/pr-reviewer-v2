@@ -30,4 +30,10 @@ export const logger = {
       console.info(...args);
     }
   },
+  debug: (...args: LogArgs) => {
+    if (!isTestEnv && process.env.DEBUG) {
+      // eslint-disable-next-line no-console
+      console.debug(...args);
+    }
+  },
 };

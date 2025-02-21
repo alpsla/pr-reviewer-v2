@@ -70,6 +70,14 @@ export interface AuthResponse {
   session: AuthSession | null;
 }
 
+export interface AuthTokens {
+  accessToken?: string;
+  refreshToken?: string;
+  expiresAt?: Date;
+  tokenType?: string;
+  scopes?: string[];
+}
+
 // Define possible shapes of OAuth response
 export type OAuthResponseWithUrl = {
   url: string;
@@ -89,3 +97,14 @@ export type OAuthResponse = {
   data: OAuthResponseWithUrl | OAuthResponseWithSession | null;
   error: Error | null;
 };
+/**
+ * OAuth tokens structure
+ */
+export interface OAuthTokens {
+  accessToken: string;
+  refreshToken?: string;
+  expiresIn?: number;
+  expiresAt?: Date;
+  tokenType?: string;
+  scope?: string[];
+}

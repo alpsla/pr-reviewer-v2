@@ -79,6 +79,7 @@ export class EmailAuthService {
     }
   }
 
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   private async processAuthData(data: { session: any, user: any }): Promise<AuthResponse> {
     // Create or update user in our database
     if (!data.user || !data.session) {

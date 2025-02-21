@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { AuthError } from './auth-error';
 
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 interface ErrorResponseBody {
   error: {
     message: string;
@@ -12,7 +13,7 @@ interface ErrorResponseBody {
 export function errorMiddleware(
   err: Error,
   _req: NextApiRequest,
-  res: NextApiResponse<ErrorResponseBody>
+  res: NextApiResponse /* <ErrorResponseBody> */
 ) {
   const response = {
     error: {
