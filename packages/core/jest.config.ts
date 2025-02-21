@@ -1,35 +1,40 @@
-import type { Config } from "@jest/types";
+import type { Config } from 'jest';
 
-export default {
-  preset: "ts-jest",
-  testEnvironment: "node",
-  testMatch: ["<rootDir>/src/**/__tests__/**/*.test.ts"],
+const config: Config = {
+  rootDir: '.',
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {
-    "^(\\.{1,2}/.*)\\.js$": "$1",
-    "^@octokit/(.*)$": "<rootDir>/src/__mocks__/@octokit/$1.ts",
-    "^@supabase/supabase-js$":
-      "<rootDir>/src/__mocks__/@supabase/supabase-js.ts",
-    "^next/(.*)$": "<rootDir>/src/__mocks__/next/$1.ts",
+    '^@/(.*)$': '<rootDir>/src/$1',
   },
-  transformIgnorePatterns: [
-    "node_modules/(?!(@octokit|octokit|@supabase|before-after-hook|universal-user-agent|node-fetch)/)",
-  ],
   transform: {
-    "^.+\\.[tj]sx?$": [
-      "ts-jest",
-      {
-        useESM: true,
-        tsconfig: "./tsconfig.json",
-      },
-    ],
+    '^.+\\.tsx?$': ['ts-jest', {
+      tsconfig: 'tsconfig.json',
+      isolatedModules: true
+    }],
   },
-  extensionsToTreatAsEsm: [".ts", ".tsx"],
-  moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
-  setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
-  clearMocks: true,
-  resetMocks: true,
-  restoreMocks: true,
-  moduleDirectories: ["node_modules"],
-  testPathIgnorePatterns: ["<rootDir>/dist/"],
-  cacheDirectory: "<rootDir>/.jest-cache",
-} satisfies Config.InitialOptions;
+  testMatch: [
+    '**/src/**/__tests__/**/*.test.ts',
+    '**/src/**/__tests__/**/*.test.tsx'
+  ],
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/**/types.ts',
+    '!src/generated/**',
+  ],
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80,
+    },
+  },
+  testEnvironmentOptions: {
+    url: 'http://localhost'
+  }
+};
+
+export default config;

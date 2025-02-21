@@ -1,7 +1,9 @@
-import type { Metadata } from "next";
 import "./globals.css";
+
 import { SiteHeader } from "@/components/layout/site-header";
 import { SupabaseProvider } from "@/lib/providers/supabase-provider";
+
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "PR Reviewer",

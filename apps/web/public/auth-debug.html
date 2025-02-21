@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Auth Debug</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; line-height: 1.5; }
+    pre { background: #f5f5f5; padding: 1rem; border-radius: 0.5rem; overflow: auto; }
+    button { padding: 0.5rem 1rem; background: #0070f3; color: white; border: none; border-radius: 0.25rem; cursor: pointer; }
+    button:hover { background: #0051a2; }
+    .card { border: 1px solid #eaeaea; border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 1.5rem; }
+    h3 { margin-top: 0; }
+  </style>
+</head>
+<body>
+  <h1>Authentication Debug</h1>
+  
+  <div class="card">
+    <h3>Current Location</h3>
+    <pre id="location-info"></pre>
+    <button onclick="goToDashboard()">Go to Dashboard</button>
+    <button onclick="goToHome()">Go to Home</button>
+  </div>
+  
+  <div class="card">
+    <h3>Session Status</h3>
+    <pre id="session-status">Checking...</pre>
+    <button onclick="checkSession()">Check Session</button>
+  </div>
+  
+  <div class="card">
+    <h3>Actions</h3>
+    <button onclick="clearAuthData()">Clear Auth Data & Reload</button>
+  </div>
+
+  <script>
+    // Initialize Supabase client
+    const supabaseUrl = 'https://ftjhmbbcuqjqmmbaymqb.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0amhtYmJjdXFqcW1tYmF5bXFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg4NTk3MzQsImV4cCI6MjA1NDQzNTczNH0.coUpXWXWCuztUyaGSHx1-qfL1CG5wlVh3I33Rq6NMNI';
+    
+    let supabase = null;
+    try {
+      supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    } catch (e) {
+      console.error('Failed to initialize Supabase client:', e);
+    }
+
+    // Update location info
+    function updateLocationInfo() {
+      const locationInfo = document.getElementById('location-info');
+      locationInfo.textContent = JSON.stringify({
+        href: window.location.href,
+        pathname: window.location.pathname,
+        search: window.location.search,
+        hash: window.location.hash,
+        timestamp: new Date().toISOString()
+      }, null, 2);
+    }
+    
+    // Check session
+    async function checkSession() {
+      const sessionStatus = document.getElementById('session-status');
+      
+      try {
+        // First, check localStorage for tokens
+        const localAuthData = {};
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key.startsWith('sb-') || key.includes('supabase')) {
+            try {
+              const value = localStorage.getItem(key);
+              // Only show partial token values for security
+              if (value && value.includes('access_token')) {
+                const parsed = JSON.parse(value);
+                if (parsed.access_token) {
+                  parsed.access_token = parsed.access_token.substring(0, 10) + '...';
+                }
+                if (parsed.refresh_token) {
+                  parsed.refresh_token = parsed.refresh_token.substring(0, 10) + '...';
+                }
+                localAuthData[key] = parsed;
+              } else {
+                localAuthData[key] = 'Token present';
+              }
+            } catch (e) {
+              localAuthData[key] = 'Error parsing';
+            }
+          }
+        }
+        
+        // Then try to get session from Supabase if available
+        let sessionData = 'Supabase client not initialized';
+        if (supabase) {
+          try {
+            const { data, error } = await supabase.auth.getSession();
+            if (error) {
+              sessionData = `Error: ${error.message}`;
+            } else {
+              // Sanitize sensitive data
+              if (data.session && data.session.access_token) {
+                data.session.access_token = data.session.access_token.substring(0, 10) + '...';
+              }
+              if (data.session && data.session.refresh_token) {
+                data.session.refresh_token = data.session.refresh_token.substring(0, 10) + '...';
+              }
+              sessionData = data;
+            }
+          } catch (e) {
+            sessionData = `Supabase error: ${e.message}`;
+          }
+        }
+        
+        sessionStatus.textContent = JSON.stringify({
+          localStorageTokens: Object.keys(localAuthData).length > 0 ? localAuthData : 'No auth tokens found',
+          supabaseSession: sessionData,
+          cookies: document.cookie ? 'Cookies present' : 'No cookies',
+          timestamp: new Date().toISOString()
+        }, null, 2);
+      } catch (error) {
+        sessionStatus.textContent = `Error checking session: ${error.message}`;
+      }
+    }
+    
+    // Clear auth data
+    function clearAuthData() {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('sb-') || key.includes('supabase') || key.includes('auth'))) {
+          localStorage.removeItem(key);
+        }
+      }
+      
+      // Clear cookies
+      document.cookie.split(";").forEach(function(c) {
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      });
+      
+      alert('Auth data cleared. Reloading page...');
+      window.location.reload();
+    }
+    
+    // Navigation helpers
+    function goToDashboard() {
+      window.location.href = '/dashboard?debug=true&t=' + Date.now();
+    }
+    
+    function goToHome() {
+      window.location.href = '/?debug=true&t=' + Date.now();
+    }
+    
+    // Initialize
+    updateLocationInfo();
+    setTimeout(checkSession, 500); // Slight delay to ensure DOM is ready
+  </script>
+</body>
+</html>

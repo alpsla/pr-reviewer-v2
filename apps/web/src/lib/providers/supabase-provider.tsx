@@ -1,9 +1,12 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useRouter } from 'next/navigation';
+import { createContext, useContext, useEffect, useState } from 'react';
+
+import { authService } from '@/lib/auth/init';
+import { logger } from '@/lib/utils/logger';
+
+import type { User, Session } from '@supabase/auth-helpers-nextjs';
 
 interface SupabaseContextValue {
   user: User | null;
@@ -28,53 +31,58 @@ export function SupabaseProvider({
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const supabase = createClientComponentClient();
 
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Get current session
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        logger.log('Starting auth initialization...');
+        const result = await authService.getSession();
+        logger.log('Session result:', result.session ? 'Has session' : 'No session');
         
-        if (currentSession) {
-          setSession(currentSession);
-          setUser(currentSession.user);
-          router.push('/dashboard');
+        if (result.session) {
+          setSession(result.session);
+          setUser(result.session.user);
+          logger.log('Found existing session, but not auto-redirecting');
+          // Don't auto-redirect to dashboard - let middleware handle this
         }
 
-        // Set up auth state change listener
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, changedSession) => {
-            setSession(changedSession);
-            setUser(changedSession?.user ?? null);
-
-            if (event === 'SIGNED_IN') {
-              router.push('/dashboard');
-            } else if (event === 'SIGNED_OUT') {
-              router.push('/');
-            }
+        logger.log('Setting up auth state change listener...');
+        authService.onAuthStateChange((authUser) => {
+          logger.log('Auth state changed:', authUser ? 'User authenticated' : 'No user');
+          if (authUser) {
+            setUser(authUser as User);
+            logger.log('User authenticated, state updated');
+            // Don't auto-redirect - let the individual pages decide
+          } else {
+            setUser(null);
+            logger.log('No user detected');
+            // Don't force redirect to home
           }
-        );
-
-        return () => {
-          subscription.unsubscribe();
-        };
+        });
       } catch (error) {
-        console.error('Error in auth initialization:', error);
+        logger.error('Error in auth initialization:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
     initializeAuth();
-  }, [supabase, router]);
+  }, [router]);
 
-  const signOut = async () => {
+  const signOutHandler = async () => {
     try {
-      await supabase.auth.signOut();
-      router.push('/');
+      if (!user) {
+        logger.warn('No user found during sign out');
+        return;
+      }
+      logger.log('Signing out user:', user.id);
+      await authService.signOut(user.id);
+      setUser(null);
+      setSession(null);
+      // Use window.location to ensure a full page reload
+      window.location.href = '/?signedout=true';
     } catch (error) {
-      console.error('Error signing out:', error);
+      logger.error('Error signing out:', error);
     }
   };
 
@@ -82,7 +90,7 @@ export function SupabaseProvider({
     user,
     session,
     isLoading,
-    signOut,
+    signOut: signOutHandler,
   };
 
   return (

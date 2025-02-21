@@ -101,6 +101,18 @@ export class DatabaseService {
     return pullRequest;
   }
 
+  async getPullRequestByNumber(repositoryId: string, number: number) {
+    const { data: pullRequest, error } = await this.supabase
+      .from("pull_requests")
+      .select()
+      .eq("repository_id", repositoryId)
+      .eq("number", number)
+      .single();
+
+    if (error) throw error;
+    return pullRequest;
+  }
+
   async createAnalysisJob(
     data: Database["public"]["Tables"]["analysis_queue"]["Insert"],
   ) {

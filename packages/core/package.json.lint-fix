@@ -1,0 +1,5 @@
+{
+  "lint": "eslint \"src/**/*.ts*\" --no-error-on-unmatched-pattern",
+  "lint:fix": "eslint \"src/**/*.ts*\" --fix --no-error-on-unmatched-pattern",
+  "lint:tests": "eslint \"src/__tests__/**/*.ts*\" --fix --no-error-on-unmatched-pattern"
+}

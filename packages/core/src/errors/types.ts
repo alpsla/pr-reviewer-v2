@@ -1,74 +1,58 @@
+export type ErrorDetails = Record<string, unknown>;
+
+export interface ErrorResponseData {
+  message: string;
+  type: string;
+  code?: string;
+  details?: ErrorDetails;
+}
+
+export interface ErrorResponse {
+  error: ErrorResponseData;
+}
+
 export class AppError extends Error {
   constructor(
     message: string,
-    public readonly code: string = "APP_ERROR",
-    public readonly statusCode: number = 400,
-    public readonly details: Record<string, unknown> = {},
+    public readonly code: string = 'APP_ERROR',
+    public readonly details: ErrorDetails = {}
   ) {
     super(message);
-    this.name = "AppError";
-  }
-}
-
-export class AuthError extends AppError {
-  constructor(message: string, details: Record<string, unknown> = {}) {
-    super(message, "AUTH_ERROR", 401, details);
-    this.name = "AuthError";
+    this.name = 'AppError';
   }
 }
 
 export class NotFoundError extends AppError {
-  constructor(message: string, details: Record<string, unknown> = {}) {
-    super(message, "NOT_FOUND", 404, details);
-    this.name = "NotFoundError";
+  constructor(message: string, details: ErrorDetails = {}) {
+    super(message, 'NOT_FOUND', details);
+    this.name = 'NotFoundError';
   }
 }
 
 export class GitHubError extends AppError {
-  constructor(
-    message: string,
-    details: Record<string, unknown> & {
-      limit?: number;
-      remaining?: number;
-      reset?: number;
-      retryAfter?: number;
-    } = {},
-  ) {
-    super(message, "GITHUB_ERROR", 502, details);
-    this.name = "GitHubError";
+  constructor(message: string, details: ErrorDetails = {}) {
+    super(message, 'GITHUB_ERROR', details);
+    this.name = 'GitHubError';
   }
 }
 
 export class DatabaseError extends AppError {
-  constructor(message: string, details: Record<string, unknown> = {}) {
-    super(message, "DATABASE_ERROR", 503, details);
-    this.name = "DatabaseError";
+  constructor(message: string, details: ErrorDetails = {}) {
+    super(message, 'DATABASE_ERROR', details);
+    this.name = 'DatabaseError';
   }
 }
 
 export class InternalError extends AppError {
-  constructor(message: string, details: Record<string, unknown> = {}) {
-    super(message, "INTERNAL_ERROR", 500, details);
-    this.name = "InternalError";
+  constructor(message: string, details: ErrorDetails = {}) {
+    super(message, 'INTERNAL_ERROR', details);
+    this.name = 'InternalError';
   }
 }
 
-export interface ErrorResponse {
-  error: {
-    message: string;
-    type: string;
-    code?: string;
-    details?: Record<string, unknown>;
-  };
-}
-
-export function formatError(error: AppError): ErrorResponse {
-  return {
-    error: {
-      message: error.message,
-      type: error.name,
-      code: error.code,
-      details: error.details,
-    },
-  };
+export class AuthError extends AppError {
+  constructor(message: string, details: ErrorDetails = {}) {
+    super(message, 'AUTH_ERROR', details);
+    this.name = 'AuthError';
+  }
 }

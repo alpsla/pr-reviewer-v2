@@ -1,40 +1,27 @@
-import { DatabaseService } from "../../supabase/database";
-import { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "../../types/database";
+import { createMockDatabaseService } from '../../__mocks__/database';
+import { MockSupabaseClient } from '../../__mocks__/supabase';
 
-export class TestDatabaseService extends DatabaseService {
-  createUser = jest.fn();
-  getUser = jest.fn();
-  getUserByGithubId = jest.fn();
-  updateUser = jest.fn();
-  createRepository = jest.fn();
-  getRepositoryByOwnerAndName = jest.fn();
-  createPullRequest = jest.fn();
-  getPullRequest = jest.fn();
-  createAnalysisJob = jest.fn();
-  getNextAnalysisJob = jest.fn();
+export { createMockDatabaseService };
+export type { MockSupabaseClient };
 
-  constructor() {
-    super({} as SupabaseClient<Database>);
-    this.initializeMocks();
-  }
-
-  private initializeMocks(): void {
-    this.createUser.mockImplementation((data) => Promise.resolve(data));
-    this.getUser.mockImplementation((id) => Promise.resolve({ id }));
-    this.getUserByGithubId.mockImplementation((id) =>
-      Promise.resolve({ github_id: id }),
-    );
-    this.updateUser.mockImplementation((id, data) =>
-      Promise.resolve({ id, ...data }),
-    );
-    this.createRepository.mockImplementation((data) => Promise.resolve(data));
-    this.getRepositoryByOwnerAndName.mockImplementation((owner, name) =>
-      Promise.resolve({ owner, name, full_name: `${owner}/${name}` }),
-    );
-    this.createPullRequest.mockImplementation((data) => Promise.resolve(data));
-    this.getPullRequest.mockImplementation((id) => Promise.resolve({ id }));
-    this.createAnalysisJob.mockImplementation((data) => Promise.resolve(data));
-    this.getNextAnalysisJob.mockImplementation(() => Promise.resolve(null));
-  }
-}
+export const mockBaseUser = {
+  id: 'test-user-id',
+  email: 'test@example.com',
+  user_metadata: {
+    full_name: 'Test User',
+    avatar_url: 'https://example.com/avatar.png'
+  },
+  app_metadata: {
+    provider: 'github',
+    provider_token: 'token-123',
+    scopes: 'read:user repo'
+  },
+  aud: 'authenticated',
+  role: 'authenticated',
+  email_confirmed_at: new Date().toISOString(),
+  phone: null,
+  confirmed_at: new Date().toISOString(),
+  last_sign_in_at: new Date().toISOString(),
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString()
+};
