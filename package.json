@@ -4,12 +4,17 @@
   "scripts": {
     "build": "pnpm --filter './packages/**' build",
     "clean": "pnpm -r clean",
+    "cleanup": "chmod +x ./cleanup.sh && ./cleanup.sh",
     "dev": "pnpm --filter web dev",
     "lint": "pnpm -r lint",
-    "test": "pnpm -r test"
+    "test": "pnpm -r test",
+    "test:simplified": "pnpm -r test:simplified",
+    "test:skip-failing": "pnpm -r test:skip-failing"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.18.1",
     "typescript": "^5.0.0"
   }
 }

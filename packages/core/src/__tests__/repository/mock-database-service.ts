@@ -3,6 +3,31 @@ import type { Database } from "../../supabase/types";
 import { DatabaseService } from '../../supabase/database';
 
 /**
+ * Creates in-memory storage for testing
+ */
+export function createTestStorage() {
+  return {
+    repositories: new Map<string, Record<string, unknown>>(),
+    pullRequests: new Map<string, Record<string, unknown>>(),
+    users: new Map<string, Record<string, unknown>>(),
+    analysisJobs: new Map<string, Record<string, unknown>>()
+  };
+}
+
+/**
+ * Creates a mock database service using the provided storage
+ */
+export function createMockDatabaseService(storage: ReturnType<typeof createTestStorage>) {
+  const mockDb = new MockDatabaseService();
+  
+  // Override the internal storage with the provided one
+  (mockDb as any).repositories = storage.repositories;
+  (mockDb as any).pullRequests = storage.pullRequests;
+  
+  return mockDb;
+}
+
+/**
  * Mock implementation of DatabaseService for testing
  * This provides type-safe mocking of the DatabaseService methods
  */

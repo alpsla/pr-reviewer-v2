@@ -1,120 +1,238 @@
 'use client';
 
-import { useEffect, useState } from "react";
-
+import { useState, useEffect } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useSupabase } from "@/lib/providers/supabase-provider";
+import { GitPullRequest, History, Settings, LogOut } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
-  const { user, signOut, isLoading } = useSupabase();
-  const [authInfo, setAuthInfo] = useState<Record<string, string>>({});
-
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  
+  // Broadcast authentication success to other tabs/windows
   useEffect(() => {
-    // Parse URL for debugging info
-    if (typeof window !== 'undefined') {
+    // Only run when we have a valid user and this appears to be coming from auth redirect
+    if (user && typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      const debugInfo: Record<string, string> = {};
-      params.forEach((value, key) => {
-        debugInfo[key] = value;
-      });
-      setAuthInfo(debugInfo);
+      const isAuthRedirect = params.get('auth_redirect') === 'true';
       
-      // eslint-disable-next-line no-console
-      console.log('Dashboard mounted', { 
-        isLoading, 
-        hasUser: !!user,
-        url: window.location.href,
-        params: debugInfo
-      });
-
-      // If we're fully loaded and have no user, offer a manual redirect
-      if (!isLoading && !user) {
-        // eslint-disable-next-line no-console
-        console.log('Dashboard: No authenticated user detected');
+      if (isAuthRedirect) {
+        // Remove the query parameter from the URL without a page reload
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+        
+        // Broadcast to all open tabs that authentication is complete
+        if (window.opener) {
+          try {
+            // If this window was opened from another window, tell the opener
+            window.opener.postMessage('auth_complete', window.location.origin);
+          } catch (e) {
+            console.log('Could not communicate with opener window');
+          }
+        } else {
+          // If this wasn't opened from another window, broadcast to all tabs
+          // using localStorage as a communication channel
+          localStorage.setItem('auth_complete_time', Date.now().toString());
+        }
       }
     }
-  }, [isLoading, user]);
+  }, [user]);
+
   
-  return (
-    <div className="container mx-auto p-6">
-      <div className="flex flex-col md:flex-row items-start justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
-          {user ? (
-            <p className="text-lg">Welcome, {user.email}</p>
-          ) : (
-            <p className="text-yellow-600">Loading user data...</p>
-          )}
-        </div>
+  const handleSignOut = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/auth/signout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        // Clear any local state
+        setUser(null);
         
-        <div className="mt-4 md:mt-0 p-4 bg-gray-50 rounded-md">
-          <h2 className="font-semibold mb-2">Auth Status:</h2>
-          <p className="mb-2">Loading: {isLoading ? 'Yes' : 'No'}</p>
-          <p className="mb-4">User: {user ? `Authenticated (${user.email})` : 'Not logged in'}</p>
+        // Also manually clear localStorage and sessionStorage
+        if (typeof window !== 'undefined') {
+          localStorage.clear();
+          sessionStorage.clear();
+        }
+        
+        // Redirect to home page
+        router.push('/');
+      } else {
+        console.error('Failed to sign out');
+      }
+    } catch (error) {
+      console.error('Error signing out:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    async function checkSession() {
+      try {
+        setLoading(true);
+        const supabase = createClientComponentClient();
+        
+        // First, try to get the session
+        const { data, error } = await supabase.auth.getSession();
+        
+        console.log('Dashboard session check:', { data, error });
+        
+        if (error) {
+          console.error('Session error:', error);
+          router.push('/');
+          return;
+        }
+        
+        if (!data.session) {
+          console.log('No session found, redirecting to home');
+          router.push('/');
+          return;
+        }
+        
+        // Additional check - verify that the user actually exists in Supabase
+        // by calling getUser which will validate the token
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !userData.user) {
+          console.error('User verification failed:', userError);
+          // Clear any invalid session state
+          await supabase.auth.signOut({ scope: 'global' });
           
-          {Object.keys(authInfo).length > 0 && (
-            <div className="mb-4">
-              <h3 className="font-medium">URL Parameters:</h3>
-              <ul className="text-sm">
-                {Object.entries(authInfo).map(([key, value]) => (
-                  <li key={key}><span className="font-mono">{key}</span>: {value}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+          if (typeof window !== 'undefined') {
+            localStorage.clear();
+            sessionStorage.clear();
+          }
           
-          <div className="flex space-x-2">
-            <Button 
-              variant="destructive" 
-              onClick={() => {
-                // eslint-disable-next-line no-console
-                console.log('Sign out button clicked, user:', user?.id);
-                signOut().catch(err => {
-                  // eslint-disable-next-line no-console
-                  console.error('Error during sign out:', err);
-                });
-              }}
-              disabled={isLoading || !user}
-              className="font-medium"
-            >
-              Sign Out
-            </Button>
-            
-            <a 
-              href="/"
-              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 inline-flex items-center justify-center text-sm"
-            >
-              Home
-            </a>
-          </div>
-          
-          {user && (
-            <div className="mt-4 text-xs text-gray-500">
-              If sign out button doesn&apos;t work, try the
-              <button 
-                onClick={() => {
-                  // eslint-disable-next-line no-console
-                  console.log('Alternative sign out clicked');
-                  // Clear auth data and redirect
-                  if (typeof window !== 'undefined') {
-                    // Clear Supabase cookies and storage
-                    for (let i = localStorage.length - 1; i >= 0; i--) {
-                      const key = localStorage.key(i);
-                      if (key && (key.startsWith('sb-') || key.includes('supabase'))) {
-                        localStorage.removeItem(key);
-                      }
-                    }
-                    // Redirect to home
-                    window.location.href = '/?manual-signout=true';
-                  }
-                }}
-                className="text-blue-500 ml-1 underline"
-              >
-                alternative sign out
-              </button>.
-            </div>
-          )}
+          router.push('/');
+          return;
+        }
+        
+        setUser(userData.user);
+      } catch (error) {
+        console.error('Error checking session:', error);
+        router.push('/');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    checkSession();
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div className="container py-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4">Loading dashboard...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect in useEffect
+  }
+
+  return (
+    <div className="container py-8">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold">Dashboard</h1>
+      </div>
+
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold mb-4">
+          Welcome{user?.user_metadata?.name ? `, ${user.user_metadata.name}` : ''}!
+        </h2>
+        <p className="text-muted-foreground">
+          Get started by analyzing a pull request or checking your recent activity.
+        </p>
+      </div>
+
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2">
+              <GitPullRequest className="h-5 w-5" />
+              PR Analyzer
+            </CardTitle>
+            <CardDescription>
+              Analyze your pull requests with AI
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Get AI-powered feedback on your code changes.
+              Identify bugs, security issues, and improvement opportunities.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Button asChild className="w-full">
+              <Link href="/dashboard/pr-analyzer">
+                Analyze PRs
+              </Link>
+            </Button>
+          </CardFooter>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Recent Activity
+            </CardTitle>
+            <CardDescription>
+              View your analysis history
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Access your previously analyzed pull requests
+              and review the feedback history.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Button variant="outline" asChild className="w-full">
+              <Link href="/dashboard/history">
+                View History
+              </Link>
+            </Button>
+          </CardFooter>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Settings
+            </CardTitle>
+            <CardDescription>
+              Configure your account
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Manage your connections, preferences,
+              and customize your analysis settings.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Button variant="outline" asChild className="w-full">
+              <Link href="/dashboard/settings">
+                Manage Settings
+              </Link>
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );

@@ -1,9 +1,22 @@
-/**
- * Minimal index with only the essential exports
- * Used for testing and when only core functionality is needed
- */
+// Re-export core types
+export type { VCSPlatform } from './types/platform';
+export { PlatformErrorCode, AnalysisStatus } from './types/platform';
+export type { APIResponse } from './types/api';
 
-export { RepositoryService } from './repository/repository-service';
+// Export minimal repository types
+export type {
+  Repository,
+  PullRequest,
+  PullRequestFile
+} from './repository/types';
+
+// Export minimal VCS types
+export type {
+  VCSClient,
+  VCSRepository,
+  VCSPullRequest
+} from './vcs/types';
+
+// Export error types
 export { RepositoryError } from './repository/repository-error';
-export type { APIResponse } from './types';
-export type { Database } from './types';
+export { VCSError } from './vcs/errors';

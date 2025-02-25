@@ -4,83 +4,155 @@
 PR Reviewer is a web application that provides AI-powered code review for pull requests. It integrates with GitHub and GitLab to fetch PR data, analyzes code changes using AI, and provides helpful feedback to developers.
 
 ## Current Status
-- ✅ Authentication system (GitHub, GitLab, Email)
-- ✅ VCS abstraction layer (GitHub, GitLab clients)
-- ✅ Repository service for fetching repos and PRs
-- ✅ Dashboard UI with PR fetching capability
-- ✅ Manual testing plan implemented
-- ✅ Build/Lint issues resolved
-- 🚧 Analysis pipeline (next phase)
+- ✅ Authentication system with all providers
+  - GitHub OAuth
+  - GitLab OAuth
+  - Email Magic Links with cross-tab sync
+- ✅ VCS abstraction layer
+  - GitHub client (Octokit)
+  - GitLab client (Gitbeaker)
+- ✅ Basic UI framework
+  - Next.js App Router
+  - Tailwind CSS
+  - shadcn/ui components
+- ✅ Database schema design
+- ✅ PR data fetching and storage
+- ✅ Error handling and recovery system
+- 🚧 Analysis queue implementation
+- 🚧 LLM integration implementation
+- 🚧 Frontend testing interfaces
 
 ## Tech Stack
 - **Frontend**: Next.js, TypeScript, Tailwind CSS, shadcn/ui
 - **Backend**: Supabase (auth, database)
 - **APIs**: GitHub API (Octokit), GitLab API (Gitbeaker)
+- **AI**: OpenAI API for code analysis
 - **Testing**: Jest, Manual Testing
 - **Deployment**: Vercel (planned)
 
 ## Project Structure
+
+### Web Application Structure
 ```
-/
-├── apps/
-│   └── web/                 # Next.js frontend application
-│       ├── src/
-│       │   ├── app/         # Next.js app router
-│       │   │   ├── auth/    # Authentication pages
-│       │   │   └── dashboard/
-│       │   │       └── pr-analyzer/ # PR analysis pages
-│       │   ├── components/  # React components
-│       │   └── lib/         # Utility functions
-├── packages/
-│   └── core/                # Core business logic and services
-│       ├── auth/            # Authentication services
-│       ├── vcs/             # Version Control System abstraction
-│       ├── repository/      # Repository management services
-│       └── tests/           # Simplified test suite
-└── docs/                    # Documentation
-    ├── content/             # Project context (this directory)
-    └── MANUAL_TESTS.md      # Comprehensive manual testing plan
+apps/web/
+├── src/
+│   ├── app/                    # Next.js app router
+│   │   ├── auth/              # Authentication routes
+│   │   ├── dashboard/         # Main application
+│   │   │   └── pr-analyzer/   # PR analysis features
+│   │   ├── layout.tsx         # Root layout
+│   │   └── page.tsx           # Home page
+│   ├── components/
+│   │   ├── auth/             # Auth components
+│   │   ├── repository/       # Repo handling
+│   │   ├── pr/              # PR components
+│   │   └── ui/              # Shared UI components
+│   └── lib/                  # Utilities & services
+│       ├── auth/            # Auth services
+│       ├── repository/      # Repo services
+│       └── database/        # Database services
+└── public/                  # Static assets
+```
+
+### Core Services Structure
+```
+packages/core/
+├── auth/                    # Authentication services
+├── vcs/                    # VCS abstraction layer
+├── repository/             # Repository management
+└── tests/                  # Test suite
 ```
 
 ## Architecture Overview
-The application follows a modular, service-oriented architecture:
 
-1. **Authentication System**
-   - Multi-provider auth (GitHub, GitLab, Email)
-   - Token management via Supabase
+### 1. Authentication System
+- Multi-provider support
+  - GitHub OAuth flow
+  - GitLab OAuth flow
+  - Email magic links
+- Token management via Supabase
+- Cross-tab session sync
+- Automatic token refresh
 
-2. **VCS Abstraction Layer**
-   - Common interface for GitHub and GitLab
-   - Error normalization and handling
-   - Mock clients for testing
+### 2. VCS Abstraction Layer
+- Common interface for all VCS providers
+- Provider-specific implementations
+  - GitHub client using Octokit
+  - GitLab client using Gitbeaker
+- Error normalization
+- Rate limit handling
+- Mock clients for testing
 
-3. **Repository Service**
-   - High-level repo and PR operations
-   - Database caching for API responses
-   - Error handling and normalization
+### 3. Repository Service
+- High-level repository operations
+- PR data fetching and caching
+- Database integration
+- Error handling and recovery
 
-4. **Testing Strategy**
-   - Simplified automated tests for core functionality
-   - Comprehensive manual testing for complex scenarios
+### 4. Analysis Pipeline
+- PR content extraction
+- Analysis queue management
+- LLM integration (planned)
+- Results storage and presentation
+
+### 5. UI Components
+- Authentication flows
+  - Platform-specific login
+  - Session management
+  - Profile handling
+- Repository management
+  - Repository browser
+  - PR listing and filtering
+  - Analysis request UI
+- PR Analysis
+  - Code diff viewer
+  - Analysis results display
+  - Suggestion management
 
 ## Development Status & Roadmap
-1. **Phase 1: Authentication & Repository Access** (COMPLETED)
-   - GitHub/GitLab OAuth ✅
-   - Repository/PR fetching ✅
-   - Testing infrastructure ✅
 
-2. **Phase 2: Analysis Pipeline** (CURRENT)
-   - PR Analyzer UI ✅
-   - Language detection 🚧
-   - LLM integration 🚧
-   - Result storage 🚧
+### Phase 1: Core Infrastructure (COMPLETED)
+- ✅ Authentication system
+- ✅ VCS abstraction layer
+- ✅ Basic UI framework
+- ✅ Database schema
+- ✅ Error handling system
+- ✅ TypeScript structure and type safety
 
-3. **Phase 3: User Interface Refinement**
-   - Advanced repository browser
-   - Analysis configuration
-   - Results visualization
+### Phase 2: Data Management (COMPLETED)
+- ✅ PR data fetching
+- ✅ Database integration
+- ✅ Analysis queue structure
+- ✅ Content extraction
 
-## How to Use This Documentation
-- **First-time setup**: Follow the onboarding steps in ONBOARDING.md
-- **Manual testing**: Reference MANUAL_TESTS.md for testing procedures
-- **Contributing**: Follow the simplified testing strategy in TESTING_STRATEGY.md
+### Phase 3: Analysis Pipeline (CURRENT)
+- 🚧 LLM integration
+- 🚧 Result processing
+- 🚧 Suggestion generation
+- 🚧 Performance optimization
+
+### Phase 4: UI Refinement (CURRENT)
+- 🚧 Testing interfaces
+- 🚧 Analysis configuration
+- 🚧 Results visualization
+- 🚧 User dashboard
+
+## Environment Setup
+Required environment variables:
+```bash
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-key
+
+# OAuth Configuration
+GITHUB_CLIENT_ID=your-github-client-id
+GITHUB_CLIENT_SECRET=your-github-client-secret
+GITLAB_CLIENT_ID=your-gitlab-client-id
+GITLAB_CLIENT_SECRET=your-gitlab-client-secret
+```
+
+## Documentation Guide
+- **Getting Started**: See ONBOARDING.md
+- **Current Tasks**: See CURRENT_TASKS.md
+- **Testing Guide**: See TESTING_STRATEGY.md
+- **Database Schema**: Check Supabase project

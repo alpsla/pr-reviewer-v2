@@ -1,7 +1,5 @@
 import "./globals.css";
-
-import { SiteHeader } from "@/components/layout/site-header";
-import { SupabaseProvider } from "@/lib/providers/supabase-provider";
+import { EmailNotificationProvider } from "@/context/email-notification-context";
 
 import type { Metadata } from "next";
 
@@ -17,15 +15,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning>
-        <SupabaseProvider>
-          <div className="relative flex min-h-screen flex-col">
-            <SiteHeader />
-            <main className="flex-1">
-              {children}
-            </main>
-          </div>
-        </SupabaseProvider>
+      <body suppressHydrationWarning className="min-h-screen bg-background antialiased">
+        <EmailNotificationProvider>
+          {children}
+        </EmailNotificationProvider>
       </body>
     </html>
   );

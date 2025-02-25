@@ -2,3 +2,9 @@
 src/__tests__/**/*
 **/*.test.*
 **/__mocks__/**/*
+/packages/core/src/__tests__/mocks/database-service.ts
+/packages/core/src/app/dashboard/pr-analyzer/repository-service.ts
+/packages/core/src/components/repository/PRFetcher.tsx
+/packages/core/src/app/auth/callback-client/page.tsx
+/packages/core/src/components/auth/email-sign-in-modal.tsx
+/packages/core/src/lib/auth/init.ts

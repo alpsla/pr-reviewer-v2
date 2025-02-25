@@ -1,5 +1,13 @@
 {
+  "/auth/callback-client-redirect/route": "app/auth/callback-client-redirect/route.js",
+  "/auth/callback-client/page": "app/auth/callback-client/page.js",
+  "/auth/signout/route": "app/auth/signout/route.js",
+  "/_not-found": "app/_not-found.js",
+  "/auth/test-auth/page": "app/auth/test-auth/page.js",
+  "/auth/signin-check/route": "app/auth/signin-check/route.js",
+  "/page": "app/page.js",
+  "/debug/page": "app/debug/page.js",
   "/auth/callback/route": "app/auth/callback/route.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/page": "app/page.js"
+  "/dashboard/pr-analyzer/page": "app/dashboard/pr-analyzer/page.js"
 }

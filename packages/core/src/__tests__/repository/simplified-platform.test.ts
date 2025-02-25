@@ -26,8 +26,8 @@ describe('Simplified Platform Support Tests', () => {
       getPlatform: () => 'github'
     }));
     
-    // Cast to unknown first, then to DatabaseService to satisfy the type checker
-    const service = new RepositoryService(mockDb as unknown as DatabaseService, { github: 'github-token' });
+    // Cast to DatabaseService to satisfy the type checker
+    const service = new RepositoryService(mockDb as DatabaseService, { github: 'github-token' });
     expect(service).toBeInstanceOf(RepositoryService);
     expect(getVCSClient).toHaveBeenCalledWith('github', 'github-token', undefined);
   });
@@ -38,8 +38,8 @@ describe('Simplified Platform Support Tests', () => {
       getPlatform: () => 'gitlab'
     }));
     
-    // Cast to unknown first, then to DatabaseService to satisfy the type checker
-    const service = new RepositoryService(mockDb as unknown as DatabaseService, { gitlab: 'gitlab-token' });
+    // Cast to DatabaseService to satisfy the type checker
+    const service = new RepositoryService(mockDb as DatabaseService, { gitlab: 'gitlab-token' });
     expect(service).toBeInstanceOf(RepositoryService);
     expect(getVCSClient).toHaveBeenCalledWith('gitlab', 'gitlab-token', undefined);
   });
@@ -54,8 +54,8 @@ describe('Simplified Platform Support Tests', () => {
         getPlatform: () => 'gitlab'
       }));
     
-    // Cast to unknown first, then to DatabaseService to satisfy the type checker
-    const service = new RepositoryService(mockDb as unknown as DatabaseService, { 
+    // Cast to DatabaseService to satisfy the type checker
+    const service = new RepositoryService(mockDb as DatabaseService, { 
       github: 'github-token',
       gitlab: 'gitlab-token'
     });
@@ -74,8 +74,8 @@ describe('Simplified Platform Support Tests', () => {
         getPlatform: () => 'gitlab'
       }));
     
-    // Cast to unknown first, then to DatabaseService to satisfy the type checker
-    const service = new RepositoryService(mockDb as unknown as DatabaseService, 
+    // Cast to DatabaseService to satisfy the type checker
+    const service = new RepositoryService(mockDb as DatabaseService, 
       { 
         github: 'github-token',
         gitlab: 'gitlab-token'
@@ -103,23 +103,24 @@ describe('Simplified Platform Support Tests', () => {
       throw new Error('No client available for platform: gitlab. Please check your authentication.');
     });
     
-    // Cast to unknown first, then to DatabaseService to satisfy the type checker
-    const service = new RepositoryService(mockDb as unknown as DatabaseService, { github: 'github-token' });
+    // Cast to DatabaseService to satisfy the type checker
+    const service = new RepositoryService(mockDb as DatabaseService, { github: 'github-token' });
     
     // Try to access GitLab
     try {
       await service.getRepository('gitlab', 'owner', 'repo');
       fail('Should have thrown an error');
     } catch (err) {
-      const error = err as Error;
-      expect(typeof error.message).toBe('string');
-      expect(error.message).toContain('No client available for platform');
+      expect(err).toBeInstanceOf(Error);
+      if (err instanceof Error) {
+        expect(err.message).toContain('No client available for platform');
+      }
     }
   });
 
   it('should fail with helpful message for unsupported platforms', async () => {
-    // Cast to unknown first, then to DatabaseService to satisfy the type checker
-    const service = new RepositoryService(mockDb as unknown as DatabaseService, { github: 'github-token' });
+    // Cast to DatabaseService to satisfy the type checker
+    const service = new RepositoryService(mockDb as DatabaseService, { github: 'github-token' });
     
     // Mock the implementation for the unsupported platform
     (getVCSClient as jest.Mock).mockImplementation((platform) => {
@@ -137,9 +138,10 @@ describe('Simplified Platform Support Tests', () => {
       await service.getRepository('bitbucket' as VCSPlatform, 'owner', 'repo');
       fail('Should have thrown an error');
     } catch (err) {
-      const error = err as Error;
-      expect(typeof error.message).toBe('string');
-      expect(error.message).toContain('No client available for platform');
+      expect(err).toBeInstanceOf(Error);
+      if (err instanceof Error) {
+        expect(err.message).toContain('No client available for platform');
+      }
     }
   });
 });

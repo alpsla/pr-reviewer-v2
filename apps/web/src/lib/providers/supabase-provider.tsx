@@ -37,11 +37,11 @@ export function SupabaseProvider({
       try {
         logger.log('Starting auth initialization...');
         const result = await authService.getSession();
-        logger.log('Session result:', result.session ? 'Has session' : 'No session');
+        logger.log('Session result:', result.data.session ? 'Has session' : 'No session');
         
-        if (result.session) {
-          setSession(result.session);
-          setUser(result.session.user);
+        if (result.data.session) {
+          setSession(result.data.session);
+          setUser(result.data.session.user);
           logger.log('Found existing session, but not auto-redirecting');
           // Don't auto-redirect to dashboard - let middleware handle this
         }
@@ -66,7 +66,13 @@ export function SupabaseProvider({
       }
     };
 
-    initializeAuth();
+    // Only run auth initialization on the client side
+    if (typeof window !== 'undefined') {
+      initializeAuth();
+    } else {
+      // On server side, just mark as not loading
+      setIsLoading(false);
+    }
   }, [router]);
 
   const signOutHandler = async () => {
@@ -76,7 +82,7 @@ export function SupabaseProvider({
         return;
       }
       logger.log('Signing out user:', user.id);
-      await authService.signOut(user.id);
+      await authService.signOut();
       setUser(null);
       setSession(null);
       // Use window.location to ensure a full page reload

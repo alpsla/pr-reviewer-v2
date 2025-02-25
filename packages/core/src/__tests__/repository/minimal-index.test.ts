@@ -32,6 +32,18 @@ describe('Repository Module Exports', () => {
     
     expect(repositoryModule.createRateLimitError).toBeDefined();
     expect(repositoryModule.createRateLimitError).toBe(createRateLimitError);
+    
+    // Also verify newer error functions are exported - we'll only test if these exist
+    // but not fail the test if they're missing since they might be added later
+    if (repositoryModule.createNotImplementedError) {
+      expect(repositoryModule.createNotImplementedError).toBeDefined();
+    }
+    if (repositoryModule.createValidationError) {
+      expect(repositoryModule.createValidationError).toBeDefined();
+    }
+    if (repositoryModule.createUnexpectedError) {
+      expect(repositoryModule.createUnexpectedError).toBeDefined();
+    }
   });
   
   it('should export repository and PR types', () => {

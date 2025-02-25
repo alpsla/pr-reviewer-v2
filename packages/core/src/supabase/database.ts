@@ -140,4 +140,41 @@ export class DatabaseService {
     if (error) throw error;
     return jobs[0] || null;
   }
+
+  async storePullRequest(data: {
+    repository_id: string;
+    number: number;
+    title: string;
+    description?: string;
+    author: string;
+    base_branch: string;
+    head_branch: string;
+    state: string;
+    metadata?: Record<string, any>;
+  }): Promise<string> {
+    const { data: pr, error } = await this.supabase
+      .from('pull_requests')
+      .upsert([data])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return pr.id;
+  }
+
+  async createAnalysisQueue(data: {
+    pull_request_id: string;
+    status: string;
+    priority: number;
+    metadata?: Record<string, any>;
+  }): Promise<string> {
+    const { data: queue, error } = await this.supabase
+      .from('analysis_queue')
+      .insert([data])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return queue.id;
+  }
 }

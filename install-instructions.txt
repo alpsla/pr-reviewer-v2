@@ -1,0 +1,14 @@
+To install the missing packages and fix the build issues, please run the following commands:
+
+```bash
+# Navigate to the web app directory
+cd apps/web
+
+# Install the dependencies
+pnpm install
+
+# Try building the app again
+pnpm build
+```
+
+If you encounter any further issues, please let me know!
