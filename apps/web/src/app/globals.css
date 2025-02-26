@@ -1,3 +1,68 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Basic styles for react-diff-view */
+.diff-line {
+  display: flex;
+}
+
+.diff-gutter {
+  padding: 0 0.5rem;
+  cursor: pointer;
+  user-select: none;
+  text-align: right;
+  min-width: 3rem;
+}
+
+.diff-gutter-normal {
+  background-color: #f7f7f7;
+}
+
+.diff-gutter-insert {
+  background-color: #dcfce7;
+}
+
+.diff-gutter-delete {
+  background-color: #fee2e2;
+}
+
+.diff-code {
+  padding: 0 0.5rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+  flex: 1;
+}
+
+.diff-code-insert {
+  background-color: #dcfce7;
+}
+
+.diff-code-delete {
+  background-color: #fee2e2;
+}
+
+.diff-code-normal {
+  background-color: #ffffff;
+}
+
+/* Dark mode adjustments */
+.dark .diff-gutter-normal {
+  background-color: #1e293b;
+}
+
+.dark .diff-code-normal {
+  background-color: #0f172a;
+}
+
+.dark .diff-gutter-insert,
+.dark .diff-code-insert {
+  background-color: #0c522d;
+  color: #ffffff;
+}
+
+.dark .diff-gutter-delete,
+.dark .diff-code-delete {
+  background-color: #7f1d1d;
+  color: #ffffff;
+}

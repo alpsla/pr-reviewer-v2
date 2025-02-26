@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from 'next/navigation';
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar } from "@/components/ui";
 import { ProvidersMenu } from "@/components/auth/providers-menu";
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 

@@ -11,6 +11,9 @@ const nextConfig = {
     '@octokit/plugin-paginate-rest',
     '@octokit/plugin-rest-endpoint-methods'
   ],
+  images: {
+    domains: ['github.com'],
+  },
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
