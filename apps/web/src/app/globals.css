@@ -2,6 +2,83 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --background: white;
+  --foreground: #1e293b;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --card: white;
+  --card-foreground: #1e293b;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --primary: #3b82f6;
+  --primary-foreground: white;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #1e293b;
+  --accent: #f1f5f9;
+  --accent-foreground: #1e293b;
+  --success: #10b981;
+  --success-foreground: white;
+  --warning: #f59e0b;
+  --warning-foreground: white;
+  --error: #ef4444;
+  --error-foreground: white;
+  --ring: #3b82f6;
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: #1e293b;  /* Softer dark blue-gray instead of very dark blue */
+  --foreground: #f8fafc;  /* Slightly softer white for less eye strain */
+  --muted: #334155;       /* Lighter muted background */
+  --muted-foreground: #cbd5e1; /* More visible muted text */
+  --card: #2d3748;        /* Lighter card background for better contrast */
+  --card-foreground: #f1f5f9; /* Slightly muted white for card text */
+  --border: #475569;      /* More visible border */
+  --input: #334155;
+  --primary: #60a5fa;     /* Brighter, more visible blue */
+  --primary-foreground: #0f172a;
+  --secondary: #334155;   /* Lighter secondary background */
+  --secondary-foreground: #f1f5f9;
+  --accent: #38bdf8;      /* Brighter accent color */
+  --accent-foreground: #0f172a;
+  --success: #34d399;     /* Brighter success color */
+  --success-foreground: #0f172a;
+  --warning: #fbbf24;     /* Brighter warning color */
+  --warning-foreground: #0f172a;
+  --error: #f87171;       /* Brighter error color */
+  --error-foreground: #0f172a;
+  --ring: #60a5fa;
+}
+
+/* Animation utilities */
+@keyframes blob {
+  0% {
+    transform: scale(1);
+  }
+  33% {
+    transform: scale(1.1);
+  }
+  66% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
 /* Basic styles for react-diff-view */
 .diff-line {
   display: flex;
@@ -48,21 +125,21 @@
 
 /* Dark mode adjustments */
 .dark .diff-gutter-normal {
-  background-color: #1e293b;
+  background-color: #334155;
 }
 
 .dark .diff-code-normal {
-  background-color: #0f172a;
+  background-color: #1e293b;
 }
 
 .dark .diff-gutter-insert,
 .dark .diff-code-insert {
-  background-color: #0c522d;
-  color: #ffffff;
+  background-color: #065f46;
+  color: #a7f3d0;
 }
 
 .dark .diff-gutter-delete,
 .dark .diff-code-delete {
   background-color: #7f1d1d;
-  color: #ffffff;
+  color: #fecaca;
 }

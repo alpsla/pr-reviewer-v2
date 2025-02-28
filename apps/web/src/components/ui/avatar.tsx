@@ -2,6 +2,7 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { CodeQualLogoFinal } from "./codequal-logo-final";
 
 const avatarVariants = cva(
   "relative flex shrink-0 overflow-hidden rounded-full",
@@ -23,11 +24,12 @@ const avatarVariants = cva(
       },
       ringColor: {
         default: "ring-border",
-        primary: "ring-primary",
-        accent: "ring-accent",
-        success: "ring-success",
-        warning: "ring-warning",
-        error: "ring-error",
+        primary: "ring-primary ring-opacity-100",
+        accent: "ring-accent ring-opacity-100",
+        success: "ring-success ring-opacity-100",
+        warning: "ring-warning ring-opacity-100",
+        error: "ring-error ring-opacity-100",
+        blue: "ring-blue-500 ring-opacity-100",
       },
     },
     defaultVariants: {
@@ -67,7 +69,7 @@ export const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
 
     // Handle image load error
     const handleError = () => {
-      console.log("Avatar image failed to load:", { src });
+      console.log("Using logo fallback instead of image");
       setHasError(true);
     };
 
@@ -80,11 +82,11 @@ export const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
           return <div className="flex h-full w-full items-center justify-center">{fallback}</div>;
         }
 
-        // If using logo is enabled, use the shield logo
+        // If using logo is enabled, use the CodeQual logo
         if (useLogo) {
           return (
-            <div className="flex h-full w-full items-center justify-center bg-white dark:bg-gray-800">
-              <ShieldLogo />
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-b from-white to-slate-50 dark:from-slate-700 dark:to-slate-800">
+              <CodeQualLogoFinal className="w-4/5 h-4/5" />
             </div>
           );
         }
@@ -129,9 +131,7 @@ export const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
             ring,
             clickCount: hasClicked ? 'second+' : 'first',
             time: new Date().toISOString(),
-            memory: window.performance?.memory ? 
-              `${Math.round(window.performance.memory.usedJSHeapSize / (1024 * 1024))}MB / ${Math.round(window.performance.memory.jsHeapSizeLimit / (1024 * 1024))}MB` : 
-              'Not available'
+            // Skip memory logging since it's Chrome-specific and causes TS errors
           });
           
           setHasClicked(true);
@@ -158,68 +158,4 @@ function getInitials(name: string): string {
     .join("")
     .toUpperCase()
     .substring(0, 2);
-}
-
-// Enhanced shield logo component with gradient and better colors
-const ShieldLogo = () => (
-  <svg
-    viewBox="0 0 100 100"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    aria-hidden={true}
-    className="w-4/5 h-4/5"
-  >
-    {/* Gradient definitions */}
-    <defs>
-      <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#4338ca" />
-        <stop offset="100%" stopColor="#3b82f6" />
-      </linearGradient>
-    </defs>
-    
-    {/* Shield shape */}
-    <path
-      d="M50 10 L90 30 L90 60 Q90 80 50 90 Q10 80 10 60 L10 30 Z"
-      fill="url(#shieldGradient)"
-      stroke="#1e3a8a"
-      strokeWidth="3"
-    />
-    
-    {/* Upper section with code brackets */}
-    <path
-      d="M50 10 L90 30 L90 40 L10 40 L10 30 Z"
-      fill="#1e3a8a"
-    />
-    
-    {/* Code brackets - simplified for small size */}
-    <text
-      x="40"
-      y="30"
-      fontFamily="monospace"
-      fontSize="15"
-      fill="#ffffff"
-      textAnchor="middle"
-    >
-      {"{"}
-    </text>
-    <text
-      x="60"
-      y="30"
-      fontFamily="monospace"
-      fontSize="15"
-      fill="#ffffff"
-      textAnchor="middle"
-    >
-      {"}"}
-    </text>
-    
-    {/* Checkmark */}
-    <path
-      d="M70 50 L45 75 L30 60"
-      stroke="#10b981"
-      strokeWidth="8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
+};

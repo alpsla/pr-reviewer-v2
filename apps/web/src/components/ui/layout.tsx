@@ -209,6 +209,7 @@ Divider.displayName = "Divider";
 // Aspect Ratio component
 interface AspectRatioProps extends React.HTMLAttributes<HTMLDivElement> {
   ratio?: number;
+  children: React.ReactNode;
 }
 
 const AspectRatio = React.forwardRef<HTMLDivElement, AspectRatioProps>(

@@ -51,9 +51,11 @@ export default function DashboardPage() {
     return (
       <div className="container py-10 text-center">
         <p>Please sign in to access the dashboard</p>
-        <Button asChild className="mt-4">
-          <Link href="/auth/signin">Sign In</Link>
-        </Button>
+        <Link href="/auth/signin">
+          <Button className="mt-4">
+            Sign In
+          </Button>
+        </Link>
       </div>
     );
   }
@@ -96,11 +98,11 @@ export default function DashboardPage() {
                 </p>
               </CardContent>
               <CardFooter>
-                <Button asChild className="w-full">
-                  <Link href="/dashboard/pr-analyzer">
+                <Link href="/dashboard/pr-analyzer" className="w-full">
+                  <Button className="w-full">
                     Analyze PRs
-                  </Link>
-                </Button>
+                  </Button>
+                </Link>
               </CardFooter>
             </Card>
 
@@ -121,11 +123,11 @@ export default function DashboardPage() {
                 </p>
               </CardContent>
               <CardFooter>
-                <Button variant="outline" asChild className="w-full">
-                  <Link href="/dashboard/history">
+                <Link href="/dashboard/history" className="w-full">
+                  <Button variant="outline" className="w-full">
                     View History
-                  </Link>
-                </Button>
+                  </Button>
+                </Link>
               </CardFooter>
             </Card>
 
@@ -146,11 +148,11 @@ export default function DashboardPage() {
                 </p>
               </CardContent>
               <CardFooter>
-                <Button variant="outline" asChild className="w-full">
-                  <Link href="/dashboard/settings">
+                <Link href="/dashboard/settings" className="w-full">
+                  <Button variant="outline" className="w-full">
                     Manage Settings
-                  </Link>
-                </Button>
+                  </Button>
+                </Link>
               </CardFooter>
             </Card>
           </div>

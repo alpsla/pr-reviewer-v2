@@ -1,6 +1,5 @@
 import React from "react";
-import { Avatar } from "@/components/ui";
-import { Heading } from "@/components/ui";
+import { Avatar, Heading } from "@/components/ui";
 
 interface AvatarExamplesProps {
   className?: string;

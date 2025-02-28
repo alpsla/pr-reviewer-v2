@@ -11,36 +11,44 @@ import { useRouter } from 'next/navigation';
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   
+  // Set mounted state
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Broadcast authentication success to other tabs/windows
   useEffect(() => {
-    // Only run when we have a valid user and this appears to be coming from auth redirect
-    if (user && typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const isAuthRedirect = params.get('auth_redirect') === 'true';
+    // Only run when we have a valid user and we're in the browser
+    if (!mounted || !user) {
+      return;
+    }
+    
+    const params = new URLSearchParams(window.location.search);
+    const isAuthRedirect = params.get('auth_redirect') === 'true';
+    
+    if (isAuthRedirect) {
+      // Remove the query parameter from the URL without a page reload
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
       
-      if (isAuthRedirect) {
-        // Remove the query parameter from the URL without a page reload
-        const newUrl = window.location.pathname;
-        window.history.replaceState({}, document.title, newUrl);
-        
-        // Broadcast to all open tabs that authentication is complete
-        if (window.opener) {
-          try {
-            // If this window was opened from another window, tell the opener
-            window.opener.postMessage('auth_complete', window.location.origin);
-          } catch (e) {
-            console.log('Could not communicate with opener window');
-          }
-        } else {
-          // If this wasn't opened from another window, broadcast to all tabs
-          // using localStorage as a communication channel
-          localStorage.setItem('auth_complete_time', Date.now().toString());
+      // Broadcast to all open tabs that authentication is complete
+      if (window.opener) {
+        try {
+          // If this window was opened from another window, tell the opener
+          window.opener.postMessage('auth_complete', window.location.origin);
+        } catch (e) {
+          console.log('Could not communicate with opener window');
         }
+      } else {
+        // If this wasn't opened from another window, broadcast to all tabs
+        // using localStorage as a communication channel
+        window.localStorage.setItem('auth_complete_time', Date.now().toString());
       }
     }
-  }, [user]);
+  }, [user, mounted]);
 
   
   const handleSignOut = async () => {
@@ -58,9 +66,9 @@ export default function DashboardPage() {
         setUser(null);
         
         // Also manually clear localStorage and sessionStorage
-        if (typeof window !== 'undefined') {
-          localStorage.clear();
-          sessionStorage.clear();
+        if (mounted) {
+          window.localStorage.clear();
+          window.sessionStorage.clear();
         }
         
         // Redirect to home page
@@ -76,6 +84,11 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
+    // Skip if not mounted yet
+    if (!mounted) {
+      return;
+    }
+    
     async function checkSession() {
       try {
         setLoading(true);
@@ -107,9 +120,9 @@ export default function DashboardPage() {
           // Clear any invalid session state
           await supabase.auth.signOut({ scope: 'global' });
           
-          if (typeof window !== 'undefined') {
-            localStorage.clear();
-            sessionStorage.clear();
+          if (mounted) {
+            window.localStorage.clear();
+            window.sessionStorage.clear();
           }
           
           router.push('/');
@@ -126,9 +139,10 @@ export default function DashboardPage() {
     }
 
     checkSession();
-  }, [router]);
+  }, [router, mounted]);
 
-  if (loading) {
+  // Show loading during SSR or while checking auth
+  if (!mounted || loading) {
     return (
       <div className="container py-8">
         <div className="text-center">
@@ -176,11 +190,11 @@ export default function DashboardPage() {
             </p>
           </CardContent>
           <CardFooter>
-            <Button asChild className="w-full">
-              <Link href="/dashboard/pr-analyzer">
+            <Link href="/dashboard/pr-analyzer" className="w-full">
+              <Button className="w-full">
                 Analyze PRs
-              </Link>
-            </Button>
+              </Button>
+            </Link>
           </CardFooter>
         </Card>
 
@@ -201,11 +215,11 @@ export default function DashboardPage() {
             </p>
           </CardContent>
           <CardFooter>
-            <Button variant="outline" asChild className="w-full">
-              <Link href="/dashboard/history">
+            <Link href="/dashboard/history" className="w-full">
+              <Button variant="outline" className="w-full">
                 View History
-              </Link>
-            </Button>
+              </Button>
+            </Link>
           </CardFooter>
         </Card>
 
@@ -226,11 +240,11 @@ export default function DashboardPage() {
             </p>
           </CardContent>
           <CardFooter>
-            <Button variant="outline" asChild className="w-full">
-              <Link href="/dashboard/settings">
+            <Link href="/dashboard/settings" className="w-full">
+              <Button variant="outline" className="w-full">
                 Manage Settings
-              </Link>
-            </Button>
+              </Button>
+            </Link>
           </CardFooter>
         </Card>
       </div>

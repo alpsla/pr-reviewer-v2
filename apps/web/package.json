@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "DISABLE_ESLINT_PLUGIN=true next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "test": "jest --config jest.config.ts --passWithNoTests",
@@ -23,6 +23,7 @@
     "clsx": "^2.0.0",
     "lucide-react": "^0.292.0",
     "next": "14.1.0",
+    "next-themes": "^0.4.4",
     "prism-react-renderer": "^2.4.1",
     "react": "^18.2.0",
     "react-diff-view": "^3.3.1",

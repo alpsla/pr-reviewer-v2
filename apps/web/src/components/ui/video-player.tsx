@@ -78,12 +78,23 @@ export const VideoPlayer = React.forwardRef<HTMLDivElement, VideoPlayerProps>(
           const embedUrl = new URL(`https://www.youtube.com/embed/${videoId}`);
           
           // Add optional parameters
-          if (autoPlay) embedUrl.searchParams.append("autoplay", "1");
-          if (controls) embedUrl.searchParams.append("controls", "1");
-          else embedUrl.searchParams.append("controls", "0");
-          if (loop) embedUrl.searchParams.append("loop", "1");
-          if (muted) embedUrl.searchParams.append("mute", "1");
-          if (startAt > 0) embedUrl.searchParams.append("start", startAt.toString());
+          if (autoPlay) {
+            embedUrl.searchParams.append("autoplay", "1");
+          }
+          if (controls) {
+            embedUrl.searchParams.append("controls", "1");
+          } else {
+            embedUrl.searchParams.append("controls", "0");
+          }
+          if (loop) {
+            embedUrl.searchParams.append("loop", "1");
+          }
+          if (muted) {
+            embedUrl.searchParams.append("mute", "1");
+          }
+          if (startAt > 0) {
+            embedUrl.searchParams.append("start", startAt.toString());
+          }
           
           return (
             <iframe
@@ -109,11 +120,21 @@ export const VideoPlayer = React.forwardRef<HTMLDivElement, VideoPlayerProps>(
           const embedUrl = new URL(`https://player.vimeo.com/video/${videoId}`);
           
           // Add optional parameters
-          if (autoPlay) embedUrl.searchParams.append("autoplay", "1");
-          if (!controls) embedUrl.searchParams.append("controls", "0");
-          if (loop) embedUrl.searchParams.append("loop", "1");
-          if (muted) embedUrl.searchParams.append("muted", "1");
-          if (startAt > 0) embedUrl.searchParams.append("t", startAt.toString());
+          if (autoPlay) {
+            embedUrl.searchParams.append("autoplay", "1");
+          }
+          if (!controls) {
+            embedUrl.searchParams.append("controls", "0");
+          }
+          if (loop) {
+            embedUrl.searchParams.append("loop", "1");
+          }
+          if (muted) {
+            embedUrl.searchParams.append("muted", "1");
+          }
+          if (startAt > 0) {
+            embedUrl.searchParams.append("t", startAt.toString());
+          }
           
           return (
             <iframe

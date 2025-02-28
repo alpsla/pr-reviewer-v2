@@ -37,7 +37,9 @@ interface CodeBlockProps
 }
 
 function getLanguageFromClassName(className?: string): string {
-  if (!className) return "typescript";
+  if (!className) {
+    return "typescript";
+  }
   const match = className.match(/language-(\w+)/);
   return match ? match[1] : "typescript";
 }

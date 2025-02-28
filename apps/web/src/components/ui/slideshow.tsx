@@ -75,17 +75,23 @@ export const Slideshow = React.forwardRef<HTMLDivElement, SlideshowProps>(
     const touchEndX = React.useRef<number | null>(null);
     
     const handleTouchStart = (e: React.TouchEvent) => {
-      if (!allowSwipe) return;
+      if (!allowSwipe) {
+        return;
+      }
       touchStartX.current = e.touches[0].clientX;
     };
     
     const handleTouchMove = (e: React.TouchEvent) => {
-      if (!allowSwipe || touchStartX.current === null) return;
+      if (!allowSwipe || touchStartX.current === null) {
+        return;
+      }
       touchEndX.current = e.touches[0].clientX;
     };
     
     const handleTouchEnd = () => {
-      if (!allowSwipe || touchStartX.current === null || touchEndX.current === null) return;
+      if (!allowSwipe || touchStartX.current === null || touchEndX.current === null) {
+        return;
+      }
       
       const diffX = touchStartX.current - touchEndX.current;
       
@@ -102,45 +108,45 @@ export const Slideshow = React.forwardRef<HTMLDivElement, SlideshowProps>(
       touchEndX.current = null;
     };
 
-    const startAutoPlay = () => {
+    const startAutoPlay = React.useCallback(() => {
       if (intervalRef.current) clearInterval(intervalRef.current);
       intervalRef.current = setInterval(() => {
         handleNext();
       }, interval);
-    };
+    }, [interval]);
 
-    const stopAutoPlay = () => {
+    const stopAutoPlay = React.useCallback(() => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
-    };
+    }, []);
 
-    const handleNext = () => {
+    const handleNext = React.useCallback(() => {
       setCurrentIndex((prev) => {
         if (prev === slides.length - 1) {
           return loop ? 0 : prev;
         }
         return prev + 1;
       });
-    };
+    }, [loop, slides.length]);
 
-    const handlePrev = () => {
+    const handlePrev = React.useCallback(() => {
       setCurrentIndex((prev) => {
         if (prev === 0) {
           return loop ? slides.length - 1 : prev;
         }
         return prev - 1;
       });
-    };
+    }, [loop, slides.length]);
 
     const handleDotClick = (index: number) => {
       setCurrentIndex(index);
     };
 
-    const toggleAutoPlay = () => {
+    const toggleAutoPlay = React.useCallback(() => {
       setIsPlaying((prev) => !prev);
-    };
+    }, []);
 
     React.useEffect(() => {
       if (isPlaying) {
@@ -152,7 +158,7 @@ export const Slideshow = React.forwardRef<HTMLDivElement, SlideshowProps>(
       return () => {
         stopAutoPlay();
       };
-    }, [isPlaying, interval, currentIndex]);
+    }, [isPlaying, interval, currentIndex, startAutoPlay, stopAutoPlay]);
 
     // Keyboard navigation
     React.useEffect(() => {
@@ -178,7 +184,7 @@ export const Slideshow = React.forwardRef<HTMLDivElement, SlideshowProps>(
       return () => {
         document.removeEventListener("keydown", handleKeyDown);
       };
-    }, []);
+    }, [handleNext, handlePrev, toggleAutoPlay]);
 
     if (!slides.length) {
       return (

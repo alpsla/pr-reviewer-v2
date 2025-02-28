@@ -27,9 +27,11 @@ export default function AuthError({
         >
           Try again
         </Button>
-        <Button asChild>
-          <Link href="/">Return Home</Link>
-        </Button>
+        <Link href="/">
+          <Button>
+            Return Home
+          </Button>
+        </Link>
       </div>
     </div>
   );

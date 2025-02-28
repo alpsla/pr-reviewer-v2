@@ -7,65 +7,54 @@ module.exports = {
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
+    container: {
+      center: true,
+      padding: {
+        DEFAULT: '1rem',
+        sm: '2rem',
+        lg: '4rem',
+        xl: '5rem',
+        '2xl': '6rem',
+      },
+    },
     extend: {
       colors: {
-        // Primary palette
+        border: "var(--border)",
+        input: "var(--input)",
+        ring: "var(--primary)",
+        background: "var(--background)",
+        foreground: "var(--foreground)",
         primary: {
-          DEFAULT: '#0f172a', // Slate 900
-          50: '#f8fafc',
-          100: '#f1f5f9',
-          200: '#e2e8f0',
-          300: '#cbd5e1',
-          400: '#94a3b8',
-          500: '#64748b',
-          600: '#475569',
-          700: '#334155',
-          800: '#1e293b',
-          900: '#0f172a',
-          950: '#020617',
+          DEFAULT: "var(--primary)",
+          foreground: "var(--primary-foreground)",
         },
-        // Secondary palette
         secondary: {
-          DEFAULT: '#475569', // Slate 600
-          light: '#64748b',
-          dark: '#334155',
+          DEFAULT: "var(--secondary)",
+          foreground: "var(--secondary-foreground)",
         },
-        // Accent palette
         accent: {
-          DEFAULT: '#3b82f6', // Blue 500
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-          950: '#172554',
+          DEFAULT: "var(--accent)",
+          foreground: "var(--accent-foreground)",
         },
-        // Status colors
-        success: {
-          DEFAULT: '#10b981', // Emerald 500
-          light: '#34d399',
-          dark: '#059669',
-          bg: '#dcfce7',
-          text: '#166534',
+        muted: {
+          DEFAULT: "var(--muted)",
+          foreground: "var(--muted-foreground)",
         },
-        warning: {
-          DEFAULT: '#f59e0b', // Amber 500
-          light: '#fbbf24',
-          dark: '#d97706',
-          bg: '#fef3c7',
-          text: '#92400e',
+        card: {
+          DEFAULT: "var(--card)",
+          foreground: "var(--card-foreground)",
         },
         error: {
-          DEFAULT: '#ef4444', // Red 500
-          light: '#f87171',
-          dark: '#dc2626',
-          bg: '#fee2e2',
-          text: '#991b1b',
+          DEFAULT: "var(--error)",
+          foreground: "var(--error-foreground)",
+        },
+        success: {
+          DEFAULT: "var(--success)",
+          foreground: "var(--success-foreground)",
+        },
+        warning: {
+          DEFAULT: "var(--warning)",
+          foreground: "var(--warning-foreground)",
         },
         // Diff colors
         diff: {

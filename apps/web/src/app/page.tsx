@@ -1,7 +1,7 @@
-import SimplePage from './simple-page';
+import WelcomePage from './welcome-page';
 
 export default function Home() {
   return (
-    <SimplePage />
+    <WelcomePage />
   );
 }

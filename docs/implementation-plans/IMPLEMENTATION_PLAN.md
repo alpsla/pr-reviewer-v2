@@ -1,5 +1,3 @@
-# PR Reviewer Implementation Plan
-
 ## Overview
 
 This document outlines the strategic implementation plan for the PR Reviewer project, aligning development priorities with our architectural vision. It provides a roadmap for current and future development efforts, ensuring we build features in the right order and avoid rework.
@@ -237,6 +235,14 @@ The advanced features phase adds capabilities that build on the core functionali
 - [ ] GitLab CI integration
 - [ ] Azure DevOps Pipelines
 - [ ] Generic CI/CD webhook support
+
+#### RAG-based Support Chatbot 📋 PRIORITY 21 (LOWEST)
+- [ ] Document ingestion pipeline for knowledge base
+- [ ] Vector database integration (Pinecone or similar)
+- [ ] LLM integration with RAG pattern
+- [ ] Escalation workflow to email for complex cases
+- [ ] User feedback collection system
+- [ ] Analytics and knowledge base improvement workflow# PR Reviewer Implementation Plan
 
 ## Cloud Deployment Strategy
 

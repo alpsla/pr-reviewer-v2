@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Clean white background for maximum contrast -->
+  <rect x="0" y="0" width="100" height="100" fill="#ffffff" />
+  
+  <!-- Bold simplified shield in blue -->
+  <path 
+    d="M50 15 L80 30 L80 60 Q80 75 50 85 Q20 75 20 60 L20 30 Z" 
+    fill="#2563eb" 
+    stroke="#1e40af" 
+    stroke-width="2" 
+  />
+  
+  <!-- Large green checkmark on top of shield -->
+  <path 
+    d="M35 50 L48 65 L70 40" 
+    fill="none"
+    stroke="#00c853" 
+    stroke-width="10" 
+    stroke-linecap="round" 
+    stroke-linejoin="round" 
+  />
+</svg>

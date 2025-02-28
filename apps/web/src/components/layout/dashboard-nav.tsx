@@ -38,22 +38,20 @@ export function DashboardNav() {
   return (
     <nav className="grid gap-2 p-4">
       {navItems.map((item) => (
-        <Button
-          key={item.href}
-          variant={pathname === item.href ? "default" : "ghost"}
-          className={cn(
-            "justify-start",
-            pathname === item.href
-              ? "bg-primary text-primary-foreground"
-              : "hover:bg-muted"
-          )}
-          asChild
-        >
-          <Link href={item.href}>
+        <Link href={item.href} key={item.href} className="w-full">
+          <Button
+            variant={pathname === item.href ? "default" : "ghost"}
+            className={cn(
+              "justify-start w-full",
+              pathname === item.href
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-muted"
+            )}
+          >
             {item.icon}
             {item.name}
-          </Link>
-        </Button>
+          </Button>
+        </Link>
       ))}
     </nav>
   );
