@@ -1,37 +1,35 @@
-/**
- * Core shared types
- */
-
 // Re-export database types
 export * from './database';
-
-// API response types
-export interface APIResponse<T> {
-  data: T | null;
-  error: Error | null;
-}
-
-// Common pagination types
-export interface PaginationParams {
-  page?: number;
-  perPage?: number;
-}
-
-export interface PaginationMeta {
-  currentPage: number;
-  totalPages: number;
-  totalItems: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
-}
-
-export interface PaginatedResult<T> {
-  data: T[];
-  pagination: PaginationMeta;
-}
 
 // Re-export provider-specific types
 export * from './github';
 
+// Re-export platform types with fixed exports
+export type {
+  VCSPlatform,
+  Repository,
+  PullRequest,
+  PullRequestFile,
+  PaginationParams,
+  PaginatedResponse
+} from './vcs';
+
+export { VCSErrorCode } from './vcs';
+
 // Re-export analysis types
-export * from './analysis';
+export type {
+  AnalysisCategory,
+  CodeAnalysis,
+  CodeIssue,
+  SecurityIssue,
+  PerformanceIssue,
+  LanguageAnalysis,
+  FileAnalysis,
+  PRAnalysisResult,
+  CategoryResult,
+  AnalysisConfig,
+  AnalysisRequest
+} from './analysis';
+
+// Re-export AnalysisStatus with a new name to avoid conflict
+export { AnalysisStatus as PRAnalysisStatus } from './analysis';

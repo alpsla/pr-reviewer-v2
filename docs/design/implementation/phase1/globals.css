@@ -1,0 +1,194 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Light mode variables */
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222.2 84% 4.9%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    
+    --accent: 217.2 91.2% 59.8%;
+    --accent-foreground: 210 40% 98%;
+    
+    --success: 142.1 76.2% 36.3%;
+    --success-foreground: 355.7 100% 97.3%;
+    
+    --warning: 38 92.7% 50.2%;
+    --warning-foreground: 355.7 100% 97.3%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    
+    --ring: 221.2 83.2% 53.3%;
+    
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-full: 9999px;
+  }
+
+  /* Dark mode variables */
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    
+    --accent: 217.2 91.2% 59.8%;
+    --accent-foreground: 210 40% 98%;
+    
+    --success: 142.1 70.6% 45.3%;
+    --success-foreground: 144.9 80.4% 10%;
+    
+    --warning: 47.9 95.8% 53.1%;
+    --warning-foreground: 26 83.3% 14.1%;
+    
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    
+    --ring: 224.3 76.3% 48%;
+  }
+}
+
+@layer base {
+  /* Base typography styles */
+  html {
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight;
+  }
+  
+  h1 {
+    @apply text-4xl leading-tight;
+  }
+  
+  h2 {
+    @apply text-3xl leading-tight;
+  }
+  
+  h3 {
+    @apply text-2xl;
+  }
+  
+  h4 {
+    @apply text-xl;
+  }
+  
+  h5 {
+    @apply text-lg;
+  }
+  
+  h6 {
+    @apply text-base;
+  }
+  
+  code, pre, kbd {
+    @apply font-mono;
+  }
+  
+  /* Remove focus outline for mouse users, but keep for keyboard */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+  
+  /* Improve focus styles for keyboard users */
+  :focus-visible {
+    @apply outline-none ring-2 ring-accent ring-offset-2;
+  }
+}
+
+/* Import fonts */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/inter-var.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-var.woff2') format('woff2');
+}
+
+/* Utility classes */
+@layer utilities {
+  .content-auto {
+    content-visibility: auto;
+  }
+  
+  .break-anywhere {
+    overflow-wrap: anywhere;
+  }
+}
+
+/* Component-specific styles */
+@layer components {
+  /* Code blocks */
+  .code-block {
+    @apply font-mono text-sm p-4 bg-primary-50 dark:bg-primary-900 rounded-md overflow-x-auto;
+  }
+  
+  /* Diff visualization */
+  .diff-added {
+    @apply bg-diff-added-bg text-diff-added-text dark:bg-success-dark/20 dark:text-success-light;
+  }
+  
+  .diff-removed {
+    @apply bg-diff-removed-bg text-diff-removed-text dark:bg-error-dark/20 dark:text-error-light;
+  }
+  
+  .diff-changed {
+    @apply bg-diff-changed-bg text-diff-changed-text dark:bg-warning-dark/20 dark:text-warning-light;
+  }
+  
+  /* Line numbers */
+  .line-number {
+    @apply text-xs text-primary-400 dark:text-primary-500 text-right pr-4 select-none border-r border-primary-200 dark:border-primary-700 mr-4;
+  }
+}

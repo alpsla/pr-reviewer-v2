@@ -28,4 +28,7 @@ const getVCSClient = (
   }
 };
 
+export { getVCSClient };
+
+// For backward compatibility, also export as default
 export default getVCSClient;

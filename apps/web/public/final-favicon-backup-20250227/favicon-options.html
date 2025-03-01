@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CodeQual - Favicon Options</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 {
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    .options {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+    .option {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+    }
+    .preview {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .preview img {
+      margin-bottom: 10px;
+      border: 1px solid #eee;
+    }
+    .actions {
+      margin-top: 30px;
+      text-align: center;
+    }
+    button {
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 0 10px;
+    }
+    .tab-simulation {
+      display: inline-flex;
+      align-items: center;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px 8px 0 0;
+      padding: 8px 12px;
+      margin-right: 10px;
+      margin-bottom: 20px;
+    }
+    .tab-simulation img {
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>CodeQual Favicon Options</h1>
+  <p>These simplified favicon designs are optimized for better visibility at small sizes.</p>
+  
+  <h2>Option 1: Simplified Shield & Checkmark</h2>
+  <div class="preview">
+    <img src="/favicon-simplified.svg" width="100" height="100" alt="Option 1" />
+    <p>A clean shield outline with checkmark on solid blue</p>
+    <div class="tab-simulation">
+      <img src="/favicon-simplified.svg" width="16" height="16" alt="Tab Preview" />
+      <span>CodeQual</span>
+    </div>
+  </div>
+  
+  <h2>Option 2: Code Brackets & Checkmark</h2>
+  <div class="preview">
+    <img src="/favicon-option2.svg" width="100" height="100" alt="Option 2" />
+    <p>Bold code brackets and checkmark on blue</p>
+    <div class="tab-simulation">
+      <img src="/favicon-option2.svg" width="16" height="16" alt="Tab Preview" />
+      <span>CodeQual</span>
+    </div>
+  </div>
+  
+  <h2>Option 3: Bold Blue Shield & Checkmark</h2>
+  <div class="preview">
+    <img src="/favicon-option3.svg" width="100" height="100" alt="Option 3" />
+    <p>Filled blue shield with prominent green checkmark</p>
+    <div class="tab-simulation">
+      <img src="/favicon-option3.svg" width="16" height="16" alt="Tab Preview" />
+      <span>CodeQual</span>
+    </div>
+  </div>
+  
+  <h2>Option 4: Improved Bold Blue Shield (Recommended)</h2>
+  <div class="preview">
+    <img src="/favicon-option3-improved.svg" width="100" height="100" alt="Option 4" />
+    <p>Enlarged blue shield with prominent checkmark</p>
+    <div class="tab-simulation">
+      <img src="/favicon-option3-improved.svg" width="16" height="16" alt="Tab Preview" />
+      <span>CodeQual</span>
+    </div>
+  </div>
+  
+  <h2>Current Favicon</h2>
+  <div class="preview">
+    <img src="/favicon-32x32.png" width="32" height="32" alt="Current Favicon" />
+    <p>The current favicon</p>
+    <div class="tab-simulation">
+      <img src="/favicon-32x32.png" width="16" height="16" alt="Tab Preview" />
+      <span>CodeQual</span>
+    </div>
+  </div>
+  
+  <div class="actions">
+    <p>Visit <a href="/favicon-options.html?favicon=option1">Option 1</a>, <a href="/favicon-options.html?favicon=option2">Option 2</a>, <a href="/favicon-options.html?favicon=option3">Option 3</a>, or <a href="/favicon-options.html?favicon=option4">Option 4 (Recommended)</a> to see how it looks in your browser tab.</p>
+  </div>
+  
+  <script>
+    // Set the favicon based on URL parameter
+    const params = new URLSearchParams(window.location.search);
+    const faviconOption = params.get('favicon');
+    
+    if (faviconOption) {
+      let faviconPath = '';
+      
+      switch(faviconOption) {
+        case 'option1':
+          faviconPath = '/favicon-simplified.svg';
+          break;
+        case 'option2':
+          faviconPath = '/favicon-option2.svg';
+          break;
+        case 'option3':
+          faviconPath = '/favicon-option3.svg';
+          break;
+        case 'option4':
+          faviconPath = '/favicon-option3-improved.svg';
+          break;
+        default:
+          faviconPath = '/favicon-32x32.png';
+      }
+      
+      // Create link element for favicon
+      const link = document.createElement('link');
+      link.rel = 'icon';
+      link.href = faviconPath;
+      document.head.appendChild(link);
+      
+      // Update title to reflect which option is being viewed
+      document.title = `CodeQual - ${faviconOption.charAt(0).toUpperCase() + faviconOption.slice(1)}`;
+    }
+  </script>
+</body>
+</html>

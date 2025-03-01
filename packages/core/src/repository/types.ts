@@ -1,13 +1,44 @@
-import { VCSPlatform, 
-  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-  VCSRepository, 
-  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-  VCSPullRequest, 
-  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-  VCSPullRequestFile, 
-  VCSPullRequestCommit, VCSPullRequestComment, VCSPullRequestReview } from '../vcs/types';
+import { PlatformErrorCode } from '../types/platform';
+import type { VCSPlatform } from '../types/platform';
+import type {
+  VCSRepository,
+  VCSPullRequest,
+  VCSPullRequestFile,
+  VCSPullRequestCommit,
+  VCSPullRequestReview,
+  VCSPullRequestComment,
+  VCSPaginatedResponse
+} from '../vcs/types';
 
-// Repository types for our domain
+/**
+ * Repository service interface
+ */
+export interface IRepositoryService {
+  getRepository(platform: VCSPlatform, owner: string, name: string): Promise<Repository>;
+  getPullRequest(platform: VCSPlatform, owner: string, repo: string, number: number): Promise<PullRequest>;
+  listPullRequests(platform: VCSPlatform, owner: string, repo: string, options?: PullRequestListOptions): Promise<VCSPaginatedResponse<PullRequest>>;
+  getPullRequestFiles(platform: VCSPlatform, owner: string, repo: string, number: number): Promise<PullRequestFile[]>;
+  getPullRequestDetails(platform: VCSPlatform, owner: string, repo: string, number: number): Promise<PullRequestDetails>;
+  checkRepositoryAccess(platform: VCSPlatform, owner: string, repo: string): Promise<{
+    hasAccess: boolean;
+    private: boolean;
+    permissions: {
+      admin: boolean;
+      push: boolean;
+      pull: boolean;
+    };
+  }>;
+  getRateLimit(platform: VCSPlatform): Promise<{
+    limit: number;
+    remaining: number;
+    reset: Date;
+    used: number;
+  }>;
+}
+
+/**
+ * Core repository interface
+ */
 export interface Repository {
   id: string;
   platform: VCSPlatform;
@@ -15,136 +46,105 @@ export interface Repository {
   owner: string;
   name: string;
   fullName: string;
-  description: string | null;
-  isPrivate: boolean;
+  description: string;
+  private: boolean;
   defaultBranch: string;
+  url: string;
+  language: string | null;
+  topics: string[];
+  permissions: {
+    admin: boolean;
+    push: boolean;
+    pull: boolean;
+  };
   createdAt: Date;
   updatedAt: Date;
-  lastSyncedAt: Date | null;
-  url: string;
-  hasAdminAccess: boolean;
-  hasWriteAccess: boolean;
-  language?: string | null;
-  topics?: string[];
-  stargazersCount?: number;
-  forksCount?: number;
+  lastSyncedAt?: Date;
 }
 
+/**
+ * Pull request interface
+ */
 export interface PullRequest {
   id: string;
-  repositoryId: string;
   platform: VCSPlatform;
   externalId: string;
   number: number;
   title: string;
-  description: string | null;
+  body?: string | null;
   state: 'open' | 'closed' | 'merged';
-  createdAt: Date;
-  updatedAt: Date;
-  closedAt: Date | null;
-  mergedAt: Date | null;
-  isDraft: boolean;
+  draft: boolean;
+  url: string;
+  repository: {
+    id: string;
+    owner: string;
+    name: string;
+  };
+  baseRef: string;
+  baseSha: string;
+  headRef: string;
+  headSha: string;
   author: {
     id: string;
     login: string;
-    name: string | null;
-    avatarUrl: string | null;
+    name?: string;
+    avatarUrl?: string;
   };
-  headRef: string;
-  baseRef: string;
-  headSha: string;
-  baseSha: string;
   labels: string[];
-  url: string;
+  createdAt: Date;
+  updatedAt: Date;
+  closedAt?: Date | null;
+  mergedAt?: Date | null;
 }
 
+/**
+ * Pull request file changes
+ */
 export interface PullRequestFile {
-  sha: string;
-  filename: string;
-  status: 'added' | 'removed' | 'modified' | 'renamed' | 'copied' | 'changed' | 'unchanged';
+  path: string;
+  status: 'added' | 'modified' | 'removed' | 'renamed' | 'copied';
   additions: number;
   deletions: number;
   changes: number;
   patch?: string;
-  previousFilename?: string;
-  rawUrl?: string;
+  previousPath?: string;
 }
 
+/**
+ * Pull request details including files, commits, etc.
+ */
+export interface PullRequestDetails {
+  pullRequest: PullRequest;
+  files: PullRequestFile[];
+  commits: VCSPullRequestCommit[];
+  reviews: VCSPullRequestReview[];
+  comments: VCSPullRequestComment[];
+}
+
+/**
+ * Options for listing repositories
+ */
 export interface RepositoryListOptions {
   page?: number;
   perPage?: number;
-  sort?: 'updated' | 'created' | 'pushed' | 'full_name';
+  sort?: 'created' | 'updated' | 'pushed' | 'full_name';
   direction?: 'asc' | 'desc';
   visibility?: 'all' | 'public' | 'private';
-  includeStats?: boolean;
+  affiliation?: 'owner' | 'collaborator' | 'organization_member';
 }
 
+/**
+ * Options for listing pull requests
+ */
 export interface PullRequestListOptions {
+  state?: 'open' | 'closed' | 'all' | 'merged';
+  sort?: 'created' | 'updated';
+  direction?: 'asc' | 'desc';
   page?: number;
   perPage?: number;
-  state?: 'open' | 'closed' | 'merged' | 'all';
-  sort?: 'created' | 'updated' | 'popularity' | 'long-running';
-  direction?: 'asc' | 'desc';
-  since?: Date;
-  labels?: string[];
 }
 
-export interface PullRequestDetails {
-  pullRequest: PullRequest;
-  files?: PullRequestFile[];
-  commits?: VCSPullRequestCommit[];
-  reviews?: VCSPullRequestReview[];
-  comments?: VCSPullRequestComment[];
-}
-
-export interface PullRequestAnalysis {
-  id: string;
-  pullRequestId: string;
-  status: 'pending' | 'running' | 'completed' | 'failed';
-  startedAt: Date;
-  completedAt: Date | null;
-  model: string | null;
-  tokenUsage: {
-    prompt: number;
-    completion: number;
-    total: number;
-  } | null;
-  summary: string | null;
-  suggestions: Array<{
-    id: string;
-    file: string;
-    line?: number;
-    content: string;
-    severity: 'critical' | 'major' | 'minor' | 'suggestion';
-    category: string;
-  }> | null;
-  error: string | null;
-}
-
-// Pagination response for repository data matching VCSPaginatedResponse
-export interface PaginatedResponse<T> {
-  data: T[];
-  pagination: {
-    currentPage: number;
-    perPage: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-    page?: number; 
-    total?: number;
-  };
-}
-
-// Error types
-export type RepositoryErrorCode = 
-  | 'REPOSITORY_NOT_FOUND'
-  | 'PULL_REQUEST_NOT_FOUND'
-  | 'PERMISSION_DENIED'
-  | 'RATE_LIMIT_EXCEEDED'
-  | 'NETWORK_ERROR'
-  | 'API_ERROR'
-  | 'VALIDATION_ERROR'
-  | 'NOT_IMPLEMENTED'
-  | 'UNEXPECTED_ERROR';
-
-// Database entity (for minimal-index.ts)
-export class Database {}
+/**
+ * Re-export common types
+ */
+export type { VCSPaginatedResponse as PaginatedResponse };

@@ -2,106 +2,130 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-import { logger } from '@/lib/utils/logger';
-import { authService } from '@/lib/auth/init';
+/**
+ * Server-side auth callback handler
+ * 
+ * This route handler processes the authentication callback from Supabase.
+ * We previously had both a client-side page and a server-side route handler
+ * at the same path (/auth/callback), which caused a routing conflict.
+ * 
+ * The client-side handler has been moved to /auth/callback-client and commented out.
+ * After testing confirms this server-side handler works correctly, the client-side
+ * version can be removed entirely.
+ */
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
-    logger.log('Auth callback route triggered');
+    console.log('Auth callback route triggered');
     const requestUrl = new URL(request.url);
     
-    // Get all potential authentication parameters
-    const code = requestUrl.searchParams.get('code');
-    const token = requestUrl.searchParams.get('token');
-    const tokenHash = requestUrl.searchParams.get('token_hash');
-    const type = requestUrl.searchParams.get('type');
-    const provider = requestUrl.searchParams.get('provider');
-
-    logger.log('Auth callback parameters:', {
-      url: requestUrl.toString(),
-      hasCode: !!code,
-      hasToken: !!token,
-      hasTokenHash: !!tokenHash,
-      type,
-      provider,
-      allParams: Array.from(requestUrl.searchParams).reduce((acc, [key, value]) => {
-        acc[key] = value;
-        return acc;
-      }, {} as Record<string, string>)
-    });
-    
-    // Handle email magic link authentication with either token or token_hash
-    if ((provider === 'email' && token) || (type === 'magiclink' && tokenHash)) {
-      try {
-        logger.log('Processing email magic link token');
-        // Use token_hash if available, otherwise use token
-        const authToken = tokenHash || token;
-        if (!authToken) {
-          throw new Error('No valid token found for email authentication');
-        }
-        
-        await authService.verifyEmailLink(authToken);
-        
-        // Redirect to dashboard after successful email verification
-        const dashboardUrl = new URL('/dashboard', requestUrl.origin);
-        dashboardUrl.searchParams.set('auth', 'success');
-        dashboardUrl.searchParams.set('provider', 'email');
-        dashboardUrl.searchParams.set('t', Date.now().toString());
-        
-        const response = NextResponse.redirect(dashboardUrl);
-        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-        response.headers.set('x-auth-redirect', 'true');
-        
-        logger.log('Email verification successful, redirecting to dashboard');
-        return response;
-      } catch (err) {
-        logger.error('Error verifying email token:', err);
-        return NextResponse.redirect(
-          new URL(`/?error=${encodeURIComponent('Invalid or expired magic link')}`, requestUrl.origin)
-        );
-      }
-    }
-
-    // Handle OAuth code exchange
-    if (!code) {
-      logger.error('No code found in URL');
-      return NextResponse.redirect(new URL('/', requestUrl.origin));
-    }
-
     const cookieStore = cookies();
     const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
-
-    logger.log('Exchanging code for session...');
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-
-    if (error) {
-      logger.error('Error exchanging code for session:', error);
-      return NextResponse.redirect(
-        new URL(`/?error=${encodeURIComponent(error.message)}`, requestUrl.origin)
-      );
+    
+    // Get the auth code from the URL
+    const code = requestUrl.searchParams.get('code');
+    
+    if (code) {
+      console.log('Found code in URL, exchanging for session...');
+      // Exchange the code for a session
+      const { error, data } = await supabase.auth.exchangeCodeForSession(code);
+      
+      if (error) {
+        console.error('Error exchanging code for session:', error);
+        return NextResponse.redirect(
+          new URL(`/?error=${encodeURIComponent(error.message)}`, requestUrl.origin)
+        );
+      }
+      
+      // Verify that we actually got a valid session
+      if (!data || !data.session) {
+        console.error('No session returned after code exchange');
+        return NextResponse.redirect(
+          new URL('/?error=Authentication%20failed', requestUrl.origin)
+        );
+      }
+      
+      console.log('Session exchange successful, redirecting to dashboard');
+      
+      // First ensure the user's email is verified
+      if (!data.session.user.email_confirmed_at) {
+        return NextResponse.redirect(
+          new URL('/?error=Please%20verify%20your%20email', requestUrl.origin)
+        );
+      }
+      
+      // Instead of redirecting directly, show instructions to return to original tab
+      const html = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Authentication Successful</title>
+            <script>
+              window.onload = function() {
+                // Try to notify the opener window
+                if (window.opener) {
+                  try {
+                    window.opener.postMessage('auth_complete', window.location.origin);
+                    // Close this tab after sending the message
+                    window.close();
+                  } catch (e) {
+                    console.error('Could not communicate with opener:', e);
+                  }
+                }
+                // If we couldn't close the tab, redirect to dashboard
+                setTimeout(() => {
+                  window.location.href = '/dashboard';
+                }, 1000);
+              };
+            </script>
+            <style>
+              body {
+                font-family: system-ui, -apple-system, sans-serif;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                margin: 0;
+                background-color: #f9fafb;
+              }
+              .container {
+                text-align: center;
+                padding: 2rem;
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                max-width: 400px;
+              }
+              h1 { color: #1a56db; margin-bottom: 1rem; }
+              p { color: #374151; line-height: 1.5; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>Authentication Successful!</h1>
+              <p>You can now close this tab and return to the PR Reviewer.</p>
+            </div>
+          </body>
+        </html>
+      `;
+      
+      const response = new Response(html, {
+        headers: {
+          'Content-Type': 'text/html',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+        },
+      });
+      
+      return response;
     }
-
-    logger.log('Session exchange successful, preparing dashboard redirect');
-
-    // Construct dashboard URL with useful debug parameters
-    const dashboardUrl = new URL('/dashboard', requestUrl.origin);
-    dashboardUrl.searchParams.set('auth', 'success');
-    dashboardUrl.searchParams.set('provider', 'github');
-    dashboardUrl.searchParams.set('t', Date.now().toString());
     
-    // Set cache control and other useful headers
-    const response = NextResponse.redirect(dashboardUrl);
-    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    response.headers.set('Pragma', 'no-cache');
-    response.headers.set('Expires', '0');
-    response.headers.set('x-auth-redirect', 'true');
-    
-    logger.log('Redirecting to dashboard with URL:', dashboardUrl.toString());
-    return response;
+    // If no code is found, redirect to home
+    console.error('No authentication code found in URL');
+    return NextResponse.redirect(new URL('/', requestUrl.origin));
   } catch (error) {
-    logger.error('Unexpected error in auth callback:', error);
+    console.error('Unexpected error in auth callback:', error);
     return NextResponse.redirect(
       new URL('/?error=Unexpected%20error', request.url)
     );

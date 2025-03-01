@@ -62,8 +62,7 @@ describe('Simplified Repository Error Tests', () => {
   });
   
   it('should create not implemented error', () => {
-    // Use a valid VCSPlatform value
-    const error = createNotImplementedError('github' as VCSPlatform, 'feature');
+    const error = createNotImplementedError('github', 'feature');
     
     expect(error).toBeInstanceOf(RepositoryError);
     // Check for lowercase feature text instead since that's what the actual message contains

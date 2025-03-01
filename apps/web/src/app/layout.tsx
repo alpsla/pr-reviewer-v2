@@ -1,13 +1,12 @@
 import "./globals.css";
-
-import { SiteHeader } from "@/components/layout/site-header";
-import { SupabaseProvider } from "@/lib/providers/supabase-provider";
+import { EmailNotificationProvider } from "@/context/email-notification-context";
+import { ThemeProvider } from "@/components/theme-provider";
 
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "PR Reviewer",
-  description: "Review your pull requests with ease",
+  title: "CodeQual",
+  description: "AI-Powered Code Review",
 };
 
 export default function RootLayout({
@@ -17,15 +16,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning>
-        <SupabaseProvider>
-          <div className="relative flex min-h-screen flex-col">
-            <SiteHeader />
-            <main className="flex-1">
-              {children}
-            </main>
-          </div>
-        </SupabaseProvider>
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="icon" type="image/svg+xml" href="/favicon-option3-fixed.svg" />
+      </head>
+      <body suppressHydrationWarning className="min-h-screen bg-background antialiased">
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <EmailNotificationProvider>
+            {children}
+          </EmailNotificationProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

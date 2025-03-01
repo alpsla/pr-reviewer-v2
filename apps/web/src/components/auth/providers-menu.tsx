@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { GitHubIcon, GitLabIcon, EmailIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
@@ -12,28 +12,44 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { EmailSignInModal } from "@/components/auth/email-sign-in-modal";
-import { authService } from '@/lib/auth/init';
-import { logger } from '@/lib/utils/logger';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useEmailNotification } from "@/context/email-notification-context";
 
 export function ProvidersMenu() {
   const [isEmailSent, setIsEmailSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const { showEmailNotification } = useEmailNotification();
+
+  // Reset email sent status after a timeout
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
+    if (isEmailSent) {
+      timeoutId = setTimeout(() => {
+        setIsEmailSent(false);
+      }, 30000); // Reset after 30 seconds
+    }
+    
+    return () => {
+      if (timeoutId) { clearTimeout(timeoutId); }
+    };
+  }, [isEmailSent]);
 
   const handleGitHubSignIn = async () => {
     try {
-      logger.log('Starting GitHub sign-in process with callback:', process.env.NEXT_PUBLIC_AUTH_CALLBACK_URL);
+      console.log('Starting GitHub sign-in process');
       setIsLoading(true);
-      const signInResult = await authService.signInWithGitHub();
-      logger.log('GitHub sign-in initiated:', signInResult);
-    } catch (error) {
-      logger.error('Error signing in with GitHub:', error);
-      if (error instanceof Error) {
-        logger.error('Error details:', error.message);
-        if ('stack' in error) {
-          logger.error('Stack trace:', error.stack);
+      const supabase = createClientComponentClient();
+      await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: 'read:user repo'
         }
-      }
+      });
+    } catch (error) {
+      console.error('Error signing in with GitHub:', error);
     } finally {
       setIsLoading(false);
     }
@@ -42,51 +58,31 @@ export function ProvidersMenu() {
   const handleGitLabSignIn = async () => {
     try {
       setIsLoading(true);
-      await authService.signInWithGitLab();
-    } catch (error) {
-      logger.error('Error signing in with GitLab:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // These handlers are commented out for Phase 1 MVP to reduce testing scope
-  // Will be re-enabled in Phase 2 based on enterprise customer needs
-  /*
-  const handleGoogleSignIn = async () => {
-    try {
-      setIsLoading(true);
-      await authService.signInWithGoogle({
-        redirectTo: `${window.location.origin}/auth/callback`
+      const supabase = createClientComponentClient();
+      await supabase.auth.signInWithOAuth({
+        provider: 'gitlab',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: 'read_user'
+        }
       });
     } catch (error) {
-      console.error('Error signing in with Google:', error);
+      console.error('Error signing in with GitLab:', error);
     } finally {
       setIsLoading(false);
     }
   };
-
-  const handleMicrosoftSignIn = async () => {
-    try {
-      setIsLoading(true);
-      await authService.signInWithMicrosoft({
-        redirectTo: `${window.location.origin}/auth/callback`
-      });
-    } catch (error) {
-      console.error('Error signing in with Microsoft:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  */
 
   const handleEmailSignIn = () => {
     setIsEmailModalOpen(true);
   };
 
-  const handleEmailSuccess = (_emailAddress: string) => {
+  const handleEmailSuccess = (emailAddress: string) => {
+    console.log(`Magic link sent to ${emailAddress}`);
     setIsEmailSent(true);
-    setIsEmailModalOpen(false);
+    // Do NOT close the modal after sending the email
+    // The modal will now show instructions instead
+    // setIsEmailModalOpen(false);
   };
 
   return (
@@ -116,17 +112,12 @@ export function ProvidersMenu() {
             <span>Continue with GitLab</span>
           </DropdownMenuItem>
 
-          {/* 
-          Google and Azure providers commented out for Phase 1 MVP.
-          Will be re-enabled in Phase 2 based on enterprise customer needs.
-          */}
-
           <DropdownMenuSeparator />
           
           <DropdownMenuItem 
             onClick={handleEmailSignIn} 
             className="cursor-pointer"
-            disabled={isLoading || isEmailSent}
+            disabled={isLoading}
           >
             <EmailIcon className="mr-2 h-4 w-4" />
             <span>
