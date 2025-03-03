@@ -1,0 +1,12 @@
+/* Global styles to override browser select dropdowns */
+select option {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .dark select option {
+    background-color: #1e293b !important;
+    color: #ffffff !important;
+  }
+}

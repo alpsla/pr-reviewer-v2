@@ -47,7 +47,7 @@ export default function PricingPage() {
         <section className="py-16 relative overflow-hidden">
           <div className="container mx-auto">
             <div className="mb-10 text-center">
-              <h2 className="text-3xl font-bold mb-3">{freeTrialContent.pricingTable.title}</h2>
+              <h2 className="text-3xl font-bold mb-3 text-slate-800 dark:text-slate-100">{freeTrialContent.pricingTable.title}</h2>
               <p className="text-lg text-slate-600 dark:text-slate-300">{freeTrialContent.pricingTable.note}</p>
             </div>
             
@@ -113,32 +113,32 @@ export default function PricingPage() {
         {/* FAQ Section */}
         <section className="py-16 bg-slate-50 dark:bg-slate-800/50">
           <div className="container mx-auto">
-            <h2 className="text-3xl font-bold mb-10 text-center">Frequently Asked Questions</h2>
+            <h2 className="text-3xl font-bold mb-10 text-center text-slate-800 dark:text-slate-100">Frequently Asked Questions</h2>
             
             <div className="max-w-3xl mx-auto space-y-8">
               <div>
-                <h3 className="text-xl font-bold mb-2">What's included in the free tier?</h3>
+                <h3 className="text-xl font-bold mb-2 text-slate-800 dark:text-slate-100">What's included in the free tier?</h3>
                 <p className="text-slate-600 dark:text-slate-300">
                   The free tier includes 5 PR analyses total, with support for JavaScript, Python, Java, C#, and TypeScript. It's a great way to try out our service before committing to a subscription.
                 </p>
               </div>
               
               <div>
-                <h3 className="text-xl font-bold mb-2">Can I upgrade or downgrade my plan?</h3>
+                <h3 className="text-xl font-bold mb-2 text-slate-800 dark:text-slate-100">Can I upgrade or downgrade my plan?</h3>
                 <p className="text-slate-600 dark:text-slate-300">
                   Yes, you can upgrade or downgrade your plan at any time. Changes will be applied at the start of your next billing cycle.
                 </p>
               </div>
               
               <div>
-                <h3 className="text-xl font-bold mb-2">What happens if I use all my monthly PR credits?</h3>
+                <h3 className="text-xl font-bold mb-2 text-slate-800 dark:text-slate-100">What happens if I use all my monthly PR credits?</h3>
                 <p className="text-slate-600 dark:text-slate-300">
                   Once you've used all your monthly PR credits, you'll need to wait until the next billing cycle for your credits to refresh or upgrade to a higher plan for additional credits.
                 </p>
               </div>
               
               <div>
-                <h3 className="text-xl font-bold mb-2">Do you offer discounts for annual billing?</h3>
+                <h3 className="text-xl font-bold mb-2 text-slate-800 dark:text-slate-100">Do you offer discounts for annual billing?</h3>
                 <p className="text-slate-600 dark:text-slate-300">
                   Yes, we offer a 15% discount for annual billing on all paid plans. Contact our sales team for more information.
                 </p>

@@ -1,16 +1,26 @@
+"use client";
+
 import { useState } from 'react';
 import Link from 'next/link';
-import { Sun, Moon, Globe, ChevronDown } from 'lucide-react';
+import { Sun, Moon, Globe, ChevronDown, LayoutDashboard, Menu, X } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { CodeQualLogoFinal } from '@/components/ui/codequal-logo-final';
 import { BaseProps } from '@/types';
 import { useTheme } from '@/components/theme-provider';
 
-export interface HeaderProps extends BaseProps {}
+export interface HeaderProps extends BaseProps {
+  isAuthenticated?: boolean;
+  userType?: 'free' | 'premium';
+}
 
-export function Header({ className }: HeaderProps) {
+export function Header({ 
+  className, 
+  isAuthenticated = false, 
+  userType = 'free' 
+}: HeaderProps) {
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   
   const toggleTheme = () => {
@@ -33,6 +43,14 @@ export function Header({ className }: HeaderProps) {
         {/* Navigation (center) */}
         <nav className="mx-auto hidden md:block">
           <ul className="flex items-center space-x-10">
+            {isAuthenticated && (
+              <li>
+                <Link href="/dashboard" className="text-base font-medium text-slate-700 hover:text-blue-600 dark:text-slate-200 dark:hover:text-blue-400 transition-colors flex items-center">
+                  <LayoutDashboard className="h-4 w-4 mr-2" />
+                  Dashboard
+                </Link>
+              </li>
+            )}
             <li>
               <Link href="/services" className="text-base font-medium text-slate-700 hover:text-blue-600 dark:text-slate-200 dark:hover:text-blue-400 transition-colors">
                 Services
@@ -53,6 +71,15 @@ export function Header({ className }: HeaderProps) {
         
         {/* UI Controls (right) */}
         <div className="flex items-center space-x-5">
+          {/* Mobile Menu Button - Only visible on mobile */}
+          <button
+            className="md:hidden rounded-full p-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+
           {/* Language Selector */}
           <div className="relative">
             <button
@@ -96,28 +123,81 @@ export function Header({ className }: HeaderProps) {
             {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </button>
           
-          {/* User Avatar */}
-          <div className="relative cursor-pointer mx-2">
-            <Avatar 
-              size="md" 
-              ring="md" 
-              ringColor="blue" 
-              useLogo={true} 
-              src="/images/avatar-example.svg"
-              alt="User" 
-              className="cursor-pointer hover:ring-blue-400 transition-all duration-200 hover:scale-110"
-            />
-          </div>
-
-          {/* Authentication/Join Us Button */}
-          <Button 
-            size="sm" 
-            className="rounded-full px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white shadow-md shadow-blue-500/20 dark:shadow-blue-900/30 hover:shadow-lg hover:shadow-blue-600/30 transition-all duration-300"
-          >
-            Join Us
-          </Button>
+          {/* User Avatar or Auth Button */}
+          {isAuthenticated ? (
+            <div className="relative cursor-pointer mx-2">
+              <Avatar 
+                size="md" 
+                ring="md" 
+                ringColor={userType === 'premium' ? 'gold' : 'blue'} 
+                useLogo={true} 
+                src="/images/avatar-example.svg"
+                alt="User" 
+                className="cursor-pointer hover:ring-blue-400 transition-all duration-200 hover:scale-110"
+              />
+            </div>
+          ) : (
+            <Link href="/">
+              <Button 
+                size="sm" 
+                className="rounded-full px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600 shadow-md hover:shadow-lg transition-all duration-300"
+              >
+                Sign In
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
+
+      {/* Mobile Navigation Menu - Only shown when mobileMenuOpen is true */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900 py-4">
+          <nav className="container mx-auto px-4">
+            <ul className="flex flex-col space-y-4">
+              {isAuthenticated && (
+                <li>
+                  <Link 
+                    href="/dashboard" 
+                    className="flex items-center py-2 text-base font-medium text-slate-700 hover:text-blue-600 dark:text-slate-200 dark:hover:text-blue-400 transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <LayoutDashboard className="h-4 w-4 mr-2" />
+                    Dashboard
+                  </Link>
+                </li>
+              )}
+              <li>
+                <Link 
+                  href="/services" 
+                  className="block py-2 text-base font-medium text-slate-700 hover:text-blue-600 dark:text-slate-200 dark:hover:text-blue-400 transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Services
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  href="/pricing" 
+                  className="block py-2 text-base font-medium text-slate-700 hover:text-blue-600 dark:text-slate-200 dark:hover:text-blue-400 transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Pricing
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  href="/about" 
+                  className="block py-2 text-base font-medium text-slate-700 hover:text-blue-600 dark:text-slate-200 dark:hover:text-blue-400 transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  About
+                </Link>
+              </li>
+
+            </ul>
+          </nav>
+        </div>
+      )}
     </header>
   );
 }

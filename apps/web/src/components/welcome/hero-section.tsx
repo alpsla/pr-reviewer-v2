@@ -2,6 +2,7 @@ import { ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BaseProps } from '@/types';
 import { heroContent } from '@/content/welcome-page-content';
+import Link from 'next/link';
 
 export interface HeroSectionProps extends BaseProps {}
 
@@ -34,9 +35,11 @@ export function HeroSection({ className }: HeroSectionProps) {
           
           {/* Call to action buttons */}
           <div className="flex flex-col space-y-4 sm:flex-row sm:justify-center sm:space-x-4 sm:space-y-0">
-            <Button size="lg" className="rounded-full font-semibold bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white shadow-lg shadow-blue-600/10 hover:shadow-xl hover:shadow-blue-600/20 dark:shadow-blue-900/20 transition-all duration-300">
-              Try for Free
-            </Button>
+            <Link href="/analyze">
+              <Button size="lg" className="rounded-full font-semibold bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white shadow-lg shadow-blue-600/10 hover:shadow-xl hover:shadow-blue-600/20 dark:shadow-blue-900/20 transition-all duration-300">
+                Try for Free
+              </Button>
+            </Link>
             <a href="#how-it-works">
               <Button size="lg" variant="outline" className="rounded-full font-semibold border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/20 shadow-lg shadow-blue-600/5 hover:shadow-xl hover:shadow-blue-600/10 dark:shadow-blue-900/10 transition-all duration-300">
                 See How It Works

@@ -1,4 +1,6 @@
 import "./globals.css";
+import "./global.css";
+import "../styles/select-fixes.css";
 import { EmailNotificationProvider } from "@/context/email-notification-context";
 import { ThemeProvider } from "@/components/theme-provider";
 

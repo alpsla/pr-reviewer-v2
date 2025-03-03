@@ -2,20 +2,25 @@
 
 This document outlines the current status, priorities, and implementation plan for the PR Reviewer project. It combines the information from the previous CURRENT_TASKS.md and IMPLEMENTATION_PLAN.md for easier reference.
 
-**Last Updated:** February 27, 2025
+**Last Updated:** February 28, 2025
 
 ## Current Status & Priorities
 
 ### Current Focus
-- **Analysis & Results View**: Implement results view screens based on design specifications
-- **LLM Integration**: Prepare for integration with AI providers
-- **Finishing UI Components**: Complete remaining UI components for the analysis views
+- **Authentication Flow**: Implementing proper user authentication and registration
+- **Repository Analysis Limits**: Adding tracking for repository analysis counts
+- **Dashboard Implementation**: Creating personalized dashboard for authenticated users
+- **Results View**: Finalizing the visualization of analysis results
 
 ### Recent Accomplishments
 - ✅ Fixed Button component rendering issues
-- ✅ Implemented Welcome page with improved logo and branding
+- ✅ Implemented Welcome page as a pure informational page
+- ✅ Created Home page as authentication gateway
 - ✅ Enhanced avatar and loading spinner with branded design
 - ✅ Added favicon and improved visual identity consistency
+- ✅ Implemented simplified Analyze page with consolidated repository section
+- ✅ Added unified Repositories component to replace separate repository cards
+- ✅ Created Results View with hierarchical, drill-down category structure
 - ✅ Completed comprehensive design specifications for all priority screens
 - ✅ Created detailed user flow documentation with interaction models
 - ✅ Designed category-based Results View with multi-level drill-down
@@ -25,24 +30,46 @@ This document outlines the current status, priorities, and implementation plan f
 - ✅ Implemented code-specific components (CodeBlock, DiffViewer)
 
 ### Current Challenges
-- **Results View Implementation**: Translating detailed designs into working components
-- **LLM Integration**: Handling code context limits and optimizing for different languages
+- **Authentication Integration**: Integrating GitHub/GitLab OAuth and email authentication
+- **Free Tier Management**: Tracking repository analysis usage to prevent abuse
+- **User Experience Flow**: Creating seamless transitions between authenticated and public areas
+
+## New User Flow
+The PR Reviewer now features a clearer separation between marketing and product:
+
+1. **Welcome Page** (Public): 
+   - Pure informational content explaining features and benefits
+   - No direct product access, only links to the Home page
+
+2. **Home Page** (Gateway):
+   - Authentication required to access application features
+   - GitHub, GitLab, and Email sign-in options
+   - Prevents unauthorized access to application features
+
+3. **User Dashboard** (Authenticated):
+   - Different experiences for free and paid users
+   - Track PR analysis usage
+   - Access to analysis history and learning resources
+
+4. **Free Tier Safeguards**:
+   - Repository-based analysis limits (5 per repository)
+   - Prevents abuse through multiple email accounts
 
 ## Implementation Timeline
 
-### Short-Term (Next 2 Months)
-- Implement priority screens (PR Input, Results View)
-- Complete implementation of analysis results visualization
-- Start LLM integration for code analysis
-- Implement testing infrastructure for validation
+### Short-Term (Next 2 Weeks)
+- Complete authentication flow integration
+- Implement repository analysis tracking/limits
+- Finalize results view implementation
+- Create user dashboard for authenticated users
 
-### Medium-Term (3-6 Months)
+### Medium-Term (1-2 Months)
 - Complete LLM integration
 - Implement language support expansion
-- Build additional Results View features
 - Add export functionality
+- Create user analytics dashboard
 
-### Long-Term (6-12 Months)
+### Long-Term (3-6 Months)
 - Implement Azure DevOps integration
 - Add enterprise security features
 - Develop team analytics capabilities
@@ -96,10 +123,10 @@ Data fetching, processing, and storage capabilities
 - [x] Status tracking
 - [x] Failure handling and retries
 
-### Phase 3: Analysis Pipeline (CURRENT)
-Core intelligence and processing systems
+### Phase 3: User Interface (CURRENT)
+Core UI components and screens
 
-#### UI/UX Design System ✅/🚧 PRIORITY 1
+#### UI/UX Design System ✅/🚧
 - [x] Core UI components
 - [x] Brand identity components 
 - [x] Layout and media components
@@ -111,13 +138,38 @@ Core intelligence and processing systems
   - [x] Error pages and states design
 - [x] Fixed Button component rendering issues
 - [x] Implemented Welcome page with security features
-- [ ] Implement remaining priority screens
-  - [ ] PR Input with private repository handling
-  - [ ] Results View with category cards
-- [ ] Advanced form components (checkbox, radio, select)
-- [ ] Data visualization components
+- [x] Unified Repositories component
+- [x] Home authentication gateway page
+- [ ] Implement user dashboard for authenticated users
 
-#### LLM Integration 🚧 PRIORITY 2
+#### Authentication System Enhancements 🚧 PRIORITY 1
+- [ ] Implement login/signup modals
+- [ ] Connect OAuth providers
+- [ ] Email verification system
+- [ ] Session persistence
+- [ ] Route protection middleware
+- [ ] User profile management
+- [ ] User preferences storage
+
+#### Repository Analysis Tracking 🚧 PRIORITY 2
+- [ ] Repository fingerprinting system
+- [ ] Analysis count tracking per repository
+- [ ] Database schema for usage tracking
+- [ ] Limit enforcement for free tier
+- [ ] Usage analytics for admins
+
+#### Results View Completion 🚧 PRIORITY 3
+- [ ] Syntax highlighting for code snippets
+- [ ] Interactive animation enhancements
+- [ ] Mobile responsiveness improvements
+- [ ] Copy-to-clipboard functionality
+- [ ] Export to PR comments feature
+- [ ] Accessibility enhancements
+
+### Phase 4: Analysis Intelligence (PLANNED)
+Core intelligence and processing systems
+
+#### LLM Integration 📋
 - [ ] Provider abstraction layer
 - [ ] Multi-provider routing logic
 - [ ] Rate limit handling
@@ -127,27 +179,11 @@ Core intelligence and processing systems
 - [ ] Confidence scoring
 - [ ] Transparent model selection display
 
-#### Manual Testing Infrastructure 🚧 PRIORITY 3
+#### Manual Testing Infrastructure 📋
 - [ ] Testing interfaces
 - [ ] Test harnesses for different PR types
 - [ ] Validation workflows
 - [ ] Test documentation
-
-### Phase 4: User Experience
-Enhanced interfaces and user interactions
-
-#### Results Visualization 🚧
-- [ ] Category-based card system
-- [ ] Multi-level drill-down navigation
-- [ ] Code context viewing with suggestions
-- [ ] LLM model transparency information
-- [ ] Export and sharing options
-
-#### Repository Management Interface 🚧
-- [ ] Repository browser
-- [ ] PR listing and filtering
-- [ ] Analysis request UI
-- [ ] History viewing
 
 ### Phase 5: Platform Expansion (PLANNED)
 Support for additional VCS platforms
@@ -172,27 +208,29 @@ Support for additional VCS platforms
 
 ## Immediate Next Steps
 
-1. **Analysis Results View Implementation**
-   - Build Summary Dashboard with score visualization
-   - Create Category Cards component
-   - Implement basic drill-down interaction
-   - Develop code context viewer
+1. **Authentication Flow Implementation**
+   - Connect GitHub and GitLab OAuth providers
+   - Implement email authentication with magic links
+   - Create protected routes with middleware
+   - Build user profile and settings page
 
-2. **PR Input Screen Implementation**
-   - Build URL input with validation
-   - Implement private repository detection and handling
-   - Create repository selection interface
-   - Develop analysis options panel
+2. **Repository Analysis Tracking System**
+   - Design database schema for repository analysis counts
+   - Implement fingerprinting to identify repositories
+   - Create tracking system for analysis limits
+   - Display usage information to users
 
-3. **Design Review Process**
-   - Establish component review methodology
-   - Create test cases for UI components
-   - Validate against design specifications
+3. **User Dashboard Development**
+   - Build personalized dashboard for authenticated users
+   - Show PR analysis history and results
+   - Display usage statistics and limits
+   - Provide learning resources and improvement suggestions
 
-4. **LLM Integration Preparation**
-   - Research optimal prompt formats
-   - Design provider abstraction layer
-   - Create plan for confidence scoring implementation
+4. **Results View Finalization**
+   - Enhance code syntax highlighting
+   - Improve interactive animations for better UX
+   - Optimize mobile responsiveness
+   - Add export and sharing capabilities
 
 ## Design Documentation
 

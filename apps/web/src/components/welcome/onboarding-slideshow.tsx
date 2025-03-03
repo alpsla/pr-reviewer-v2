@@ -72,12 +72,12 @@ export function OnboardingSlideshow({ className }: OnboardingSlideshowProps) {
       </div>
       
       <div className="container relative z-10">
-        <h2 className="mb-12 text-center text-3xl font-bold tracking-tight sm:text-4xl">
+        <h2 className="mb-12 text-center text-3xl font-bold tracking-tight sm:text-4xl text-slate-800 dark:text-slate-100">
           How It Works
         </h2>
         
         <div 
-          className={`mx-auto max-w-3xl rounded-xl border bg-white dark:bg-slate-800/80 p-8 shadow-lg backdrop-blur-sm relative overflow-hidden dark:shadow-black/20
+          className={`mx-auto max-w-3xl rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 p-8 shadow-lg backdrop-blur-sm relative overflow-hidden dark:shadow-black/20
             ${activeSlide === 0 ? 'shadow-blue-100 dark:shadow-blue-900/10' : 
               activeSlide === 1 ? 'shadow-indigo-100 dark:shadow-indigo-900/10' : 
               activeSlide === 2 ? 'shadow-sky-100 dark:shadow-sky-900/10' : 
@@ -92,24 +92,22 @@ export function OnboardingSlideshow({ className }: OnboardingSlideshowProps) {
             {/* Slide content */}
             <div className="text-center">
               <div className={`mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full 
-                bg-gradient-to-br ${
-                  activeSlide === 0 ? 'from-blue-100 to-blue-50 dark:from-blue-900/30 dark:to-blue-900/20' : 
+                bg-gradient-to-br ${activeSlide === 0 ? 'from-blue-100 to-blue-50 dark:from-blue-900/30 dark:to-blue-900/20' : 
                   activeSlide === 1 ? 'from-indigo-100 to-indigo-50 dark:from-indigo-900/30 dark:to-indigo-900/20' : 
                   activeSlide === 2 ? 'from-sky-100 to-sky-50 dark:from-sky-900/30 dark:to-sky-900/20' : 
-                  'from-teal-100 to-teal-50 dark:from-teal-900/30 dark:to-teal-900/20'
-                }`}>
+                  'from-teal-100 to-teal-50 dark:from-teal-900/30 dark:to-teal-900/20' }`}>
                 {slides[activeSlide].icon}
               </div>
-              <h3 className="mb-3 text-2xl font-bold">
+              <h3 className="mb-3 text-2xl font-bold text-slate-800 dark:text-slate-100">
                 {slides[activeSlide].title}
               </h3>
-              <p className="mx-auto max-w-lg text-muted-foreground">
+              <p className="mx-auto max-w-lg text-slate-600 dark:text-slate-300">
                 {slides[activeSlide].description}
               </p>
               
               {/* Time estimate badge */}
-              <div className="mt-4 inline-flex items-center px-3 py-1 rounded-full bg-white/40 dark:bg-slate-700/40 text-sm font-medium">
-                <Clock className="h-4 w-4 mr-1 text-slate-600 dark:text-slate-300" />
+              <div className="mt-4 inline-flex items-center px-3 py-1 rounded-full bg-white/40 dark:bg-slate-700/40 text-slate-600 dark:text-slate-300 text-sm font-medium">
+                <Clock className="h-4 w-4 mr-1" />
                 <span>{slides[activeSlide].time}</span>
               </div>
             </div>

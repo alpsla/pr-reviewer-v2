@@ -271,6 +271,20 @@ Common design template for Terms of Service, Privacy Policy, Contact, and other 
 - Contact methods in card layout
 - FAQ section with expandable questions
 
+## Component Guidelines
+
+### Responsive Navigation
+- Mobile navigation collapses to hamburger menu at breakpoints below md (768px)
+- Menu slides down from header when activated
+- Navigation items match desktop menu structure
+- Clicking a navigation item closes the mobile menu
+
+### Form Controls
+- Dropdowns maintain visual consistency in both light and dark modes
+- Selected values have appropriate contrast in both themes
+- Hover states adapt to current theme
+- Form validation works consistently across all device sizes
+
 ## Implementation Notes
 
 These screen designs should be implemented with a focus on:

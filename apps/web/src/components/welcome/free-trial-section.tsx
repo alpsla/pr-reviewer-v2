@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { BaseProps } from '@/types';
+import Link from 'next/link';
 
 export interface FreeTrialSectionProps extends BaseProps {}
 
@@ -52,12 +53,14 @@ export function FreeTrialSection({ className }: FreeTrialSectionProps) {
             </div>
           </div>
           
-          <Button 
-            size="lg" 
-            className="rounded-full bg-white text-blue-700 font-bold hover:bg-blue-50 shadow-lg shadow-blue-900/20 transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/30 hover:scale-105"
-          >
-            Start Now
-          </Button>
+          <Link href="/analyze">
+            <Button 
+              size="lg" 
+              className="rounded-full bg-white text-blue-700 font-bold hover:bg-blue-50 shadow-lg shadow-blue-900/20 transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/30 hover:scale-105"
+            >
+              Start Now
+            </Button>
+          </Link>
           
           <div className="mt-8">
             <a href="/pricing" className="text-white underline hover:text-blue-200 transition-colors">View Pricing Details</a>

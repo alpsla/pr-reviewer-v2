@@ -1,5 +1,7 @@
+"use client";
+
 import Link from 'next/link';
-import { Github, Twitter, Linkedin } from 'lucide-react';
+// No social media icons needed for now
 import { BaseProps } from '@/types';
 import { CodeQualLogoFinal } from '@/components/ui/codequal-logo-final';
 
@@ -52,8 +54,8 @@ export function Footer({ className }: FooterProps) {
                 </Link>
               </li>
               <li>
-                <Link href="/integrations" className="text-sm text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400">
-                  Integrations
+                <Link href="/faq" className="text-sm text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400">
+                  FAQ
                 </Link>
               </li>
             </ul>
@@ -73,11 +75,6 @@ export function Footer({ className }: FooterProps) {
               <li>
                 <Link href="/blog" className="text-sm text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400">
                   Blog
-                </Link>
-              </li>
-              <li>
-                <Link href="/careers" className="text-sm text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400">
-                  Careers
                 </Link>
               </li>
               <li>
@@ -115,41 +112,10 @@ export function Footer({ className }: FooterProps) {
         
         {/* Bottom section */}
         <div className="mt-12 border-t border-slate-300 pt-8 dark:border-slate-700">
-          <div className="flex flex-col items-center justify-between space-y-4 md:flex-row md:space-y-0">
+          <div className="flex justify-center">
             <p className="text-xs text-slate-600 dark:text-slate-400">
               &copy; {currentYear} CodeQual, Inc. All rights reserved.
             </p>
-            
-            {/* Social Media */}
-            <div className="flex space-x-4">
-              <a 
-                href="https://github.com/codequal" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-slate-600 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400"
-                aria-label="GitHub"
-              >
-                <Github className="h-5 w-5" />
-              </a>
-              <a 
-                href="https://twitter.com/codequal" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-slate-600 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400"
-                aria-label="Twitter"
-              >
-                <Twitter className="h-5 w-5" />
-              </a>
-              <a 
-                href="https://linkedin.com/company/codequal" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-slate-600 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400"
-                aria-label="LinkedIn"
-              >
-                <Linkedin className="h-5 w-5" />
-              </a>
-            </div>
           </div>
         </div>
       </div>
