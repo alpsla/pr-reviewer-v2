@@ -1,0 +1,17 @@
+/* Override the container class to be full width */
+.container {
+  max-width: 100% !important;
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+/* Add more padding on larger screens */
+@media (min-width: 768px) {
+  .container {
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
+  }
+}

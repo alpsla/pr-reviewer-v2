@@ -9,16 +9,13 @@ import { CodeQualLogoFinal } from '@/components/ui/codequal-logo-final';
 import { BaseProps } from '@/types';
 import { useTheme } from '@/components/theme-provider';
 import { useAuth } from '@/context/auth-context';
-import { ProvidersMenu } from '@/components/auth/providers-menu';
 
 export interface HeaderProps extends BaseProps {
-  isAuthenticated?: boolean;
   userType?: 'free' | 'premium';
 }
 
 export function Header({ 
   className, 
-  isAuthenticated: initialAuthState = false, 
   userType = 'free' 
 }: HeaderProps) {
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
@@ -27,7 +24,7 @@ export function Header({
   const { theme, setTheme } = useTheme();
   const { user, signOut } = useAuth();
   
-  const isAuthenticated = !!user || initialAuthState;
+  const isAuthenticated = !!user;
   
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -63,12 +60,7 @@ export function Header({
             {isAuthenticated && (
               <li>
                 <Link href="/dashboard" className="text-base font-medium text-slate-700 hover:text-blue-600 dark:text-slate-200 dark:hover:text-blue-400 transition-colors flex items-center">
-                  <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2" />
-                    <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2" />
-                    <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2" />
-                    <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2" />
-                  </svg>
+                  <LayoutDashboard className="h-4 w-4 mr-2" />
                   Dashboard
                 </Link>
               </li>
@@ -145,17 +137,17 @@ export function Header({
             {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </button>
           
-          {/* User Avatar or Auth Button */}
-          {isAuthenticated ? (
+          {/* Show Sign Out button only when authenticated */}
+          {isAuthenticated && (
             <div className="flex items-center space-x-3">
               <Button 
                 variant="default" 
                 onClick={handleSignOut}
-                className="rounded-md px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white shadow-sm hover:shadow-md transition-all duration-300 flex items-center"
+                className="rounded-full px-5 py-2 bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg transition-all duration-300"
                 disabled={isLoading}
                 size="sm"
               >
-                <LogOut className="h-4 w-4 mr-2" />
+                <LogOut className="h-4 w-4 mr-1" />
                 {isLoading ? 'Signing out...' : 'Sign Out'}
               </Button>
               <div className="relative cursor-pointer">
@@ -170,7 +162,7 @@ export function Header({
                 />
               </div>
             </div>
-          ) : null}
+          )}
         </div>
       </div>
 
@@ -186,12 +178,7 @@ export function Header({
                     className="flex items-center py-2 text-base font-medium text-slate-700 hover:text-blue-600 dark:text-slate-200 dark:hover:text-blue-400 transition-colors"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2" />
-                      <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2" />
-                      <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2" />
-                      <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="2" />
-                    </svg>
+                    <LayoutDashboard className="h-4 w-4 mr-2" />
                     Dashboard
                   </Link>
                 </li>
@@ -223,7 +210,7 @@ export function Header({
                   About
                 </Link>
               </li>
-
+                
               {isAuthenticated && (
                 <li className="pt-4 mt-4 border-t border-slate-200 dark:border-slate-700">
                   <button

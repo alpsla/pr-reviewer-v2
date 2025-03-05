@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAuth } from '@/context/auth-context';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useRouter } from 'next/navigation';
@@ -29,6 +30,7 @@ export function EmailSignInModal({ isOpen, onClose, onSuccess }: EmailSignInModa
   const [isMagicLinkSent, setIsMagicLinkSent] = useState(false);
   const [isCheckingUser, setIsCheckingUser] = useState(false);
   const router = useRouter();
+  const { signIn } = useAuth();
   const supabase = createClientComponentClient();
 
   // Listen for auth completion across tabs/windows
@@ -121,20 +123,12 @@ export function EmailSignInModal({ isOpen, onClose, onSuccess }: EmailSignInModa
     setIsCheckingUser(true);
     
     try {
-      await supabase.auth.signOut();
-
-      const { error: signInError } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-          shouldCreateUser: true
-        }
-      });
+      setError('');
+      setIsLoading(true);
+      setIsCheckingUser(true);
       
-      if (signInError) {
-        throw signInError;
-      }
-
+      await signIn('email', email);
+      
       setIsMagicLinkSent(true);
       onSuccess(email);
     } catch (err: any) {

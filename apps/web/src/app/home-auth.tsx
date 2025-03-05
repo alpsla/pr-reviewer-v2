@@ -8,22 +8,12 @@ import { Github, Mail } from 'lucide-react';
 import GitlabIcon from '@/components/ui/icons/gitlab-icon';
 import { useAuth } from '@/context/auth-context';
 import { EmailSignInModal } from '@/components/auth/email-sign-in-modal';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 
 export default function HomePage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { user, signIn, isLoading: authLoading } = useAuth();
-  const router = useRouter();
+  const { signIn } = useAuth();
   
-  // Redirect to dashboard if already authenticated
-  useEffect(() => {
-    if (user && !authLoading) {
-      router.push('/dashboard');
-    }
-  }, [user, authLoading, router]);
-
   const handleAuthClick = async (method: 'github' | 'gitlab' | 'email') => {
     if (method === 'email') {
       setIsAuthModalOpen(true);
@@ -43,22 +33,6 @@ export default function HomePage() {
   const handleEmailSuccess = (emailAddress: string) => {
     console.log(`Magic link sent to ${emailAddress}`);
   };
-  
-  // Show loading state while checking auth
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-300">Loading...</p>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
   
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-b from-white to-blue-50 dark:from-slate-900 dark:to-blue-950">
@@ -90,6 +64,8 @@ export default function HomePage() {
           </p>
           
           <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6 shadow-lg mb-8 relative overflow-hidden">
+            {/* Card subtle highlight */}
+            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500 opacity-60"></div>
             
             <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6">
               Sign in to get started

@@ -1,6 +1,8 @@
 import "./globals.css";
 import "./global.css";
 import "../styles/select-fixes.css";
+import "../styles/full-width-fix.css";
+import { AuthProvider } from "@/context/auth-context";
 import { EmailNotificationProvider } from "@/context/email-notification-context";
 import { ThemeProvider } from "@/components/theme-provider";
 
@@ -27,9 +29,11 @@ export default function RootLayout({
       </head>
       <body suppressHydrationWarning className="min-h-screen bg-background antialiased">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <EmailNotificationProvider>
-            {children}
-          </EmailNotificationProvider>
+          <AuthProvider>
+            <EmailNotificationProvider>
+              {children}
+            </EmailNotificationProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
