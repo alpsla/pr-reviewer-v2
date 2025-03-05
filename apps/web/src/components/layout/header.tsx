@@ -29,14 +29,14 @@ export function Header({
   
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-700/80 bg-white/95 dark:bg-slate-900/95 backdrop-blur supports-[backdrop-filter]:bg-white/90 dark:supports-[backdrop-filter]:bg-slate-900/90 shadow-sm">
-      <div className="container mx-auto px-4 flex h-16 items-center justify-between">
+      <div className="container mx-auto px-8 lg:px-12 max-w-screen-2xl flex h-16 items-center justify-between">
         {/* Logo (left) */}
-        <div className="flex items-center">
-          <Link href="/" className="flex items-center space-x-3 group">
-            <div className="flex items-center justify-center h-12 w-12 bg-gradient-to-b from-white to-slate-50 dark:from-slate-700 dark:to-slate-800 rounded-full shadow-md shadow-blue-500/10 dark:shadow-blue-900/20 overflow-hidden border border-slate-200 dark:border-slate-700">
+        <div className="flex items-center pl-0">
+          <Link href="/" className="flex items-center group">
+            <div className="flex items-center justify-center h-12 w-12 bg-gradient-to-b from-gray-100 to-slate-100 dark:from-slate-700/30 dark:to-slate-800/30 rounded-full shadow-md shadow-blue-500/10 dark:shadow-blue-900/20 overflow-hidden border border-slate-200 dark:border-slate-700/70">
               <CodeQualLogoFinal className="w-10 h-10" />
             </div>
-            <span className="font-bold text-lg text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">CodeQual</span>
+            <span className="ml-3 font-bold text-lg text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">CodeQual</span>
           </Link>
         </div>
         
@@ -140,7 +140,7 @@ export function Header({
             <Link href="/">
               <Button 
                 size="sm" 
-                className="rounded-full px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600 shadow-md hover:shadow-lg transition-all duration-300"
+                className="rounded-full px-5 py-2 bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg transition-all duration-300"
               >
                 Sign In
               </Button>

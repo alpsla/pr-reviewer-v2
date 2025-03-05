@@ -1,7 +1,6 @@
-"use client";
+'use client';
 
 import Link from 'next/link';
-// No social media icons needed for now
 import { BaseProps } from '@/types';
 import { CodeQualLogoFinal } from '@/components/ui/codequal-logo-final';
 
@@ -11,26 +10,26 @@ export function Footer({ className }: FooterProps) {
   const currentYear = new Date().getFullYear();
   
   return (
-    <footer className="border-t py-12 relative bg-white dark:bg-slate-900">
-      <div className="container mx-auto px-8 lg:px-12 max-w-screen-2xl">
-        {/* Main Footer Grid with flexbox for better control */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-16 gap-y-10 mx-0">
+    <footer className="w-full bg-blue-50 dark:bg-slate-900 py-12 border-t border-slate-200 dark:border-slate-800">
+      <div className="container mx-auto">
+        {/* Main Footer Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-10 mb-8 max-w-6xl mx-auto px-6 lg:px-8">
           {/* Column 1: Logo and description */}
-          <div className="mb-8 md:mb-0 pl-0">
-            <Link href="/" className="flex items-center group mb-4">
-              <div className="flex items-center justify-center h-12 w-12 bg-gradient-to-b from-gray-100 to-slate-100 dark:from-slate-700/30 dark:to-slate-800/30 rounded-full shadow-md shadow-blue-500/10 dark:shadow-blue-900/20 overflow-hidden border border-slate-200 dark:border-slate-700/70">
-                <CodeQualLogoFinal className="w-10 h-10" />
+          <div className="col-span-1">
+            <Link href="/" className="flex items-center space-x-2 mb-4">
+              <div className="flex items-center justify-center h-8 w-8 bg-gradient-to-b from-slate-700/30 to-slate-800/30 rounded-full shadow-sm overflow-hidden border border-slate-700/70">
+                <CodeQualLogoFinal className="w-6 h-6" />
               </div>
-              <span className="ml-3 font-bold text-lg text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">CodeQual</span>
+              <span className="font-bold text-slate-800 dark:text-white">CodeQual</span>
             </Link>
-            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mt-2 max-w-xs">
-              AI-powered code review to improve
+            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              AI-powered code review to improve<br />
               quality and save development time.
             </p>
           </div>
           
           {/* Column 2: Platform Links */}
-          <div className="lg:ml-16 md:ml-8 mb-8 md:mb-0">
+          <div className="col-span-1">
             <h3 className="font-semibold text-slate-800 dark:text-white mb-4">
               PLATFORM
             </h3>
@@ -59,7 +58,7 @@ export function Footer({ className }: FooterProps) {
           </div>
           
           {/* Column 3: Company Links */}
-          <div className="lg:ml-12 md:ml-6 mb-8 md:mb-0">
+          <div className="col-span-1">
             <h3 className="font-semibold text-slate-800 dark:text-white mb-4">
               COMPANY
             </h3>
@@ -83,7 +82,7 @@ export function Footer({ className }: FooterProps) {
           </div>
           
           {/* Column 4: Legal Links */}
-          <div className="lg:ml-8 md:ml-4">
+          <div className="col-span-1">
             <h3 className="font-semibold text-slate-800 dark:text-white mb-4">
               LEGAL
             </h3>
@@ -107,12 +106,14 @@ export function Footer({ className }: FooterProps) {
           </div>
         </div>
         
-        {/* Bottom section */}
-        <div className="mt-16 border-t border-slate-200 pt-8 dark:border-slate-700">
-          <div className="flex justify-center">
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              &copy; {currentYear} CodeQual, Inc. All rights reserved.
-            </p>
+        {/* Bottom section with horizontal line */}
+        <div className="max-w-6xl mx-auto px-6 lg:px-8">
+          <div className="border-t border-slate-200 dark:border-slate-700 pt-6">
+            <div className="text-center">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                © {currentYear} CodeQual, Inc. All rights reserved.
+              </p>
+            </div>
           </div>
         </div>
       </div>

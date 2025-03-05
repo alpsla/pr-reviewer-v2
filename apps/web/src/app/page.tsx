@@ -65,7 +65,7 @@ export default function HomePage() {
             
             <div className="space-y-3">
               <button 
-                className="w-full flex items-center justify-center gap-2 p-3 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm hover:shadow"
+                className="w-full flex items-center justify-center gap-2 p-3 rounded-md bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm hover:shadow"
                 onClick={() => handleAuthClick('github')}
               >
                 <Github className="h-5 w-5" />
@@ -73,7 +73,7 @@ export default function HomePage() {
               </button>
               
               <button 
-                className="w-full flex items-center justify-center gap-2 p-3 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm hover:shadow"
+                className="w-full flex items-center justify-center gap-2 p-3 rounded-md bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm hover:shadow"
                 onClick={() => handleAuthClick('gitlab')}
               >
                 <GitlabIcon className="h-5 w-5" />
@@ -81,7 +81,7 @@ export default function HomePage() {
               </button>
               
               <button 
-                className="w-full flex items-center justify-center gap-2 p-3 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm hover:shadow"
+                className="w-full flex items-center justify-center gap-2 p-3 rounded-md bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm hover:shadow"
                 onClick={() => handleAuthClick('email')}
               >
                 <Mail className="h-5 w-5" />
