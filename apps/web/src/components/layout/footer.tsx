@@ -4,25 +4,34 @@ import Link from 'next/link';
 // No social media icons needed for now
 import { BaseProps } from '@/types';
 import { CodeQualLogoFinal } from '@/components/ui/codequal-logo-final';
+import { useAuth } from '@/context/auth-context';
 
 export interface FooterProps extends BaseProps {}
 
 export function Footer({ className }: FooterProps) {
   const currentYear = new Date().getFullYear();
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
   
   return (
-    <footer className="border-t py-12 relative bg-white dark:bg-slate-900">
+    <footer className="border-t border-slate-700/20 dark:border-slate-700/30 py-12 mt-6 relative bg-white dark:bg-slate-900">
       <div className="container mx-auto px-8 lg:px-12 max-w-screen-2xl">
         {/* Main Footer Grid with flexbox for better control */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-16 gap-y-10 mx-0">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-16 gap-y-10 md:px-12 lg:px-16">
           {/* Column 1: Logo and description */}
           <div className="mb-8 md:mb-0 pl-0">
-            <Link href="/" className="flex items-center group mb-4">
-              <div className="flex items-center justify-center h-12 w-12 bg-gradient-to-b from-gray-100 to-slate-100 dark:from-slate-700/30 dark:to-slate-800/30 rounded-full shadow-md shadow-blue-500/10 dark:shadow-blue-900/20 overflow-hidden border border-slate-200 dark:border-slate-700/70">
-                <CodeQualLogoFinal className="w-10 h-10" />
+            <div className="flex items-center mb-4">
+              <div className="flex items-center">
+                <Link href={isAuthenticated ? "/dashboard" : "/"}>
+                  <div className="flex items-center justify-center h-12 w-12 bg-gradient-to-b from-gray-100 to-slate-100 dark:from-slate-700/30 dark:to-slate-800/30 rounded-full shadow-md shadow-blue-500/10 dark:shadow-blue-900/20 overflow-hidden border border-slate-200 dark:border-slate-700/70">
+                    <CodeQualLogoFinal className="w-10 h-10" />
+                  </div>
+                </Link>
+                <Link href={isAuthenticated ? "/dashboard" : "/"} className="ml-3 font-bold text-lg text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  CodeQual
+                </Link>
               </div>
-              <span className="ml-3 font-bold text-lg text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">CodeQual</span>
-            </Link>
+            </div>
             <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mt-2 max-w-xs">
               AI-powered code review to improve
               quality and save development time.

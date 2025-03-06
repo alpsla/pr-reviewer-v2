@@ -1,7 +1,9 @@
 import "./globals.css";
 import "./global.css";
 import "../styles/select-fixes.css";
-import "../styles/full-width-fix.css";
+import "../styles/layout-fix.css";
+import "../styles/footer-fix.css";
+import "../styles/button-fix.css";
 import { AuthProvider } from "@/context/auth-context";
 import { EmailNotificationProvider } from "@/context/email-notification-context";
 import { ThemeProvider } from "@/components/theme-provider";

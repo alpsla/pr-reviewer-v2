@@ -49,7 +49,7 @@ export function Header({
       <div className="container mx-auto px-8 lg:px-12 max-w-screen-2xl flex h-16 items-center justify-between">
         {/* Logo (left) */}
         <div className="flex items-center pl-0">
-          <Link href="/" className="flex items-center group">
+          <Link href={isAuthenticated ? "/dashboard" : "/"} className="flex items-center group">
             <div className="flex items-center justify-center h-12 w-12 bg-gradient-to-b from-gray-100 to-slate-100 dark:from-slate-700/30 dark:to-slate-800/30 rounded-full shadow-md shadow-blue-500/10 dark:shadow-blue-900/20 overflow-hidden border border-slate-200 dark:border-slate-700/70">
               <CodeQualLogoFinal className="w-10 h-10" />
             </div>
@@ -118,18 +118,19 @@ export function Header({
               <div className="absolute right-0 mt-2 w-40 rounded-md bg-white dark:bg-slate-800 shadow-lg ring-1 ring-black/5 dark:ring-white/10 z-10">
                 <div className="py-1" role="menu" aria-orientation="vertical">
                   <button
-                    className="block w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
+                    className="block w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-between"
                     role="menuitem"
                     onClick={() => setLanguageMenuOpen(false)}
                   >
-                    English
+                    <span>English</span>
+                    <span>✓</span>
                   </button>
                   <button
-                    className="block w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700"
+                    className="block w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-between"
                     role="menuitem"
                     onClick={() => setLanguageMenuOpen(false)}
                   >
-                    Español
+                    <span>Español</span>
                   </button>
                 </div>
               </div>
@@ -147,17 +148,15 @@ export function Header({
           
           {/* User Avatar or Auth Button */}
           {isAuthenticated ? (
-            <div className="flex items-center space-x-3">
-              <Button 
-                variant="default" 
-                onClick={handleSignOut}
-                className="rounded-md px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white shadow-sm hover:shadow-md transition-all duration-300 flex items-center"
-                disabled={isLoading}
-                size="sm"
+            <div className="flex items-center space-x-5">
+              <button 
+              onClick={handleSignOut}
+              disabled={isLoading}
+              className="rounded-md p-3 bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors flex items-center justify-center"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 {isLoading ? 'Signing out...' : 'Sign Out'}
-              </Button>
+              </button>
               <div className="relative cursor-pointer">
                 <Avatar 
                   size="md" 

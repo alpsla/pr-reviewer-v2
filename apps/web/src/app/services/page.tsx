@@ -168,7 +168,7 @@ export default function ServicesPage() {
         </section>
         
         {/* CTA Section */}
-        <section className="py-16 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-800">
+        <section className="py-16 mb-12 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-800">
           <div className="container mx-auto px-4 text-center">
             <div className="max-w-3xl mx-auto">
               <h2 className="text-3xl font-bold text-white mb-6">Ready to improve your code quality?</h2>

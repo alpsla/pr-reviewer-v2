@@ -8,6 +8,7 @@ import { PrPreviewSection } from '@/components/analyze/pr-preview-section';
 import { Repositories } from '@/components/analyze/repositories';
 import { AnalysisOptions } from '@/components/analyze/analysis-options';
 import { useState } from 'react';
+import Link from 'next/link';
 import { Sparkles, CheckCircle, Zap, Shield, Clock } from 'lucide-react';
 
 export default function AnalyzePage() {
@@ -78,7 +79,7 @@ export default function AnalyzePage() {
         <div className="mb-8">
           <Breadcrumb 
             items={[
-              { label: 'Home', href: '/' },
+              { label: 'Home', href: '/dashboard' },
               { label: 'PR Analysis', href: '/analyze' }
             ]} 
           />
@@ -104,14 +105,13 @@ export default function AnalyzePage() {
                 You've used {freeAnalysesUsed} of {freeAnalysesTotal} free analyses
               </span>
             </div>
-            <Button
-            size="sm"
-            variant="outline"
-            className="text-xs bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700 border-blue-200 dark:border-blue-800 hover:border-blue-400 dark:hover:border-blue-600 shadow-sm"
+            <Link
+              href="#upgrade"
+              className="text-xs bg-blue-500 hover:bg-blue-600 text-white font-medium p-2 rounded-md transition-colors flex items-center gap-1"
             >
-              <Sparkles className="h-3 w-3 mr-1 text-amber-400" />
+              <Sparkles className="h-3 w-3 text-amber-300" />
               Upgrade
-            </Button>
+            </Link>
           </div>
         </div>
         
@@ -169,12 +169,18 @@ export default function AnalyzePage() {
               
               {/* Submit button */}
               <div className="flex justify-end mt-2">
-                <Button 
-                  disabled={validationStatus !== 'success'}
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-60 disabled:bg-slate-400 disabled:dark:bg-slate-600 disabled:shadow-none disabled:cursor-not-allowed"
-                >
-                  Analyze PR
-                </Button>
+                {validationStatus === 'success' ? (
+                  <Link 
+                    href="#analyze"
+                    className="inline-block px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-md transition-colors text-center"
+                  >
+                    Analyze PR
+                  </Link>
+                ) : (
+                  <span className="inline-block px-6 py-3 bg-slate-400 text-white font-medium rounded-md opacity-60 cursor-not-allowed">
+                    Analyze PR
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -281,9 +287,12 @@ export default function AnalyzePage() {
               </div>
               
               <div className="flex justify-center">
-                <Button className="bg-white dark:bg-white/90 text-blue-600 dark:text-blue-700 hover:bg-blue-50 dark:hover:bg-white px-8 py-2 shadow-md hover:shadow-lg transition-all duration-200">
+                <Link 
+                  href="#upgrade" 
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-medium p-3 rounded-md transition-colors text-center px-8"
+                >
                   Upgrade Now
-                </Button>
+                </Link>
               </div>
             </div>
           </div>

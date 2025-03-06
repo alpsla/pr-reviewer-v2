@@ -4,6 +4,7 @@ import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 
 // List of routes that require authentication
 const PROTECTED_ROUTES = [
+  '/dashboard-new',
   '/dashboard',
   '/analyze',
   '/results',
@@ -50,7 +51,7 @@ export async function middleware(req: NextRequest) {
   
   // Redirect authenticated users from public-only routes to the dashboard
   if (isPublicOnlyRoute && isAuthenticated) {
-    const redirectUrl = new URL('/dashboard', req.url);
+    const redirectUrl = new URL('/dashboard-new', req.url);
     return NextResponse.redirect(redirectUrl);
   }
   

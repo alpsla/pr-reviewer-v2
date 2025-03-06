@@ -1,0 +1,88 @@
+/* Fix for all button modes */
+
+/* Light mode button styles */
+.btn-outline,
+[class*="variant-outline"] {
+  border-color: rgb(203, 213, 225) !important; /* slate-300 */
+  color: rgb(30, 41, 59) !important; /* slate-800 */
+}
+
+.btn-outline:hover,
+[class*="variant-outline"]:hover {
+  background-color: rgba(59, 130, 246, 0.1) !important; /* blue-500 with opacity */
+  border-color: rgb(59, 130, 246) !important; /* blue-500 */
+  color: rgb(29, 78, 216) !important; /* blue-700 */
+}
+
+/* Fix for specific buttons in light mode */
+button[variant="outline"],
+.bg-white a button {
+  border-color: rgb(203, 213, 225) !important; /* slate-300 */
+  color: rgb(30, 41, 59) !important; /* slate-800 */
+}
+
+button[variant="outline"]:hover,
+.bg-white a button:hover {
+  background-color: rgba(59, 130, 246, 0.1) !important; /* blue-500 with opacity */
+  border-color: rgb(59, 130, 246) !important; /* blue-500 */
+  color: rgb(29, 78, 216) !important; /* blue-700 */
+}
+
+/* High specificity selector for shadcn buttons in light mode */
+.bg-white a button[class*="outline"],
+button[class*="outline"] {
+  color: rgb(30, 41, 59) !important; /* slate-800 */
+  border: 1px solid rgb(203, 213, 225) !important; /* slate-300 */
+  background-color: transparent !important;
+}
+
+.bg-white a button[class*="outline"]:hover,
+button[class*="outline"]:hover {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+  border-color: rgb(59, 130, 246) !important; /* blue-500 */
+  color: rgb(29, 78, 216) !important; /* blue-700 */
+}
+
+/* Dark mode button styles */
+
+/* Make outline buttons visible in dark mode */
+.dark .btn-outline,
+.dark [class*="variant-outline"] {
+  border-color: rgb(100, 116, 139) !important; /* slate-500 */
+  color: rgb(226, 232, 240) !important; /* slate-200 */
+}
+
+.dark .btn-outline:hover,
+.dark [class*="variant-outline"]:hover {
+  background-color: rgba(59, 130, 246, 0.2) !important; /* blue-500 with opacity */
+  border-color: rgb(96, 165, 250) !important; /* blue-400 */
+  color: rgb(255, 255, 255) !important;
+}
+
+/* Fix for specific buttons in dark mode */
+.dark button[variant="outline"],
+.dark .dark\:bg-slate-800 a button {
+  border-color: rgb(100, 116, 139) !important; /* slate-500 */
+  color: rgb(226, 232, 240) !important; /* slate-200 */
+}
+
+.dark button[variant="outline"]:hover,
+.dark .dark\:bg-slate-800 a button:hover {
+  background-color: rgba(59, 130, 246, 0.2) !important; /* blue-500 with opacity */
+  border-color: rgb(96, 165, 250) !important; /* blue-400 */
+  color: rgb(255, 255, 255) !important;
+}
+
+/* High specificity selector for shadcn buttons in dark mode */
+.dark .dark\:bg-slate-800 a button[class*="outline"],
+.dark button[class*="outline"] {
+  color: white !important;
+  border: 1px solid rgb(100, 116, 139) !important;
+  background-color: transparent !important;
+}
+
+.dark .dark\:bg-slate-800 a button[class*="outline"]:hover,
+.dark button[class*="outline"]:hover {
+  background-color: rgba(59, 130, 246, 0.2) !important;
+  border-color: rgb(96, 165, 250) !important;
+}

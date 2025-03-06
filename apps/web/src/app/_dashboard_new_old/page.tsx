@@ -7,7 +7,7 @@ import { Header, Footer } from '@/components/layout';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
-export default function DashboardPage() {
+export default function DashboardNewPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   
@@ -75,24 +75,15 @@ export default function DashboardPage() {
             <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg p-6">
               <h2 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">Quick Actions</h2>
               <div className="space-y-3">
-                <Link 
-                  href="/analyze" 
-                  className="w-full block bg-blue-500 hover:bg-blue-600 text-white font-medium p-3 rounded-md transition-colors text-center"
-                >
+                <button className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium p-3 rounded-md transition-colors">
                   Analyze New PR
-                </Link>
-                <Link 
-                  href="/history" 
-                  className="w-full block bg-blue-500 hover:bg-blue-600 text-white font-medium p-3 rounded-md transition-colors text-center"
-                >
+                </button>
+                <button className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium p-3 rounded-md transition-colors">
                   View History
-                </Link>
-                <Link 
-                  href="/settings" 
-                  className="w-full block bg-blue-500 hover:bg-blue-600 text-white font-medium p-3 rounded-md transition-colors text-center"
-                >
+                </button>
+                <button className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium p-3 rounded-md transition-colors">
                   Account Settings
-                </Link>
+                </button>
               </div>
             </div>
           </div>

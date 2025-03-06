@@ -71,17 +71,16 @@ export function SiteHeaderWithAuth() {
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-          <nav className="flex items-center space-x-2">
+          <nav className="flex items-center space-x-5">
             {isAuthenticated ? (
-              <Button 
-                variant="outline" 
-                onClick={handleSignOut}
-                className="flex items-center gap-1 hidden md:inline-flex"
-                disabled={isLoading}
+              <button 
+              onClick={handleSignOut}
+              disabled={isLoading}
+              className="flex items-center gap-1 hidden md:inline-flex rounded-md p-3 bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors"
               >
                 <LogOut className="h-4 w-4" />
                 {isLoading ? 'Signing out...' : 'Sign Out'}
-              </Button>
+              </button>
             ) : (
               <ProvidersMenu />
             )}
