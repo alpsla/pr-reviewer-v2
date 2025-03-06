@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 // Import DatabaseService correctly
-import { DatabaseService } from '@/app/dashboard/pr-analyzer/database-service';
+import { DatabaseService } from '@/app/_dashboard_old/pr-analyzer/database-service';
 
 // Create our own AuthService class to avoid core dependency issues
 class AuthService {
