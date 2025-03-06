@@ -16,6 +16,8 @@ export function Footer({ className }: FooterProps) {
   return (
     <footer className="border-t border-slate-700/20 dark:border-slate-700/30 py-12 mt-6 relative bg-white dark:bg-slate-900">
       <div className="container mx-auto px-8 lg:px-12 max-w-screen-2xl">
+        {/* Spacer div for extra space */}
+        <div className="h-24"></div>
         {/* Main Footer Grid with flexbox for better control */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-x-16 gap-y-10 md:px-12 lg:px-16">
           {/* Column 1: Logo and description */}

@@ -132,7 +132,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       // OAuth sign in (GitHub or GitLab)
       const { error } = await supabase.auth.signInWithOAuth({
-        provider,
+        provider: provider as 'github' | 'gitlab',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
           scopes: provider === 'github' ? 'read:user repo' : 'read_user'
@@ -154,16 +154,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setIsLoading(true);
       
-      // Call our sign-out endpoint for server-side handling
-      const response = await fetch('/auth/signout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Sign out request failed');
+      // Try server-side signout first, but don't block if it fails
+      try {
+        await fetch('/auth/signout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      } catch (error) {
+        console.warn('Server-side sign out failed, continuing with client-side logout:', error);
       }
       
       // Also trigger client-side signout

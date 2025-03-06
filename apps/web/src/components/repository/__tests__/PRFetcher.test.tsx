@@ -1,10 +1,10 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { PRFetcher } from '../PRFetcher';
-import { RepositoryService } from '@/app/dashboard/pr-analyzer/repository-service';
+import { RepositoryService } from '@/app/_dashboard_old/pr-analyzer/repository-service';
 
 // Mock the repository service
-jest.mock('@/app/dashboard/pr-analyzer/repository-service');
+jest.mock('@/app/_dashboard_old/pr-analyzer/repository-service');
 
 const mockPullRequest = {
   id: 'pr-123',

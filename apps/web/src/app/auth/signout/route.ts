@@ -1,31 +1,34 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
   try {
     const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = createServerComponentClient({ cookies: () => cookieStore });
     
-    // Clear auth cookies and sign out
-    await supabase.auth.signOut({ scope: 'global' });
+    // Sign out on the server
+    await supabase.auth.signOut();
     
-    // Set all Supabase cookies to expired to ensure they're removed
-    const allCookies = cookieStore.getAll();
-    for (const cookie of allCookies) {
-      if (cookie.name.startsWith('sb-')) {
-        cookieStore.set(cookie.name, '', { 
+    // Clear auth cookies by setting them to expired
+    cookies().getAll().forEach((cookie) => {
+      if (cookie.name.includes('supabase') || 
+          cookie.name.includes('auth') || 
+          cookie.name.includes('token')) {
+        cookies().set({
+          name: cookie.name,
+          value: '',
           expires: new Date(0),
-          path: '/' 
+          path: '/',
         });
       }
-    }
+    });
     
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error signing out:', error);
+    console.error('Error during server-side sign out:', error);
     return NextResponse.json(
-      { error: 'Failed to sign out' },
+      { error: 'Internal Server Error' },
       { status: 500 }
     );
   }
