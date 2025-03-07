@@ -9,36 +9,41 @@ export interface ActionPanelProps {
   onExportToComments: () => void;
   onDownloadReport: () => void;
   onDismissMinorIssues: () => void;
+  style?: React.CSSProperties;
 }
 
 export function ActionPanel({
   onExportToComments,
   onDownloadReport,
-  onDismissMinorIssues
+  onDismissMinorIssues,
+  style
 }: ActionPanelProps) {
   const [helpfulRating, setHelpfulRating] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<string>('');
   
   return (
-    <Card className="mt-8 p-6">
+    <Card className="mt-8 p-6" style={style}>
       <h2 className="text-lg font-medium text-slate-900 dark:text-white mb-4">Actions</h2>
       <div className="flex flex-wrap gap-4 justify-between">
-        <div className="flex flex-wrap gap-3">
-          <DarkModeButton
+        <div className="flex flex-wrap gap-4">
+          <button
             onClick={onExportToComments}
+            className="px-4 py-2 h-10 rounded-md font-medium transition-all duration-300 bg-blue-500 hover:bg-blue-600 text-white dark:bg-slate-800 dark:hover:bg-slate-700 dark:border dark:border-slate-700 shadow-md hover:shadow-lg dark:text-slate-200 flex items-center"
           >
             Export to PR Comments
-          </DarkModeButton>
-          <DarkModeButton
+          </button>
+          <button
             onClick={onDownloadReport}
+            className="px-4 py-2 h-10 rounded-md font-medium transition-all duration-300 bg-blue-500 hover:bg-blue-600 text-white dark:bg-slate-800 dark:hover:bg-slate-700 dark:border dark:border-slate-700 shadow-md hover:shadow-lg dark:text-slate-200 flex items-center"
           >
             Download Report
-          </DarkModeButton>
-          <DarkModeButton
+          </button>
+          <button
             onClick={onDismissMinorIssues}
+            className="px-4 py-2 h-10 rounded-md font-medium transition-all duration-300 bg-blue-500 hover:bg-blue-600 text-white dark:bg-slate-800 dark:hover:bg-slate-700 dark:border dark:border-slate-700 shadow-md hover:shadow-lg dark:text-slate-200 flex items-center"
           >
             Dismiss Minor Issues
-          </DarkModeButton>
+          </button>
         </div>
         <div className="flex flex-col items-end">
           <div className="flex items-center justify-center">

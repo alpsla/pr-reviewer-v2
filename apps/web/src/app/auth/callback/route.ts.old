@@ -6,7 +6,12 @@ import { NextResponse } from 'next/server';
  * Server-side auth callback handler
  * 
  * This route handler processes the authentication callback from Supabase.
- * Client-side UI for the authentication process is at /auth/callback-ui.
+ * We previously had both a client-side page and a server-side route handler
+ * at the same path (/auth/callback), which caused a routing conflict.
+ * 
+ * The client-side handler has been moved to /auth/callback-client and commented out.
+ * After testing confirms this server-side handler works correctly, the client-side
+ * version can be removed entirely.
  */
 
 export const dynamic = 'force-dynamic';
@@ -69,9 +74,9 @@ export async function GET(request: Request) {
                     console.error('Could not communicate with opener:', e);
                   }
                 }
-                // If we couldn't close the tab, redirect to dashboard or callback UI
+                // If we couldn't close the tab, redirect to dashboard
                 setTimeout(() => {
-                  window.location.href = '/auth/callback-ui';
+                  window.location.href = '/dashboard';
                 }, 1000);
               };
             </script>
@@ -118,7 +123,7 @@ export async function GET(request: Request) {
     
     // If no code is found, redirect to home
     console.error('No authentication code found in URL');
-    return NextResponse.redirect(new URL('/auth/callback-ui', requestUrl.origin));
+    return NextResponse.redirect(new URL('/', requestUrl.origin));
   } catch (error) {
     console.error('Unexpected error in auth callback:', error);
     return NextResponse.redirect(

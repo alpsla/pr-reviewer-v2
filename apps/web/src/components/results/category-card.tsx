@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import { useTheme } from 'next-themes';
 import { ChevronRight, ArrowUp, ArrowDown } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,6 +51,8 @@ export function CategoryCard({
   isExpanded, 
   onExpand 
 }: CategoryCardProps) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
   return (
     <Card 
       className={`overflow-hidden transition-all duration-300 ${isExpanded ? 'col-span-full' : 'col-span-1'} bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600`}
@@ -162,14 +165,12 @@ export function CategoryCard({
                         <p className="text-sm text-slate-700 dark:text-slate-300">{issue.recommendation}</p>
                       </div>
                        {issue.codeSnippet && (
-                        <div className="dark:bg-slate-900 bg-gray-100 rounded-md overflow-hidden border border-slate-200 dark:border-slate-700 m-0 p-0">
-                          <div className="bg-inherit dark:bg-inherit">
+                        <div className="rounded-md overflow-hidden border border-slate-200 dark:border-slate-700 m-0 p-0">
                             <CodeBlock
                               code={issue.codeSnippet}
                               language="typescript"
-                              variant="ghost"
+                              variant={isDark ? "dark" : "primary"}
                             />
-                          </div>
                         </div>
                       )}
                     </div>

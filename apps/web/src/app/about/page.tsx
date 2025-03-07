@@ -42,14 +42,30 @@ export default function AboutPage() {
               <p className="mx-auto max-w-2xl text-lg text-blue-100 mb-8">
                 We're on a mission to elevate code quality and improve development workflows through intelligent, AI-powered code reviews.
               </p>
-              <Link href="/">
-                <Button 
-                  size="lg" 
-                  className="rounded-full font-semibold bg-white text-blue-700 hover:bg-blue-50 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 border border-transparent"
-                >
-                  Get Started
-                </Button>
-              </Link>
+              <div className="flex justify-center">
+                <Link href="/">
+                  <button 
+                    className="rounded-full px-8 py-3 bg-indigo-800 text-white font-bold hover:bg-indigo-700 dark:bg-slate-900 dark:hover:bg-slate-800 shadow-lg hover:shadow-xl flex items-center gap-2 transform hover:-translate-y-0.5 transition-all duration-300 border-2 border-indigo-800/30 dark:border-slate-700"
+                  >
+                    Get Started
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      width="20" 
+                      height="20" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      className="transform group-hover:translate-x-1 transition-transform"
+                    >
+                      <path d="M5 12h14"></path>
+                      <path d="m12 5 7 7-7 7"></path>
+                    </svg>
+                  </button>
+                </Link>
+              </div>
             </div>
           </div>
         </section>
@@ -209,12 +225,26 @@ export default function AboutPage() {
               </p>
               <div className="flex justify-center">
                 <Link href="/">
-                  <Button 
-                    size="lg" 
-                    className="rounded-full bg-white text-blue-700 font-bold hover:bg-blue-50 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 border-2 border-white"
+                  <button 
+                    className="rounded-full px-8 py-3 bg-indigo-800 text-white font-bold hover:bg-indigo-700 dark:bg-slate-900 dark:hover:bg-slate-800 shadow-lg hover:shadow-xl flex items-center gap-2 transform hover:-translate-y-0.5 transition-all duration-300 border-2 border-indigo-800/30 dark:border-slate-700"
                   >
                     Get Started Free
-                  </Button>
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      width="20" 
+                      height="20" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      className="transform group-hover:translate-x-1 transition-transform"
+                    >
+                      <path d="M5 12h14"></path>
+                      <path d="m12 5 7 7-7 7"></path>
+                    </svg>
+                  </button>
                 </Link>
               </div>
             </div>

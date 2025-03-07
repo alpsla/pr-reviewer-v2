@@ -12,6 +12,7 @@ const codeBlockVariants = cva(
         primary: "bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md",
         secondary: "bg-card text-card-foreground border border-border rounded-md",
         ghost: "bg-transparent border-0 rounded-none",
+        dark: "bg-slate-900 border border-slate-700 rounded-md text-white",
       },
       size: {
         sm: "text-xs p-2",
@@ -65,7 +66,7 @@ export const CodeBlock = React.forwardRef<HTMLPreElement, CodeBlockProps>(
     const isDark = resolvedTheme === 'dark';
     
     // Use different themes based on current theme and variant
-    const codeTheme = isDark || variant === 'ghost' 
+    const codeTheme = isDark
       ? themes.nightOwl 
       : themes.github;
     
@@ -100,12 +101,13 @@ export const CodeBlock = React.forwardRef<HTMLPreElement, CodeBlockProps>(
           >
             {({ className, style, tokens, getLineProps, getTokenProps }) => (
               <pre
-                ref={ref}
-                className={cn(
-                  codeBlockVariants({ variant, size }),
-                  className,
-                  variant === 'ghost' ? 'bg-transparent dark:bg-transparent' : 'dark:bg-slate-900 bg-slate-100'
-                )}
+              ref={ref}
+              className={cn(
+              codeBlockVariants({ variant, size }),
+              className,
+              'dark:!bg-gray-900 !bg-white',
+              variant === 'ghost' ? 'bg-transparent' : ''
+              )}
                 style={style}
                 {...props}
               >

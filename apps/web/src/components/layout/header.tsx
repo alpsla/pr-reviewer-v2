@@ -152,7 +152,7 @@ export function Header({
               <button 
               onClick={handleSignOut}
               disabled={isLoading}
-              className="rounded-md p-3 bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors flex items-center justify-center"
+              className="rounded-md p-3 bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors flex items-center justify-center dark:bg-slate-800 dark:hover:bg-slate-700 dark:border dark:border-slate-700 dark:shadow-md"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 {isLoading ? 'Signing out...' : 'Sign Out'}

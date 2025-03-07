@@ -1,5 +1,7 @@
 "use client";
 
+// Action panel styles are handled by the Button component
+
 import React, { useState } from 'react';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
@@ -179,14 +181,13 @@ export default function ResultsPage() {
           {expandedCategory ? (
             <>
               <div className="col-span-full mb-4">
-                <DarkModeButton
-                  size="sm"
+                <button
                   onClick={() => setExpandedCategory(null)}
-                  className="flex items-center"
-                  icon={<ChevronLeft className="h-4 w-4" />}
+                  className="flex items-center px-4 py-2 rounded-md font-medium transition-all duration-300 bg-blue-500 hover:bg-blue-600 text-white dark:bg-slate-800 dark:hover:bg-slate-700 dark:border dark:border-slate-700 shadow-md hover:shadow-lg dark:text-slate-200"
                 >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
                   Back to overview
-                </DarkModeButton>
+                </button>
               </div>
               
               {mockAnalysisData.categories
