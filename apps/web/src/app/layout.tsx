@@ -5,7 +5,7 @@ import "../styles/layout-fix.css";
 import "../styles/footer-fix.css";
 import "../styles/button-fix.css";
 import { AuthProvider } from "@/context/auth-context";
-import { EmailNotificationProvider } from "@/context/email-notification-context";
+// Email authentication removed
 import { ThemeProvider } from "@/components/theme-provider";
 
 import type { Metadata } from "next";
@@ -32,9 +32,7 @@ export default function RootLayout({
       <body suppressHydrationWarning className="min-h-screen bg-background antialiased">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider>
-            <EmailNotificationProvider>
-              {children}
-            </EmailNotificationProvider>
+            {children}
           </AuthProvider>
         </ThemeProvider>
       </body>

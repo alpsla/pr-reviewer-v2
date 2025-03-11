@@ -65,7 +65,11 @@ export function mapGitHubRepository(repo: Record<string, unknown>): VCSRepositor
     permissions: {
       admin: Boolean((repo.permissions as Record<string, unknown>)?.admin || false),
       push: Boolean((repo.permissions as Record<string, unknown>)?.push || false),
-      pull: Boolean((repo.permissions as Record<string, unknown>)?.pull || true),
+      // Always set pull permissions to true for non-private repos
+      // For private repos, respect the permission from GitHub
+      pull: repo.private === true 
+        ? Boolean((repo.permissions as Record<string, unknown>)?.pull || false)
+        : true,
     },
     url: String(repo.html_url || ''),
     language: repo.language ? String(repo.language) : null,

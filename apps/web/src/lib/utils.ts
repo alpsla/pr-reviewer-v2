@@ -12,13 +12,29 @@ export function cn(...inputs: ClassValue[]) {
  * Format a date string into a readable date
  */
 export function formatDate(dateString: string): string {
-  const date = new Date(dateString);
+  if (!dateString) {
+    console.warn('Attempted to format undefined or empty date string');
+    return 'Unknown date';
+  }
   
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  }).format(date);
+  try {
+    const date = new Date(dateString);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.warn(`Invalid date string provided: ${dateString}`);
+      return 'Invalid date';
+    }
+    
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    }).format(date);
+  } catch (error) {
+    console.error(`Error formatting date: ${dateString}`, error);
+    return 'Error formatting date';
+  }
 }
 
 /**

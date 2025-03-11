@@ -19,7 +19,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
-  signIn: (provider: 'github' | 'gitlab' | 'email', email?: string) => Promise<void>;
+  signIn: (provider: 'github' | 'gitlab') => Promise<void>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
 }
@@ -109,26 +109,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [supabase, router]);
 
   // Function to sign in with a provider
-  const signIn = async (provider: 'github' | 'gitlab' | 'email', email?: string) => {
+  const signIn = async (provider: 'github' | 'gitlab') => {
     try {
       setIsLoading(true);
-      
-      if (provider === 'email' && email) {
-        // Magic link sign in with email
-        const { error } = await supabase.auth.signInWithOtp({
-          email,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
-            shouldCreateUser: true
-          }
-        });
-        
-        if (error) throw error;
-        
-        // Return early as we'll wait for user to click the email link
-        setIsLoading(false);
-        return;
-      }
       
       // OAuth sign in (GitHub or GitLab)
       const { error } = await supabase.auth.signInWithOAuth({

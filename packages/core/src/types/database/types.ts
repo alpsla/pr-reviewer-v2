@@ -82,6 +82,9 @@ export interface Database {
           created_at: string
           updated_at: string
           last_analyzed_at: string | null
+          fingerprint: string | null
+          analysis_count: number
+          free_tier_analysis_limit: number
           metadata: Json | null
         }
         Insert: {
@@ -95,6 +98,9 @@ export interface Database {
           created_at?: string
           updated_at?: string
           last_analyzed_at?: string | null
+          fingerprint?: string | null
+          analysis_count?: number
+          free_tier_analysis_limit?: number
           metadata?: Json | null
         }
         Update: {
@@ -108,6 +114,9 @@ export interface Database {
           created_at?: string
           updated_at?: string
           last_analyzed_at?: string | null
+          fingerprint?: string | null
+          analysis_count?: number
+          free_tier_analysis_limit?: number
           metadata?: Json | null
         }
       }

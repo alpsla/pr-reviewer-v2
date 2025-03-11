@@ -25,6 +25,7 @@ module.exports = {
     'simplified-cache',
     'simplified-integration',
     'error-handling',
+    'fingerprint/',
   ],
   // Focus only on these tests that are likely to pass
   testMatch: [

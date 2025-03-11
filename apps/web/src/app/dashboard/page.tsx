@@ -1,15 +1,25 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { Header, Footer } from '@/components/layout';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { useRepositoryAnalysis } from '@/hooks/use-repository-analysis';
 
 export default function DashboardPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const [analysisStats, setAnalysisStats] = useState({
+    totalAnalyses: 0,
+    freeUsed: 0,
+    freeLimit: 5,
+    lastAnalysis: null
+  });
+  
+  // Get the repository analysis hook for getting stats
+  const { getAnalysisLimits } = useRepositoryAnalysis();
   
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -17,6 +27,48 @@ export default function DashboardPage() {
       router.push('/');
     }
   }, [user, isLoading, router]);
+
+  // Fetch analysis stats
+  useEffect(() => {
+    if (!isLoading && user) {
+      // In a real implementation, you would call an API to get the user's analysis stats
+      // For this example, we'll use localStorage to simulate recently accessed repositories
+      try {
+        // Get recent repositories from localStorage
+        const recentRepos = localStorage.getItem('recentRepositories');
+        if (recentRepos) {
+          const repos = JSON.parse(recentRepos);
+          if (repos.length > 0) {
+            // Get the most recent repository
+            const mostRecent = repos[0];
+            
+            // Use the repository analysis hook to get statistics
+            if (mostRecent && mostRecent.owner && mostRecent.name) {
+              getAnalysisLimits({
+                platform: mostRecent.platform || 'github',
+                owner: mostRecent.owner,
+                repo: mostRecent.name
+              }).then(limits => {
+                if (limits) {
+                  setAnalysisStats(prev => ({
+                    ...prev,
+                    freeUsed: limits.current,
+                    freeLimit: limits.limit,
+                    totalAnalyses: limits.current,
+                    lastAnalysis: mostRecent.lastAccessed || new Date().toISOString()
+                  }));
+                }
+              }).catch(err => {
+                console.error('Error fetching repository limits:', err);
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading analysis stats:', error);
+      }
+    }
+  }, [user, isLoading, getAnalysisLimits]);
 
   if (isLoading) {
     return (
@@ -60,10 +112,10 @@ export default function DashboardPage() {
               <h2 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">Analysis Stats</h2>
               <div className="space-y-3">
                 <p className="text-slate-700 dark:text-slate-300">
-                  <span className="font-medium">Free PRs Used:</span> 0 of 5
+                  <span className="font-medium">Free PRs Used:</span> {analysisStats.freeUsed} of {analysisStats.freeLimit}
                 </p>
                 <p className="text-slate-700 dark:text-slate-300">
-                  <span className="font-medium">Last Analysis:</span> None
+                  <span className="font-medium">Last Analysis:</span> {analysisStats.lastAnalysis ? new Date(analysisStats.lastAnalysis).toLocaleDateString() : 'None'}
                 </p>
                 <p className="text-slate-700 dark:text-slate-300">
                   <span className="font-medium">Account Status:</span> Free Tier

@@ -4,21 +4,17 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Header, Footer } from '@/components/layout';
 import Link from 'next/link';
-import { Github, Mail } from 'lucide-react';
+import { Github } from 'lucide-react';
 import GitlabIcon from '@/components/ui/icons/gitlab-icon';
 import { useAuth } from '@/context/auth-context';
 import { EmailSignInModal } from '@/components/auth/email-sign-in-modal';
 
 export default function HomePage() {
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  // Email authentication removed
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
   
-  const handleAuthClick = async (method: 'github' | 'gitlab' | 'email') => {
-    if (method === 'email') {
-      setIsAuthModalOpen(true);
-      return;
-    }
+  const handleAuthClick = async (method: 'github' | 'gitlab') => {
     
     try {
       setIsLoading(true);
@@ -30,9 +26,7 @@ export default function HomePage() {
     }
   };
   
-  const handleEmailSuccess = (emailAddress: string) => {
-    console.log(`Magic link sent to ${emailAddress}`);
-  };
+  // Email authentication removed
   
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-b from-white to-blue-50 dark:from-slate-900 dark:to-blue-950">
@@ -90,14 +84,7 @@ export default function HomePage() {
                 <span>{isLoading ? 'Loading...' : 'Continue with GitLab'}</span>
               </button>
               
-              <button 
-                className="w-full flex items-center justify-center gap-2 p-3 rounded-md bg-blue-500 hover:bg-blue-600 text-white transition-colors shadow-sm hover:shadow"
-                onClick={() => handleAuthClick('email')}
-                disabled={isLoading}
-              >
-                <Mail className="h-5 w-5" />
-                <span>{isLoading ? 'Loading...' : 'Continue with Email'}</span>
-              </button>
+              {/* Email authentication removed */}
             </div>
             
             <div className="text-center text-xs text-slate-500 dark:text-slate-400 mt-4">
@@ -134,12 +121,7 @@ export default function HomePage() {
       
       <Footer />
       
-      {/* Email Sign In Modal */}
-      <EmailSignInModal 
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        onSuccess={handleEmailSuccess}
-      />
+      {/* Email authentication removed */}
     </div>
   );
 }

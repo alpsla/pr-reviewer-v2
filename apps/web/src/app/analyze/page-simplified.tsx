@@ -6,13 +6,48 @@ import { PrInputSection } from '@/components/analyze/pr-input-section-simplified
 import { PrPreviewSection } from '@/components/analyze/pr-preview-section';
 import { Repositories } from '@/components/analyze/repositories';
 import { AnalysisOptions } from '@/components/analyze/analysis-options';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function AnalyzePageSimplified() {
   const [prUrl, setPrUrl] = useState<string>('');
   const [prDetails, setPrDetails] = useState<any>(null);
   const [validationStatus, setValidationStatus] = useState<'idle' | 'validating' | 'success' | 'error'>('idle');
   const [validationMessage, setValidationMessage] = useState<string>('');
+  const [repoInfo, setRepoInfo] = useState<{platform: string; owner: string; repo: string} | null>(null);
+  const [prNumber, setPrNumber] = useState<number | null>(null);
+  
+  // Parse repository information from URL
+  useEffect(() => {
+    if (prUrl) {
+      // Parse repository info
+      const repoMatch = prUrl.match(/(?:github\.com|gitlab\.com)\/([^\/]+)\/([^\/]+)/);
+      if (repoMatch) {
+        const platform = prUrl.includes('github.com') ? 'github' : 'gitlab';
+        const owner = repoMatch[1];
+        const repo = repoMatch[2].split('/')[0]; // Get the repo name without extra path
+        setRepoInfo({ platform, owner, repo });
+      } else {
+        setRepoInfo(null);
+      }
+      
+      // Parse PR number
+      let prMatch;
+      if (prUrl.includes('github.com')) {
+        prMatch = prUrl.match(/\/pull\/(\d+)/);
+      } else if (prUrl.includes('gitlab.com')) {
+        prMatch = prUrl.match(/\/merge_requests\/(\d+)/);
+      }
+      
+      if (prMatch) {
+        setPrNumber(parseInt(prMatch[1], 10));
+      } else {
+        setPrNumber(null);
+      }
+    } else {
+      setRepoInfo(null);
+      setPrNumber(null);
+    }
+  }, [prUrl]);
   
   // Free analyses tracking (mock for now)
   const freeAnalysesUsed = 3;
@@ -103,7 +138,12 @@ export default function AnalyzePageSimplified() {
             
             {/* PR Preview - only show when we have details */}
             {prDetails && (
-              <PrPreviewSection prDetails={prDetails} />
+              <PrPreviewSection
+                prDetails={prDetails}
+                prUrl={prUrl}
+                repoInfo={repoInfo}
+                prNumber={prNumber}
+              />
             )}
             
             {/* Analysis Options - only show when we have details */}

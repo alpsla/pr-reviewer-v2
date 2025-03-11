@@ -18,6 +18,13 @@ const getVCSClient = (
   token: string,
   baseUrl?: string
 ): VCSClient => {
+  // Add token debugging (just show length for security)
+  console.log(`Creating ${platform} client with token [length: ${token?.length || 0}]`);
+  
+  if (!token) {
+    throw new Error(`Cannot create ${platform} client: No token provided`);
+  }
+  
   switch (platform) {
     case 'github':
       return new GitHubClient(token, baseUrl ? { baseUrl } : undefined);

@@ -16,8 +16,13 @@ export interface Database {
           topics?: string[];
           created_at: string;
           updated_at: string;
+          last_synced_at?: string;
           last_analyzed_at?: string;
+          fingerprint?: string | null;
+          analysis_count?: number;
+          free_tier_analysis_limit?: number;
           metadata?: Record<string, any>;
+          platform?: string;
         };
         Insert: {
           id?: string;
@@ -33,8 +38,13 @@ export interface Database {
           topics?: string[];
           created_at?: string;
           updated_at?: string;
+          last_synced_at?: string;
           last_analyzed_at?: string;
+          fingerprint?: string | null;
+          analysis_count?: number;
+          free_tier_analysis_limit?: number;
           metadata?: Record<string, any>;
+          platform?: string;
         };
         Update: {
           id?: string;
@@ -50,8 +60,13 @@ export interface Database {
           topics?: string[];
           created_at?: string;
           updated_at?: string;
+          last_synced_at?: string;
           last_analyzed_at?: string;
+          fingerprint?: string | null;
+          analysis_count?: number;
+          free_tier_analysis_limit?: number;
           metadata?: Record<string, any>;
+          platform?: string;
         };
       };
       users: {
