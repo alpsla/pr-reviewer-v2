@@ -9,13 +9,23 @@ import { VCSPlatform } from '../types/platform';
 import { DatabaseService } from '../supabase/database';
 import { RepositoryOperations } from './repository-operations';
 import { PullRequestOperations } from './pull-request-operations';
+import { DataCollectionOperations } from './data-collection-operations';
 import type {
   Repository,
   PullRequest,
   PullRequestFile,
   PullRequestDetails,
   PullRequestListOptions,
-  IRepositoryService
+  IRepositoryService,
+  DataType,
+  PullRequestBasicDetails,
+  AnalysisEligibility,
+  DataCollectionJob,
+  DataCollectionStatusInfo,
+  RepositoryStructure,
+  Dependencies,
+  SecurityInfo,
+  PerformanceIndicators
 } from './types';
 import type { VCSPaginatedResponse } from '../vcs/types';
 
@@ -28,6 +38,7 @@ import type { VCSPaginatedResponse } from '../vcs/types';
 export class RepositoryService implements IRepositoryService {
   private repoOps: RepositoryOperations;
   private prOps: PullRequestOperations;
+  private dataOps: DataCollectionOperations;
 
   constructor(
     db: DatabaseService,
@@ -36,6 +47,8 @@ export class RepositoryService implements IRepositoryService {
   ) {
     this.repoOps = new RepositoryOperations(db, tokens, baseUrls);
     this.prOps = new PullRequestOperations(db, tokens, baseUrls);
+    this.dataOps = new DataCollectionOperations(db, tokens, baseUrls);
+    // Now all three operation classes are properly initialized
   }
 
   /**
@@ -142,5 +155,118 @@ export class RepositoryService implements IRepositoryService {
     bypassLimit = false
   ): Promise<number> {
     return this.repoOps.incrementAnalysisCount(platform, owner, repo, bypassLimit);
+  }
+
+  /**
+   * Two-tier Data Collection - Primary (Immediate)
+   */
+  
+  /**
+   * Get basic PR details (primary tier data)
+   */
+  async getPullRequestBasicDetails(
+    platform: VCSPlatform,
+    owner: string,
+    repo: string,
+    number: number
+  ): Promise<PullRequestBasicDetails> {
+    try {
+      // Use the DataCollectionOperations implementation
+      return await this.dataOps.getPullRequestBasicDetails(platform, owner, repo, number);
+    } catch (error) {
+      console.error('Error in getPullRequestBasicDetails:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Check if a repository is eligible for analysis
+   */
+  async checkAnalysisEligibility(repositoryId: string): Promise<AnalysisEligibility> {
+    try {
+      return await this.dataOps.checkAnalysisEligibility(repositoryId);
+    } catch (error) {
+      console.error('Error in checkAnalysisEligibility:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Two-tier Data Collection - Secondary (Background)
+   */
+  
+  /**
+   * Schedule data collection for a repository
+   */
+  async scheduleDataCollection(
+    repositoryId: string,
+    dataTypes: DataType[]
+  ): Promise<DataCollectionJob> {
+    try {
+      return await this.dataOps.scheduleDataCollection(repositoryId, dataTypes);
+    } catch (error) {
+      console.error('Error in scheduleDataCollection:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Get data collection status for a repository
+   */
+  async getDataCollectionStatus(repositoryId: string): Promise<DataCollectionStatusInfo> {
+    try {
+      return await this.dataOps.getDataCollectionStatus(repositoryId);
+    } catch (error) {
+      console.error('Error in getDataCollectionStatus:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Get repository structure
+   */
+  async getRepositoryStructure(repositoryId: string): Promise<RepositoryStructure | null> {
+    try {
+      return await this.dataOps.getRepositoryStructure(repositoryId);
+    } catch (error) {
+      console.error('Error in getRepositoryStructure:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Get dependency information
+   */
+  async getDependencyInfo(repositoryId: string): Promise<Dependencies | null> {
+    try {
+      return await this.dataOps.getDependencyInfo(repositoryId);
+    } catch (error) {
+      console.error('Error in getDependencyInfo:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Get security information
+   */
+  async getSecurityInfo(repositoryId: string): Promise<SecurityInfo | null> {
+    try {
+      return await this.dataOps.getSecurityInfo(repositoryId);
+    } catch (error) {
+      console.error('Error in getSecurityInfo:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Get performance indicators
+   */
+  async getPerformanceIndicators(repositoryId: string): Promise<PerformanceIndicators | null> {
+    try {
+      return await this.dataOps.getPerformanceIndicators(repositoryId);
+    } catch (error) {
+      console.error('Error in getPerformanceIndicators:', error);
+      throw error;
+    }
   }
 }

@@ -1,142 +1,102 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import Link from 'next/link';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Fingerprint, GitBranch, GitPullRequest, ChevronsRight, Wrench } from 'lucide-react';
 
-export default function DebugPage() {
-  const [sessionInfo, setSessionInfo] = useState<any>(null);
-  const [cookieInfo, setCookieInfo] = useState<any>(null);
-  const [localStorageInfo, setLocalStorageInfo] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [message, setMessage] = useState('');
-
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    setIsLoading(true);
-    try {
-      // Check Supabase session
-      const supabase = createClientComponentClient();
-      const { data } = await supabase.auth.getSession();
-      setSessionInfo(data);
-      
-      // Get cookies
-      const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-        const [name, value] = cookie.trim().split('=');
-        if (name && name.includes('sb-')) {
-          acc[name] = value;
-        }
-        return acc;
-      }, {} as Record<string, string>);
-      setCookieInfo(cookies);
-      
-      // Get localStorage items
-      const localStorage: Record<string, string> = {};
-      for (let i = 0; i < window.localStorage.length; i++) {
-        const key = window.localStorage.key(i);
-        if (key && key.includes('sb-')) {
-          localStorage[key] = window.localStorage.getItem(key) || '';
-        }
-      }
-      setLocalStorageInfo(localStorage);
-    } catch (error) {
-      console.error('Error checking auth:', error);
-      setMessage('Error checking auth status');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const clearAllAuth = async () => {
-    try {
-      setMessage('Clearing auth data...');
-      
-      // 1. Clear browser storage
-      Object.keys(window.localStorage).forEach(key => {
-        if (key.startsWith('sb-')) {
-          window.localStorage.removeItem(key);
-        }
-      });
-      
-      // 2. Clear cookies manually
-      document.cookie.split(';').forEach(c => {
-        const [name] = c.trim().split('=');
-        if (name && name.includes('sb-')) {
-          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-        }
-      });
-      
-      // 3. Call our signout API
-      await fetch('/auth/signout', {
-        method: 'POST',
-      });
-      
-      // 4. Force Supabase signout
-      const supabase = createClientComponentClient();
-      await supabase.auth.signOut({ scope: 'global' });
-      
-      setMessage('Auth data cleared. Refreshing...');
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 1000);
-    } catch (error) {
-      console.error('Error clearing auth:', error);
-      setMessage('Error clearing auth data: ' + String(error));
-    }
-  };
-
+export default function DebugIndexPage() {
   return (
-    <div className="container py-10 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Authentication Debug</h1>
+    <div className="container max-w-5xl py-8">
+      <h1 className="text-3xl font-bold mb-8 flex items-center">
+        <Wrench className="h-8 w-8 mr-2 text-blue-500" />
+        Debugging Tools
+      </h1>
       
-      <div className="mb-4 flex items-center gap-4">
-        <Button onClick={checkAuth} disabled={isLoading}>
-          Refresh Auth Status
-        </Button>
-        <Button 
-          onClick={clearAllAuth} 
-          variant="destructive" 
-          disabled={isLoading}
-        >
-          Force Clear All Auth Data
-        </Button>
+      <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+        <p className="text-sm text-yellow-800 dark:text-yellow-300">
+          These debugging tools are intended for development and testing use only.
+          They provide insights into system behavior and help verify edge cases.
+        </p>
       </div>
       
-      {message && (
-        <div className="p-4 bg-yellow-100 border border-yellow-300 rounded mb-6">
-          {message}
-        </div>
-      )}
-      
-      {isLoading ? (
-        <div>Loading auth data...</div>
-      ) : (
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-xl font-semibold mb-2">Session Status</h2>
-            <div className="p-4 bg-gray-50 rounded overflow-auto max-h-60">
-              <pre className="text-sm">{JSON.stringify(sessionInfo, null, 2)}</pre>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Fingerprint className="h-5 w-5 mr-2 text-blue-500" />
+              Repository Fingerprinting
+            </CardTitle>
+            <CardDescription>
+              Debug and test repository fingerprinting functionality
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+              Test how repositories are fingerprinted, compare repositories with different names, 
+              test special characters, and verify public/private repository switching.
+            </p>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center text-slate-600 dark:text-slate-300">
+                <ChevronsRight className="h-4 w-4 mr-2 text-blue-500" />
+                <span>Repository Fingerprint Analysis</span>
+              </div>
+              <div className="flex items-center text-slate-600 dark:text-slate-300">
+                <ChevronsRight className="h-4 w-4 mr-2 text-blue-500" />
+                <span>Special Characters Test</span>
+              </div>
+              <div className="flex items-center text-slate-600 dark:text-slate-300">
+                <ChevronsRight className="h-4 w-4 mr-2 text-blue-500" />
+                <span>Public/Private Repository Switch</span>
+              </div>
             </div>
-          </div>
-          
-          <div>
-            <h2 className="text-xl font-semibold mb-2">Auth Cookies</h2>
-            <div className="p-4 bg-gray-50 rounded overflow-auto max-h-60">
-              <pre className="text-sm">{JSON.stringify(cookieInfo, null, 2)}</pre>
+          </CardContent>
+          <CardFooter>
+            <Link href="/debug/fingerprint" className="w-full">
+              <Button variant="default" className="w-full">
+                Open Fingerprint Debug Tools
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <GitPullRequest className="h-5 w-5 mr-2 text-blue-500" />
+              Large PR Handling
+            </CardTitle>
+            <CardDescription>
+              Test how the system handles very large pull requests
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+              Test fetching and processing large pull requests with hundreds or thousands of files.
+              Analyze performance, memory usage, and verify proper pagination handling.
+            </p>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center text-slate-600 dark:text-slate-300">
+                <ChevronsRight className="h-4 w-4 mr-2 text-blue-500" />
+                <span>Large PR File Fetching</span>
+              </div>
+              <div className="flex items-center text-slate-600 dark:text-slate-300">
+                <ChevronsRight className="h-4 w-4 mr-2 text-blue-500" />
+                <span>Memory Usage Tracking</span>
+              </div>
+              <div className="flex items-center text-slate-600 dark:text-slate-300">
+                <ChevronsRight className="h-4 w-4 mr-2 text-blue-500" />
+                <span>Performance Analysis</span>
+              </div>
             </div>
-          </div>
-          
-          <div>
-            <h2 className="text-xl font-semibold mb-2">Local Storage</h2>
-            <div className="p-4 bg-gray-50 rounded overflow-auto max-h-60">
-              <pre className="text-sm">{JSON.stringify(localStorageInfo, null, 2)}</pre>
-            </div>
-          </div>
-        </div>
-      )}
+          </CardContent>
+          <CardFooter>
+            <Link href="/debug/fingerprint?tab=large-pr" className="w-full">
+              <Button variant="default" className="w-full">
+                Open Large PR Debug Tools
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -2,25 +2,26 @@
 
 This document outlines the current status, priorities, and implementation plan for the PR Reviewer project. It combines the information from the previous CURRENT_TASKS.md and IMPLEMENTATION_PLAN.md for easier reference.
 
-**Last Updated:** March 9, 2025
+**Last Updated:** March 14, 2025
 
 ## Current Status & Priorities
 
 ### Current Focus
-- **Repository Access Verification**: Implementing access checks for private repositories
+- **Two-Tier Data Collection**: Implementing a new approach to data collection that balances immediate feedback with comprehensive analysis
+- **Repository Access Verification**: Improving access checks for private repositories
 - **Core Functionality Integration**: Integrating PR analysis functionality with UI
 - **Repository Analysis Limits**: Adding tracking for repository analysis counts
 - **Results Visualization**: Testing and refining the visualization of analysis results
-- **Advanced Features**: Implementing additional features for paid tier users
 
 ### Recent Accomplishments
+- ✅ Fixed pagination in GitHub API client to retrieve ALL files/data for large PRs
+- ✅ Implemented two-tier data collection system for improved user experience
+- ✅ Added background data collection with progress indicators
+- ✅ Created database schema for comprehensive repository data
+- ✅ Implemented data collectors for repository structure, dependencies, security, and performance
+- ✅ Added API endpoints for two-tier data collection
+- ✅ Updated UI to show data collection progress
 - ✅ Implemented repository access verification for private repositories
-- ✅ Added visual indicators for private repositories in the UI
-- ✅ Created comprehensive error handling for repository access issues
-- ✅ Implemented repository fingerprinting to uniquely identify repositories across users
-- ✅ Added database schema for tracking analysis counts
-- ✅ Created API endpoints for checking and incrementing analysis counts
-- ✅ Set up free tier limits enforcement
 - ✅ Completed full user authentication flow integration
 - ✅ Implemented dashboard page with user info, stats, and quick actions
 - ✅ Created analyze page with PR URL input and validation
@@ -45,7 +46,9 @@ This document outlines the current status, priorities, and implementation plan f
 - ✅ Implemented code-specific components (CodeBlock, DiffViewer)
 
 ### Current Challenges
-- **Private Repository Access**: Ensuring proper authentication for private repository access
+- **Complete Data Collection**: Ensuring ALL data is collected even for very large PRs
+- **Private Repository Data Collection**: Ensuring complete data collection for private repositories
+- **Background Processing**: Managing background jobs efficiently
 - **Core Functionality Integration**: Connecting UI with backend PR analysis services
 - **Free Tier Management**: Tracking repository analysis usage to prevent abuse
 - **Performance Optimization**: Ensuring fast analysis and response times for users
@@ -198,63 +201,72 @@ This phase focuses on connecting the UI with backend services to implement the c
   - Created visual indicators for private repositories
   - Ensured proper authentication token usage
 
-## Project Status Update - March 9, 2025
+## Project Status Update - March 14, 2025
 
-### Completed Tasks
-1. **Repository Access Verification**:
-   - Implemented access checking for private repositories
-   - Added API endpoint for repository access verification
-   - Created visual indicators for private repositories in the UI
-   - Enhanced error handling for access denial scenarios
-   - Updated PR submission flow to verify access before analysis
-   - Cleaned up code by removing email authentication fallbacks
+### MAJOR PROGRESS: Two-Tier Data Collection System
 
-2. **Fingerprinting Functionality**:
-   - Implemented repository fingerprinting to uniquely identify repositories across users
-   - Added database schema for tracking analysis counts
-   - Created API endpoints for checking and incrementing analysis counts
-   - Set up free tier limits enforcement
+We've made significant progress on the two-tier data collection system for PR review analysis. This approach solves the core challenge of balancing immediate user feedback with comprehensive repository analysis.
 
-3. **Database Integration**:
-   - Fixed schema issues to properly store repository data
-   - Added missing columns: `url`, `language`, `topics`, `last_synced_at`, `last_analyzed_at`
-   - Implemented Row Level Security (RLS) policies for database tables
-   - Set up proper error handling for database operations
+#### Completed Features:
 
-4. **UI Integration**:
-   - Connected frontend to the repository analysis API
-   - Implemented proper state management for analysis process
-   - Added validation for PR URLs
-   - Created visual feedback for analysis status
-   - Fixed loading state issues to prevent UI freezing
+1. **API Enhancement for Comprehensive Data Retrieval**:
+   - ✅ Implemented pagination handling for GitHub API calls
+   - ✅ Now able to fetch ALL changed files in a PR, not just the first 100
+   - ✅ Enhanced commit, review, and comment fetching with pagination
+   - ✅ Added detailed logging for API response monitoring
 
-### Current Issues
-1. Need to test repository access verification across different scenarios
-2. Some intermittent UI state management issues when analyzing PRs
-3. Need more comprehensive testing of the analysis workflow
-4. Potential memory leaks to investigate
+2. **Two-Tier Data Collection**:
+   - ✅ Implemented two-tier data collection system architecture
+   - ✅ Created primary tier for fast, essential data retrieval
+   - ✅ Developed secondary tier for comprehensive background data collection
+   - ✅ Added progress indicators for background data collection
 
-### Next Steps
-1. Complete testing of repository access verification
-2. Refine error handling and user feedback
-3. Complete the actual PR analysis functionality
-4. Implement the results page for displaying analysis feedback
-5. Add unit and integration tests for the repository tracking
-6. Optimize database queries and API calls
-7. Enhance UI/UX for the analysis process
+3. **Data Collectors**:
+   - ✅ Structure Collector: Analyzes repository file structure
+   - ✅ Dependencies Collector: Identifies and analyzes dependencies
+   - ✅ Security Collector: Scans for security vulnerabilities
+   - ✅ Performance Collector: Identifies performance issues
 
-### Technical Debt
-1. Improve type definitions across the codebase
-2. Refactor repository service for better separation of concerns
-3. Add comprehensive documentation for the fingerprinting functionality
-4. Review and optimize database schema and queries
+4. **TypeScript Improvements**:
+   - ✅ Fixed type compatibility issues between packages
+   - ✅ Created proper interfaces for data collection
+   - ✅ Implemented type guards and safety checks
 
-### Future Improvements (Repository Access)
-1. Add repository access caching to reduce API calls
-2. Implement organization-level access checks for enterprise accounts
-3. Add more detailed error messages for different access denial scenarios
-4. Consider adding a request access feature for private repositories
-5. Implement access audit logging for security tracking
+#### Current Testing Focus:
+
+- Testing pagination with large PRs (100+ files)
+- Verifying data consistency between GitHub UI and our application
+- Validating performance with large repositories
+- Testing background job management for data collection
+
+#### Next Steps:
+
+1. **Enhanced Data Analysis**:
+   - Improve performance analysis patterns detection
+   - Expand language detection and statistics
+   - Enhance security vulnerability scanning
+   - Improve dependency analysis with version checking
+
+2. **Integration with External Tools**:
+   - Connect with dependency vulnerability databases
+   - Implement code quality metrics integration
+   - Add performance benchmarking capabilities
+
+3. **Data Processing Optimization**:
+   - Implement efficient storage and retrieval of collected data
+   - Add caching mechanisms to reduce API calls
+   - Optimize memory usage for large repositories
+
+4. **User Experience Refinements**:
+   - Add more detailed progress indicators
+   - Implement data refresh mechanisms
+   - Provide clearer summaries of findings
+
+5. **Cross-Platform Support**:
+   - Ensure GitLab support has similar pagination improvements
+   - Harmonize data structures between GitHub and GitLab
+
+This system will provide a significant competitive advantage by giving users immediate feedback while still providing deep, comprehensive analysis of their repositories.
 
 - [ ] **PR Data Fetching Enhancement**
   - Optimize PR data fetching for larger repositories
@@ -324,7 +336,7 @@ This phase focuses on connecting the UI with backend services to implement the c
 - Confirm accurate response parsing across providers
 - Validate end-to-end flow from request to stored response
 
-#### Chunk 4: Intelligent Agent Routing
+#### Chunk 4: Intelligent Agent Routing and Task Pipeline
 - [ ] **Multi-Provider Routing Logic**
   - Implement routing based on analysis category
   - Add performance-based routing algorithms
@@ -343,11 +355,29 @@ This phase focuses on connecting the UI with backend services to implement the c
   - Develop continuous improvement algorithms
   - Add A/B testing framework for routing strategies
 
+- [ ] **LLM Task Queue Architecture**
+  - Implement distributed queue system (Redis/RabbitMQ/SQS)
+  - Design per-category sub-queues for specialized processing
+  - Create dynamic queue prioritization based on system load
+  - Add persistence for task recovery after failures
+  - Implement dead letter queues for failed tasks
+
+- [ ] **Execution Pipeline**
+  - Design worker pool with auto-scaling capabilities
+  - Implement provider-specific adapters with consistent interfaces
+  - Create token usage budgeting per analysis/repository
+  - Add result caching for similar queries
+  - Develop batching system for similar prompts
+  - Build comprehensive logging and monitoring
+
 **Testing Milestones**:
 - Verify intelligent routing based on multiple factors
 - Confirm proper handling of rate limits and queuing
-- Test feedback collection and incorporation
-- Validate routing improvements based on performance data
+- Test queue persistence and recovery after system failures
+- Validate parallel processing improvements for large analyses
+
+**Detailed Architecture**:
+- For complete details on our LLM Task Queue and Execution Pipeline architecture, see [LLM_TASK_QUEUE.md](./LLM_TASK_QUEUE.md)
 
 #### Chunk 5: Results Visualization
 - [ ] **Dynamic Syntax Highlighting**

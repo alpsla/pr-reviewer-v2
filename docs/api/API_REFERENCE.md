@@ -22,6 +22,8 @@ interface VCSClient {
   // File Operations
   getPullRequestFiles(owner: string, repo: string, number: number): Promise<PRFile[]>;
   getFileContent(owner: string, repo: string, path: string, ref?: string): Promise<string>;
+  getRepositoryTree(owner: string, repo: string, ref?: string): Promise<RepositoryTree>;
+  getRepositoryLanguages(owner: string, repo: string): Promise<Record<string, number>>;
   
   // Comment Operations
   createPullRequestComment(owner: string, repo: string, number: number, body: string, path?: string, line?: number): Promise<Comment>;
@@ -141,11 +143,21 @@ interface RepositoryService {
   getRepository(owner: string, repo: string, provider: string): Promise<Repository>;
   listUserRepositories(provider: string): Promise<Repository[]>;
   syncRepository(owner: string, repo: string, provider: string): Promise<Repository>;
+  checkRepositoryAccess(owner: string, repo: string, provider: string): Promise<AccessStatus>;
   
   // PR Operations
   getPullRequest(owner: string, repo: string, number: number, provider: string): Promise<PullRequest>;
   getPullRequestFromUrl(url: string): Promise<PullRequest>;
   getPullRequestFiles(pullRequestId: string): Promise<PRFile[]>;
+  getPullRequestDetails(owner: string, repo: string, number: number, provider: string): Promise<PullRequestDetails>;
+  
+  // Repository Data Operations
+  getRepositoryTree(owner: string, repo: string, provider: string): Promise<RepositoryTree>;
+  getRepositoryLanguages(owner: string, repo: string, provider: string): Promise<Record<string, number>>;
+  getRepositoryDependencies(owner: string, repo: string, provider: string): Promise<Dependencies>;
+  getRepositorySecurityInfo(owner: string, repo: string, provider: string): Promise<SecurityInfo>;
+  getRepositoryStructure(owner: string, repo: string, provider: string): Promise<RepositoryStructure>;
+  getRepositoryPerformanceIndicators(owner: string, repo: string, provider: string): Promise<PerformanceIndicators>;
   
   // Analysis Operations
   requestAnalysis(pullRequestId: string, options?: AnalysisOptions): Promise<AnalysisJob>;
@@ -186,6 +198,10 @@ interface AnalysisService {
   // Analysis Operations
   processJob(job: AnalysisJob): Promise<AnalysisResult>;
   getAnalysisResults(jobId: string): Promise<AnalysisResult>;
+  
+  // Background Data Collection
+  scheduleRepositoryDataCollection(repoId: string, dataTypes: string[]): Promise<void>;
+  getDataCollectionStatus(repoId: string): Promise<DataCollectionStatus>;
 }
 ```
 
@@ -258,10 +274,25 @@ interface DatabaseService {
   createPullRequest(data: Partial<PullRequest>): Promise<PullRequest>;
   savePullRequestFiles(pullRequestId: string, files: PRFile[]): Promise<number>;
   
+  // Repository Data Methods
+  saveRepositoryTree(repositoryId: string, tree: RepositoryTree): Promise<boolean>;
+  saveRepositoryLanguages(repositoryId: string, languages: Record<string, number>): Promise<boolean>;
+  saveRepositoryDependencies(repositoryId: string, dependencies: Dependencies): Promise<boolean>;
+  saveRepositorySecurityInfo(repositoryId: string, securityInfo: SecurityInfo): Promise<boolean>;
+  saveRepositoryStructure(repositoryId: string, structure: RepositoryStructure): Promise<boolean>;
+  saveRepositoryPerformanceIndicators(repositoryId: string, indicators: PerformanceIndicators): Promise<boolean>;
+  
   // Analysis Methods
   createAnalysisJob(data: Partial<AnalysisJob>): Promise<AnalysisJob>;
   updateAnalysisJob(id: string, data: Partial<AnalysisJob>): Promise<AnalysisJob>;
   saveAnalysisResults(jobId: string, results: AnalysisResult): Promise<boolean>;
+  saveSecurityFindings(repositoryId: string, findings: SecurityFinding[]): Promise<boolean>;
+  savePerformanceIndicators(repositoryId: string, indicators: PerformanceIndicator[]): Promise<boolean>;
+  
+  // Data Collection Methods
+  createDataCollectionJob(repositoryId: string, dataTypes: string[]): Promise<DataCollectionJob>;
+  updateDataCollectionJob(id: string, data: Partial<DataCollectionJob>): Promise<DataCollectionJob>;
+  getDataCollectionJobs(repositoryId: string, status?: string): Promise<DataCollectionJob[]>;
   
   // Utility Methods
   runTransaction<T>(callback: (tx: Transaction) => Promise<T>): Promise<T>;
@@ -278,6 +309,26 @@ class SupabaseDatabaseService implements DatabaseService {
   
   // Implementation of DatabaseService interface using Supabase
   // ...
+}
+```
+
+## Background Processing
+
+### DataCollector Interface
+
+```typescript
+interface DataCollector {
+  // Queue Management
+  scheduleCollection(repositoryId: string, dataTypes: string[], priority?: number): Promise<DataCollectionJob>;
+  processJob(job: DataCollectionJob): Promise<void>;
+  
+  // Collection Methods
+  collectRepositoryTree(repositoryId: string): Promise<RepositoryTree>;
+  collectRepositoryLanguages(repositoryId: string): Promise<Record<string, number>>;
+  collectRepositoryDependencies(repositoryId: string): Promise<Dependencies>;
+  collectRepositorySecurityInfo(repositoryId: string): Promise<SecurityInfo>;
+  collectRepositoryStructure(repositoryId: string): Promise<RepositoryStructure>;
+  collectRepositoryPerformanceIndicators(repositoryId: string): Promise<PerformanceIndicators>;
 }
 ```
 
@@ -315,6 +366,50 @@ Internal API routes used by the frontend.
 // Params: { owner: string, repo: string }
 // Query: { provider: string, state?: string }
 // Response: { pullRequests: PullRequest[] }
+
+// GET /api/repos/:owner/:repo/access
+// Params: { owner: string, repo: string }
+// Query: { provider: string }
+// Response: { access: AccessStatus }
+
+// GET /api/repos/:owner/:repo/structure
+// Params: { owner: string, repo: string }
+// Query: { provider: string }
+// Response: { structure: RepositoryStructure }
+
+// GET /api/repos/:owner/:repo/languages
+// Params: { owner: string, repo: string }
+// Query: { provider: string }
+// Response: { languages: Record<string, number> }
+
+// GET /api/repos/:owner/:repo/dependencies
+// Params: { owner: string, repo: string }
+// Query: { provider: string }
+// Response: { dependencies: Dependencies }
+
+// GET /api/repos/:owner/:repo/security
+// Params: { owner: string, repo: string }
+// Query: { provider: string }
+// Response: { security: SecurityInfo }
+
+// GET /api/repos/:owner/:repo/performance
+// Params: { owner: string, repo: string }
+// Query: { provider: string }
+// Response: { performance: PerformanceIndicators }
+```
+
+### PR Routes
+
+```typescript
+// GET /api/prs/:owner/:repo/:number/details
+// Params: { owner: string, repo: string, number: number }
+// Query: { provider: string }
+// Response: { details: PullRequestDetails }
+
+// GET /api/prs/:owner/:repo/:number/files
+// Params: { owner: string, repo: string, number: number }
+// Query: { provider: string }
+// Response: { files: PRFile[] }
 ```
 
 ### Analysis Routes
@@ -330,6 +425,14 @@ Internal API routes used by the frontend.
 
 // GET /api/analysis/history
 // Response: { jobs: AnalysisJob[] }
+
+// POST /api/analysis/data-collection
+// Request: { repositoryId: string, dataTypes: string[] }
+// Response: { job: DataCollectionJob }
+
+// GET /api/analysis/data-collection/:repositoryId
+// Params: { repositoryId: string }
+// Response: { jobs: DataCollectionJob[] }
 ```
 
 ## Error Handling
@@ -370,10 +473,23 @@ class RateLimitError extends VCSError {
   }
 }
 
+class RepositoryAccessError extends VCSError {
+  constructor(message: string, details?: any) {
+    super(message, 'access-denied', 403, details);
+  }
+}
+
 // Analysis errors
 class AnalysisError extends AppError {
   constructor(message: string, code: string, details?: any) {
     super(message, `analysis/${code}`, 500, details);
+  }
+}
+
+// Data Collection errors
+class DataCollectionError extends AppError {
+  constructor(message: string, code: string, details?: any) {
+    super(message, `data-collection/${code}`, 500, details);
   }
 }
 
@@ -405,6 +521,20 @@ interface Repository {
   defaultBranch: string;
   languages?: Record<string, number>;
   lastSyncedAt?: Date;
+  lastAnalyzedAt?: Date;
+  fingerprint?: string;
+  analysisCount?: number;
+  freeTierLimit?: number;
+}
+
+interface AccessStatus {
+  hasAccess: boolean;
+  private: boolean;
+  permissions: {
+    admin: boolean;
+    push: boolean;
+    pull: boolean;
+  };
 }
 
 interface PullRequest {
@@ -428,6 +558,20 @@ interface PullRequest {
   lastSyncedAt?: Date;
 }
 
+interface PullRequestDetails {
+  id: string;
+  pullRequest: PullRequest;
+  filesChanged: number;
+  linesAdded: number;
+  linesRemoved: number;
+  commits: number;
+  reviewers?: string[];
+  labels?: string[];
+  milestone?: string;
+  isDraft?: boolean;
+  mergeableState?: string;
+}
+
 interface PRFile {
   id?: string;
   pullRequestId?: string;
@@ -439,6 +583,102 @@ interface PRFile {
   contentType?: string;
   content?: string;
   patch?: string;
+}
+
+interface RepositoryTree {
+  sha: string;
+  tree: TreeItem[];
+}
+
+interface TreeItem {
+  path: string;
+  mode: string;
+  type: 'blob' | 'tree';
+  sha: string;
+  size?: number;
+  url: string;
+}
+
+interface RepositoryStructure {
+  id: string;
+  repositoryId: string;
+  rootDirectories: DirectoryNode[];
+  fileTypes: Record<string, number>;
+  specialDirectories: Record<string, string>;
+  lastUpdated: Date;
+}
+
+interface DirectoryNode {
+  path: string;
+  type: 'directory' | 'file';
+  children?: DirectoryNode[];
+  size?: number;
+  extension?: string;
+}
+
+interface Dependencies {
+  id: string;
+  repositoryId: string;
+  packageManagers: string[];
+  directDependencies: Dependency[];
+  devDependencies: Dependency[];
+  transitiveDependencies?: Dependency[];
+  vulnerabilities: DependencyVulnerability[];
+  lastUpdated: Date;
+}
+
+interface Dependency {
+  name: string;
+  version: string;
+  latestVersion?: string;
+  outdated?: boolean;
+  packageManager: string;
+}
+
+interface DependencyVulnerability {
+  id: string;
+  dependencyName: string;
+  dependencyVersion: string;
+  vulnerability: string;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  description: string;
+  fixedInVersion?: string;
+}
+
+interface SecurityInfo {
+  id: string;
+  repositoryId: string;
+  findings: SecurityFinding[];
+  lastUpdated: Date;
+}
+
+interface SecurityFinding {
+  id: string;
+  type: 'dependency' | 'code' | 'configuration';
+  path?: string;
+  title: string;
+  description: string;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  recommendation?: string;
+  cwe?: string;
+  detectedAt: Date;
+}
+
+interface PerformanceIndicators {
+  id: string;
+  repositoryId: string;
+  indicators: PerformanceIndicator[];
+  lastUpdated: Date;
+}
+
+interface PerformanceIndicator {
+  id: string;
+  type: 'asset_size' | 'query_complexity' | 'api_overhead' | 'memory_usage' | 'worker_config';
+  path?: string;
+  measurement: Record<string, any>;
+  impact: 'high' | 'medium' | 'low';
+  recommendation?: string;
+  detectedAt: Date;
 }
 
 interface AnalysisJob {
@@ -454,6 +694,29 @@ interface AnalysisJob {
   error?: string;
   retryCount: number;
   settings?: Record<string, any>;
+}
+
+interface DataCollectionJob {
+  id: string;
+  repositoryId: string;
+  dataTypes: string[];
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  priority: number;
+  createdAt: Date;
+  updatedAt: Date;
+  startedAt?: Date;
+  completedAt?: Date;
+  error?: string;
+  retryCount: number;
+}
+
+interface DataCollectionStatus {
+  repositoryId: string;
+  collectedDataTypes: string[];
+  pendingDataTypes: string[];
+  failedDataTypes: string[];
+  lastUpdated: Date;
+  completionPercentage: number;
 }
 
 interface AnalysisResult {
@@ -509,6 +772,74 @@ Content-Type: application/json
     "status": "pending",
     "createdAt": "2025-02-26T12:34:56.789Z",
     "pullRequestId": "b2c3d4e5-f6g7-8901-ijkl-mn2345678901"
+  }
+}
+```
+
+### Request Repository Data Collection
+
+```http
+POST /api/analysis/data-collection
+Content-Type: application/json
+
+{
+  "repositoryId": "b2c3d4e5-f6g7-8901-ijkl-mn2345678901",
+  "dataTypes": ["languages", "dependencies", "security", "structure", "performance"]
+}
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "success": true,
+  "job": {
+    "id": "d4e5f6g7-h8i9-0123-uvwx-yz4567890123",
+    "status": "pending",
+    "dataTypes": ["languages", "dependencies", "security", "structure", "performance"],
+    "createdAt": "2025-02-26T12:37:45.123Z",
+    "repositoryId": "b2c3d4e5-f6g7-8901-ijkl-mn2345678901",
+    "completionPercentage": 0
+  }
+}
+```
+
+### Get PR Details with Initial Data
+
+```http
+GET /api/prs/owner/repo/123/details?provider=github
+```
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "success": true,
+  "details": {
+    "id": "b2c3d4e5-f6g7-8901-ijkl-mn2345678901",
+    "pullRequest": {
+      "id": "c3d4e5f6-g7h8-9012-opqr-st3456789012",
+      "title": "Add user authentication",
+      "number": 123,
+      "state": "open",
+      "url": "https://github.com/owner/repo/pull/123",
+      "authorUsername": "developer",
+      "baseBranch": "main",
+      "headBranch": "feature/auth",
+      "createdAt": "2025-02-25T10:15:30.456Z",
+      "updatedAt": "2025-02-26T09:22:15.789Z"
+    },
+    "filesChanged": 5,
+    "linesAdded": 120,
+    "linesRemoved": 25,
+    "commits": 3
+  },
+  "dataCollectionStatus": {
+    "pendingDataTypes": ["security", "performance"],
+    "collectedDataTypes": ["languages", "structure"],
+    "completionPercentage": 40
   }
 }
 ```

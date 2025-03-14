@@ -23,6 +23,8 @@ export class GitHubClient implements VCSClient {
   private platform = 'github' as const;
 
   constructor(token: string, options?: { baseUrl?: string }) {
+    console.log(`Initializing GitHub client with token (first 5 chars): ${token.substring(0, 5)}...`);
+    console.log(`Token length: ${token.length}, Token type: ${typeof token}`);
     this.octokit = new Octokit({
       auth: token,
       baseUrl: options?.baseUrl || 'https://api.github.com'
@@ -213,6 +215,42 @@ export class GitHubClient implements VCSClient {
         sort = params.sort;
       }
       
+      // For fetching all PRs regardless of pagination set by the user, 
+      // uncomment this code and comment out the normal API call
+      /*
+      let allPRs: any[] = [];
+      let currentPage = 1;
+      let hasNextPage = true;
+      
+      // Fetch all pages of PRs
+      while (hasNextPage) {
+        const pageResponse = await this.octokit.pulls.list({
+          owner,
+          repo,
+          page: currentPage,
+          per_page: 100,
+          state: params?.state === 'merged' ? 'closed' : params?.state || 'open',
+          sort,
+          direction: params?.direction
+        });
+        
+        allPRs = [...allPRs, ...pageResponse.data];
+        
+        // Check if there are more pages
+        hasNextPage = !!pageResponse.headers.link?.includes('rel="next"');
+        currentPage++;
+      }
+      
+      console.log(`Total PRs fetched for ${owner}/${repo}: ${allPRs.length}`);
+      
+      // Use the all fetched PRs instead of paginated results
+      response = {
+        data: allPRs,
+        headers: { link: '' }
+      };
+      */
+      
+      // Normal paginated API call as requested by user
       const response = await this.octokit.pulls.list({
         owner,
         repo,
@@ -265,14 +303,35 @@ export class GitHubClient implements VCSClient {
     pullNumber: number
   ): Promise<VCSPullRequestFile[]> {
     try {
-      const response = await this.octokit.pulls.listFiles({
-        owner,
-        repo,
-        pull_number: pullNumber,
-        per_page: 100
-      });
+      let allFiles: any[] = [];
+      let page = 1;
+      let hasNextPage = true;
       
-      return response.data.map(file => ({
+      // Fetch all pages of files
+      while (hasNextPage) {
+        console.log(`Fetching PR files page ${page} for ${owner}/${repo}#${pullNumber}`);
+        const response = await this.octokit.pulls.listFiles({
+          owner,
+          repo,
+          pull_number: pullNumber,
+          per_page: 100,
+          page
+        });
+        
+        allFiles = [...allFiles, ...response.data];
+        
+        // Check if there are more pages
+        hasNextPage = !!response.headers.link?.includes('rel="next"');
+        page++;
+        
+        if (hasNextPage) {
+          console.log(`Found next page for PR files: ${owner}/${repo}#${pullNumber}`);
+        }
+      }
+      
+      console.log(`Total files fetched for ${owner}/${repo}#${pullNumber}: ${allFiles.length}`);
+      
+      return allFiles.map(file => ({
         filename: file.filename,
         status: file.status as 'added' | 'modified' | 'removed' | 'renamed' | 'copied',
         additions: file.additions,
@@ -296,14 +355,30 @@ export class GitHubClient implements VCSClient {
     pullNumber: number
   ): Promise<VCSPullRequestCommit[]> {
     try {
-      const response = await this.octokit.pulls.listCommits({
-        owner,
-        repo,
-        pull_number: pullNumber,
-        per_page: 100
-      });
+      let allCommits: any[] = [];
+      let page = 1;
+      let hasNextPage = true;
       
-      return response.data.map(commit => ({
+      // Fetch all pages of commits
+      while (hasNextPage) {
+        const response = await this.octokit.pulls.listCommits({
+          owner,
+          repo,
+          pull_number: pullNumber,
+          per_page: 100,
+          page
+        });
+        
+        allCommits = [...allCommits, ...response.data];
+        
+        // Check if there are more pages
+        hasNextPage = !!response.headers.link?.includes('rel="next"');
+        page++;
+      }
+      
+      console.log(`Total commits fetched for ${owner}/${repo}#${pullNumber}: ${allCommits.length}`);
+      
+      return allCommits.map(commit => ({
         sha: commit.sha,
         message: commit.commit.message,
         author: {
@@ -336,13 +411,28 @@ export class GitHubClient implements VCSClient {
     pullNumber: number
   ): Promise<VCSPullRequestReview[]> {
     try {
-      const response = await this.octokit.pulls.listReviews({
-        owner,
-        repo,
-        pull_number: pullNumber
-      });
+      let allReviews: any[] = [];
+      let page = 1;
+      let hasNextPage = true;
       
-      return response.data.map(review => ({
+      // Fetch all pages of reviews
+      while (hasNextPage) {
+        const response = await this.octokit.pulls.listReviews({
+          owner,
+          repo,
+          pull_number: pullNumber,
+          per_page: 100,
+          page
+        });
+        
+        allReviews = [...allReviews, ...response.data];
+        
+        // Check if there are more pages
+        hasNextPage = !!response.headers.link?.includes('rel="next"');
+        page++;
+      }
+      
+      return allReviews.map(review => ({
         id: review.id.toString(),
         user: {
           id: review.user?.id?.toString() || '',
@@ -374,14 +464,28 @@ export class GitHubClient implements VCSClient {
     pullNumber: number
   ): Promise<VCSPullRequestComment[]> {
     try {
-      const response = await this.octokit.pulls.listReviewComments({
-        owner,
-        repo,
-        pull_number: pullNumber,
-        per_page: 100
-      });
+      let allComments: any[] = [];
+      let page = 1;
+      let hasNextPage = true;
       
-      return response.data.map(comment => ({
+      // Fetch all pages of comments
+      while (hasNextPage) {
+        const response = await this.octokit.pulls.listReviewComments({
+          owner,
+          repo,
+          pull_number: pullNumber,
+          per_page: 100,
+          page
+        });
+        
+        allComments = [...allComments, ...response.data];
+        
+        // Check if there are more pages
+        hasNextPage = !!response.headers.link?.includes('rel="next"');
+        page++;
+      }
+      
+      return allComments.map(comment => ({
         id: comment.id.toString(),
         user: {
           id: comment.user?.id?.toString() || '',

@@ -1,11 +1,17 @@
 {
-  "/analyze/page": "app/analyze/page.js",
+  "/api/analysis/data-collection/[repositoryId]/route": "app/api/analysis/data-collection/[repositoryId]/route.js",
   "/api/repository/list/route": "app/api/repository/list/route.js",
+  "/api/repository/increment-analysis/route": "app/api/repository/increment-analysis/route.js",
+  "/page": "app/page.js",
+  "/api/debug/repo/route": "app/api/debug/repo/route.js",
+  "/auth/callback/route": "app/auth/callback/route.js",
+  "/api/repository/limits/route": "app/api/repository/limits/route.js",
+  "/api/analysis/data-collection/route": "app/api/analysis/data-collection/route.js",
   "/api/repository/test-token/route": "app/api/repository/test-token/route.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/page": "app/page.js",
-  "/api/repository/limits/route": "app/api/repository/limits/route.js",
-  "/api/debug/repo/route": "app/api/debug/repo/route.js",
-  "/api/repository/pr-details/route": "app/api/repository/pr-details/route.js",
-  "/api/repository/increment-analysis/route": "app/api/repository/increment-analysis/route.js"
+  "/api/prs/[owner]/[repo]/[number]/basic-details/route": "app/api/prs/[owner]/[repo]/[number]/basic-details/route.js",
+  "/auth/callback-ui/page": "app/auth/callback-ui/page.js",
+  "/analyze/page": "app/analyze/page.js",
+  "/auth/signout/route": "app/auth/signout/route.js",
+  "/not-found": "app/not-found.js"
 }

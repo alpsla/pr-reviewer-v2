@@ -19,6 +19,14 @@ export class RepositoryOperations extends BaseRepositoryService {
       console.log('Repository cache check:', { cached: !!cachedRepo, owner, name });
       
       if (cachedRepo && new Date(cachedRepo.last_synced_at).getTime() > Date.now() - 3600000) {
+        console.log('Using cached repository data:', {
+          id: cachedRepo.id,
+          owner: cachedRepo.owner,
+          name: cachedRepo.name,
+          private: cachedRepo.is_private,
+          fingerprint: cachedRepo.fingerprint
+        });
+        
         return {
           id: cachedRepo.id,
           platform,
@@ -58,10 +66,30 @@ export class RepositoryOperations extends BaseRepositoryService {
         throw new Error(`No authentication token available for ${platform}. Please check your login.`);
       }
       
+      // Enhanced token validation
+      if (platform === 'github' && this.tokens.github) {
+        console.log(`Using GitHub token for ${owner}/${name} (token length: ${this.tokens.github.length})`);
+        console.log(`Token starts with: ${this.tokens.github.substring(0, 5)}...`);
+        if (this.tokens.github.length < 30) {
+          console.warn('Warning: GitHub token length is suspiciously short. This might not be a valid token.');
+        }
+      } else if (platform === 'gitlab' && this.tokens.gitlab) {
+        console.log(`Using GitLab token for ${owner}/${name} (token length: ${this.tokens.gitlab.length})`);
+        console.log(`Token starts with: ${this.tokens.gitlab.substring(0, 5)}...`);
+      }
+      
       const client = this.getClientForPlatform(platform);
       console.log('VCS client obtained, fetching repository...');
+      
       const vcsRepo = await client.getRepository(owner, name);
       const repository = convertVCSRepository(vcsRepo);
+      
+      // Log detailed information about private repositories
+      if (repository.private) {
+        console.log(`Repository ${owner}/${name} is PRIVATE with permissions:`, repository.permissions);
+      } else {
+        console.log(`Repository ${owner}/${name} is PUBLIC with permissions:`, repository.permissions);
+      }
       
       console.log('VCS repository details:', { 
         repoId: repository.externalId,
@@ -69,7 +97,7 @@ export class RepositoryOperations extends BaseRepositoryService {
         name: repository.name
       });
       
-      // Generate fingerprint for this repository
+      // Generate fingerprint for this repository (only pass platform, owner, name)
       const fingerprint = createRepositoryFingerprint(platform, owner, name);
       
       // Check if there's any repository with this fingerprint already
@@ -149,6 +177,7 @@ export class RepositoryOperations extends BaseRepositoryService {
       if (this.tokens[platform]) {
         // Log the first few characters of the token for debugging
         console.log(`Token starts with: ${this.tokens[platform]?.substring(0, 5)}...`);
+        console.log(`Token length: ${this.tokens[platform]?.length || 0}`);
       }
       
       // Check if we have a client for this platform
@@ -172,15 +201,29 @@ export class RepositoryOperations extends BaseRepositoryService {
       // Get the repository (this will throw if access is denied)
       const repository = await this.getRepository(platform, owner, repo);
       
-      // Attempt to handle GitHub API sometimes incorrectly reporting public repos as private
-      // If we have pull permission, let's treat it as accessible
+      // Explicit check for private repository access
       let isPrivate = repository.private;
       
+      // Enhanced checking for private repositories
+      if (isPrivate) {
+        console.log('Repository is private, verifying access permissions explicitly');
+        if (!repository.permissions.pull) {
+          console.log('No pull permission for private repository - access denied');
+          return {
+            hasAccess: false,
+            private: true,
+            permissions: repository.permissions
+          };
+        }
+        console.log('Private repository with verified pull permissions - access granted');
+      } else {
+        console.log('Repository is public - access granted');
+      }
+      
       // Special case handling: if a repo is marked as private but we have pull permission,
-      // it might be a public repo incorrectly marked as private by the API
+      // we'll allow access but keep it marked as private
       if (isPrivate && repository.permissions.pull) {
-        console.log('Repository is marked private but has pull permission - might be public');
-        // We'll still mark it as private, but we'll allow access
+        console.log('Repository is correctly marked as private and we have pull permission');
       }
       
       console.log(`Access check result: hasAccess=true, private=${isPrivate}, permissions=`, repository.permissions);
@@ -261,8 +304,26 @@ export class RepositoryOperations extends BaseRepositoryService {
     repo: string
   ): Promise<{ current: number; limit: number; hasReachedLimit: boolean }> {
     try {
-      // Generate fingerprint first to check if repository was already analyzed
+      console.log(`Checking analysis limit for ${platform}/${owner}/${repo}`);
+
+      let isPrivate = false;
+      // Try to get repository visibility status first
+      if (this.tokens[platform]) {
+        try {
+          const accessInfo = await this.checkRepositoryAccess(platform, owner, repo);
+          isPrivate = accessInfo.private;
+          console.log(`Repository access check completed: private=${isPrivate}, hasAccess=${accessInfo.hasAccess}`);
+        } catch (error) {
+          console.warn(`Could not determine repository visibility, assuming public:`, error);
+        }
+      }
+
+      // Generate fingerprint
       const fingerprint = createRepositoryFingerprint(platform, owner, repo);
+      console.log(`Generated fingerprint for ${owner}/${repo}:`, {
+        fingerprint: fingerprint.substring(0, 16),
+        isPrivate // Log private status separately for debugging
+      });
       
       // Check if there's any repository with this fingerprint already
       let existingByFingerprint;
@@ -352,8 +413,31 @@ export class RepositoryOperations extends BaseRepositoryService {
     bypassLimit = false
   ): Promise<number> {
     try {
-      // Generate fingerprint first to check if repository was already analyzed
+      console.log(`Incrementing analysis count for ${platform}/${owner}/${repo}`);
+
+      let isPrivate = false;
+      // Try to get repository visibility status first
+      if (this.tokens[platform]) {
+        try {
+          const accessInfo = await this.checkRepositoryAccess(platform, owner, repo);
+          isPrivate = accessInfo.private;
+          console.log(`Repository access check for increment: private=${isPrivate}, hasAccess=${accessInfo.hasAccess}`);
+          
+          // If it's a private repository and we don't have access, fail early
+          if (isPrivate && !accessInfo.hasAccess) {
+            throw new Error(`Cannot access private repository ${owner}/${repo} - permission denied`);
+          }
+        } catch (error) {
+          console.warn(`Could not determine repository visibility, proceeding anyway:`, error);
+        }
+      }
+
+      // Generate fingerprint
       const fingerprint = createRepositoryFingerprint(platform, owner, repo);
+      console.log(`Generated fingerprint for increment operation ${owner}/${repo}:`, {
+        fingerprint: fingerprint.substring(0, 16),
+        isPrivate // Log private status separately for debugging
+      });
       
       // Check if there's any repository with this fingerprint already
       let existingByFingerprint;

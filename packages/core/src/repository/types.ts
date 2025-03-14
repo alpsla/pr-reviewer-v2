@@ -1,5 +1,18 @@
 import { PlatformErrorCode } from '../types/platform';
 import type { VCSPlatform } from '../types/platform';
+
+// Import data collection types
+import {
+  PullRequestBasicDetails,
+  AnalysisEligibility,
+  DataCollectionJob,
+  DataCollectionStatusInfo,
+  RepositoryStructure,
+  Dependencies,
+  SecurityInfo,
+  PerformanceIndicators,
+  DataType
+} from './types/data-collection';
 import type {
   VCSRepository,
   VCSPullRequest,
@@ -14,6 +27,7 @@ import type {
  * Repository service interface
  */
 export interface IRepositoryService {
+  // Original methods
   getRepository(platform: VCSPlatform, owner: string, name: string): Promise<Repository>;
   getPullRequest(platform: VCSPlatform, owner: string, repo: string, number: number): Promise<PullRequest>;
   listPullRequests(platform: VCSPlatform, owner: string, repo: string, options?: PullRequestListOptions): Promise<VCSPaginatedResponse<PullRequest>>;
@@ -40,6 +54,18 @@ export interface IRepositoryService {
     hasReachedLimit: boolean;
   }>;
   incrementAnalysisCount(platform: VCSPlatform, owner: string, repo: string, bypassLimit?: boolean): Promise<number>;
+  
+  // Two-tier data collection - Primary (Immediate)
+  getPullRequestBasicDetails(platform: VCSPlatform, owner: string, repo: string, number: number): Promise<PullRequestBasicDetails>;
+  checkAnalysisEligibility(repositoryId: string): Promise<AnalysisEligibility>;
+  
+  // Two-tier data collection - Secondary (Background)
+  scheduleDataCollection(repositoryId: string, dataTypes: DataType[]): Promise<DataCollectionJob>;
+  getDataCollectionStatus(repositoryId: string): Promise<DataCollectionStatusInfo>;
+  getRepositoryStructure(repositoryId: string): Promise<RepositoryStructure | null>;
+  getDependencyInfo(repositoryId: string): Promise<Dependencies | null>;
+  getSecurityInfo(repositoryId: string): Promise<SecurityInfo | null>;
+  getPerformanceIndicators(repositoryId: string): Promise<PerformanceIndicators | null>;
 }
 
 /**
@@ -158,3 +184,18 @@ export interface PullRequestListOptions {
  * Re-export common types
  */
 export type { VCSPaginatedResponse as PaginatedResponse };
+
+/**
+ * Re-export data collection types
+ */
+export type {
+  PullRequestBasicDetails,
+  AnalysisEligibility,
+  DataCollectionJob,
+  DataCollectionStatusInfo,
+  RepositoryStructure,
+  Dependencies,
+  SecurityInfo,
+  PerformanceIndicators,
+  DataType
+};

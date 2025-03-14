@@ -45,7 +45,10 @@ export class MockVCSClient implements VCSClient {
       'getPullRequestCommits',
       'getPullRequestReviews',
       'getPullRequestComments',
-      'getRateLimit'
+      'getRateLimit',
+      'getRepositoryContents',
+      'getFileContent',
+      'getRepositoryTree'
     ];
     
     // Apply spies using type assertion
@@ -246,6 +249,46 @@ export class MockVCSClient implements VCSClient {
       remaining: 4999,
       reset: new Date(Date.now() + 3600 * 1000),
       used: 1
+    };
+  }
+
+  // Data collection extension methods
+  async getRepositoryContents(owner: string, repo: string, path: string, ref?: string): Promise<any[]> {
+    return [
+      {
+        name: 'file1.txt',
+        path: `${path}/file1.txt`,
+        sha: 'sha-123',
+        size: 100,
+        type: 'file',
+        content: 'Mock file content',
+        encoding: 'utf-8'
+      }
+    ];
+  }
+
+  async getFileContent(owner: string, repo: string, path: string, ref?: string): Promise<string> {
+    return 'Mock file content for ' + path;
+  }
+
+  async getRepositoryTree(owner: string, repo: string, ref: string = 'HEAD', recursive: boolean = false): Promise<any> {
+    return {
+      sha: 'tree-sha-123',
+      tree: [
+        {
+          path: 'file1.txt',
+          type: 'blob',
+          sha: 'file-sha-123',
+          size: 100
+        },
+        {
+          path: 'dir/file2.txt',
+          type: 'blob',
+          sha: 'file-sha-456',
+          size: 200
+        }
+      ],
+      truncated: false
     };
   }
 }

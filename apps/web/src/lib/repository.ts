@@ -26,7 +26,16 @@ import type {
   PullRequestDetails,
   PullRequestListOptions,
   PaginatedResponse,
-  IRepositoryService
+  IRepositoryService,
+  PullRequestBasicDetails,
+  AnalysisEligibility,
+  DataCollectionJob,
+  DataCollectionStatusInfo,
+  RepositoryStructure,
+  Dependencies,
+  SecurityInfo,
+  PerformanceIndicators,
+  DataType
 } from '@pr-reviewer/core/src/repository/types';
 
 export {
@@ -56,5 +65,14 @@ export type {
   PullRequestDetails,
   PullRequestListOptions,
   PaginatedResponse,
-  IRepositoryService
+  IRepositoryService,
+  PullRequestBasicDetails,
+  AnalysisEligibility,
+  DataCollectionJob,
+  DataCollectionStatusInfo,
+  RepositoryStructure,
+  Dependencies,
+  SecurityInfo,
+  PerformanceIndicators,
+  DataType
 };

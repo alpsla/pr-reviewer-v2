@@ -81,7 +81,8 @@ export abstract class BaseRepositoryService {
         }
       }
       
-      return this.githubClient;
+      // At this point, githubClient must be defined
+      return this.githubClient!;
     }
     
     if (platform === 'gitlab') {
@@ -107,7 +108,8 @@ export abstract class BaseRepositoryService {
         }
       }
       
-      return this.gitlabClient;
+      // At this point, gitlabClient must be defined
+      return this.gitlabClient!;
     }
     
     // Create a validation error for unsupported platforms

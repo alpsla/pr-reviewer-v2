@@ -142,63 +142,81 @@ CREATE TABLE public.pr_files (
 );
 ```
 
-### Analysis Jobs
+### Data Collection Jobs
 
-Tracks analysis jobs in the queue.
+Tracks data collection jobs for the two-tier data collection system.
 
 ```sql
-CREATE TABLE public.analysis_jobs (
+CREATE TABLE public.data_collection_jobs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES auth.users(id) NOT NULL,
-  pull_request_id UUID REFERENCES public.pull_requests(id) NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending',
-  priority INTEGER DEFAULT 0,
+  repository_id UUID REFERENCES repositories(id) ON DELETE CASCADE,
+  data_types TEXT[] NOT NULL,
+  status VARCHAR(20) NOT NULL CHECK (status IN ('pending', 'processing', 'completed', 'failed')),
+  priority INTEGER NOT NULL DEFAULT 1,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   started_at TIMESTAMP WITH TIME ZONE,
   completed_at TIMESTAMP WITH TIME ZONE,
   error TEXT,
-  retry_count INTEGER DEFAULT 0,
-  settings JSONB DEFAULT '{}'::JSONB
+  retry_count INTEGER NOT NULL DEFAULT 0
 );
 ```
 
-### Analysis Results
+### Repository Structure
 
-Stores the results of analysis jobs.
+Stores information about the repository's directory structure and file types.
 
 ```sql
-CREATE TABLE public.analysis_results (
+CREATE TABLE public.repository_structures (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  analysis_job_id UUID REFERENCES public.analysis_jobs(id) NOT NULL,
-  pull_request_id UUID REFERENCES public.pull_requests(id) NOT NULL,
-  summary TEXT,
-  categories JSONB,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE (analysis_job_id)
+  repository_id UUID REFERENCES repositories(id) ON DELETE CASCADE,
+  root_directories JSONB NOT NULL,
+  file_types JSONB NOT NULL,
+  special_directories JSONB,
+  last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 ```
 
-### Analysis Issues
+### Repository Dependencies
 
-Stores individual issues found during analysis.
+Stores information about the repository's dependencies.
 
 ```sql
-CREATE TABLE public.analysis_issues (
+CREATE TABLE public.repository_dependencies (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  analysis_result_id UUID REFERENCES public.analysis_results(id) NOT NULL,
-  file_path TEXT NOT NULL,
-  category TEXT NOT NULL,
-  severity TEXT NOT NULL,
-  title TEXT NOT NULL,
-  description TEXT,
-  suggestion TEXT,
-  line_numbers INTEGER[],
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  location_start JSON,
-  location_end JSON,
-  code_snippet TEXT
+  repository_id UUID REFERENCES repositories(id) ON DELETE CASCADE,
+  package_managers TEXT[] NOT NULL,
+  direct_dependencies JSONB NOT NULL,
+  dev_dependencies JSONB NOT NULL,
+  transitive_dependencies JSONB,
+  vulnerabilities JSONB,
+  last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+### Security Information
+
+Stores security findings for a repository.
+
+```sql
+CREATE TABLE public.security_info (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  repository_id UUID REFERENCES repositories(id) ON DELETE CASCADE,
+  findings JSONB NOT NULL,
+  last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+### Performance Indicators
+
+Stores performance-related information for a repository.
+
+```sql
+CREATE TABLE public.performance_indicators (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  repository_id UUID REFERENCES repositories(id) ON DELETE CASCADE,
+  indicators JSONB NOT NULL,
+  last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 ```
 
@@ -214,6 +232,12 @@ auth.users → profiles → connections → repository_access
 
 ```
 repositories → repository_access → pull_requests → pr_files
+```
+
+### Data Collection Flow
+
+```
+repositories → data_collection_jobs → [repository_structures, repository_dependencies, security_info, performance_indicators]
 ```
 
 ### Analysis Data Flow
@@ -272,6 +296,16 @@ CREATE INDEX idx_analysis_results_pull_request_id ON analysis_results(pull_reque
 -- Issues by file path and category
 CREATE INDEX idx_analysis_issues_file_path ON analysis_issues(file_path);
 CREATE INDEX idx_analysis_issues_category ON analysis_issues(category);
+
+-- Data collection jobs by status and repository ID
+CREATE INDEX idx_data_collection_jobs_status ON data_collection_jobs(status);
+CREATE INDEX idx_data_collection_jobs_repository_id ON data_collection_jobs(repository_id);
+
+-- Repository data by repository ID
+CREATE INDEX idx_repository_structures_repository_id ON repository_structures(repository_id);
+CREATE INDEX idx_repository_dependencies_repository_id ON repository_dependencies(repository_id);
+CREATE INDEX idx_security_info_repository_id ON security_info(repository_id);
+CREATE INDEX idx_performance_indicators_repository_id ON performance_indicators(repository_id);
 ```
 
 ## Data Caching Strategy

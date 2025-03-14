@@ -2,9 +2,10 @@
  * VCS Client Factory
  * Creates appropriate client based on platform type
  */
-import { VCSPlatform, VCSClient } from './types';
+import { VCSPlatform } from './types';
 import { GitHubClient } from './github/github-client';
 import { GitLabClient } from './gitlab/gitlab-client';
+import { initializeVCSExtensions } from './extensions';
 
 /**
  * Create a VCS client based on platform
@@ -17,7 +18,7 @@ const getVCSClient = (
   platform: VCSPlatform,
   token: string,
   baseUrl?: string
-): VCSClient => {
+): any => {
   // Add token debugging (just show length for security)
   console.log(`Creating ${platform} client with token [length: ${token?.length || 0}]`);
   
@@ -27,9 +28,13 @@ const getVCSClient = (
   
   switch (platform) {
     case 'github':
-      return new GitHubClient(token, baseUrl ? { baseUrl } : undefined);
+      const githubClient = new GitHubClient(token, baseUrl ? { baseUrl } : undefined);
+      initializeVCSExtensions(githubClient);
+      return githubClient;
     case 'gitlab':
-      return new GitLabClient(token, baseUrl ? { baseUrl } : undefined);
+      const gitlabClient = new GitLabClient(token, baseUrl ? { baseUrl } : undefined);
+      initializeVCSExtensions(gitlabClient);
+      return gitlabClient;
     default:
       throw new Error(`Unsupported VCS platform: ${platform}`);
   }

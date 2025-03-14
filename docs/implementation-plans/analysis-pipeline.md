@@ -1,14 +1,16 @@
-# Implementation Plan: Analysis Pipeline
+# Implementation Plan: Analysis Pipeline with Two-Tier Data Collection
 
 ## Overview
-The Analysis Pipeline is a core feature that processes pull requests through AI models to generate intelligent code reviews. This plan details the architecture, components, and implementation steps for the complete pipeline.
+The Analysis Pipeline is a core feature that processes pull requests through AI models to generate intelligent code reviews. This plan details the architecture, components, and implementation steps for the complete pipeline, including the new two-tier data collection approach.
 
 ## Goals
-1. Detect programming languages in PR files
-2. Implement job queue for analysis tasks
-3. Integrate with LLM provider
-4. Store and present analysis results
-5. Handle rate limits and large PRs
+1. Implement two-tier data collection for improved user experience
+2. Split data collection into immediate and background processes
+3. Detect programming languages in PR files
+4. Implement job queue for analysis and data collection tasks
+5. Integrate with LLM provider
+6. Store and present analysis results
+7. Handle rate limits and large PRs
 
 ## Architecture
 

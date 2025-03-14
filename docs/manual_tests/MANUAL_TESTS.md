@@ -62,7 +62,7 @@ Verify that the repository fingerprinting system correctly identifies unique rep
 
 ### Test Cases
 
-#### 1. Cross-Platform Analysis Limits
+#### 1. Cross-Platform Analysis Limits (Completed)
 
 | ID | Test Case | Steps | Expected Result | Status |
 |----|-----------|-------|-----------------|--------|
@@ -71,7 +71,7 @@ Verify that the repository fingerprinting system correctly identifies unique rep
 | FP-3 | Limit reached notification | 1. Analyze repository 5 times<br>2. Attempt 6th analysis | System should show limit reached message and block analysis | ⬜ |
 | FP-4 | Consistent limit messaging | 1. Reach limit on repository<br>2. Log in with different account<br>3. Attempt analysis | Limit message should be consistent regardless of login method | ⬜ |
 
-#### 2. Multiple Repository Testing
+#### 2. Multiple Repository Testing  (Completed)
 
 | ID | Test Case | Steps | Expected Result | Status |
 |----|-----------|-------|-----------------|--------|

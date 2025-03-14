@@ -15,6 +15,7 @@ export default function AnalyzePageSimplified() {
   const [validationMessage, setValidationMessage] = useState<string>('');
   const [repoInfo, setRepoInfo] = useState<{platform: string; owner: string; repo: string} | null>(null);
   const [prNumber, setPrNumber] = useState<number | null>(null);
+  const [privateRepoError, setPrivateRepoError] = useState<string | undefined>(undefined);
   
   // Parse repository information from URL
   useEffect(() => {
@@ -54,23 +55,50 @@ export default function AnalyzePageSimplified() {
   const freeAnalysesTotal = 5;
   
   const handlePrUrlChange = (url: string) => {
-    setPrUrl(url);
+  setPrUrl(url);
+  
+  // Basic validation
+  if (!url) {
+  setValidationStatus('idle');
+  setValidationMessage('');
+  setPrDetails(null);
+  return;
+  }
+  
+  // Start validation
+  setValidationStatus('validating');
+  
+  // Mock validation - in a real app this would check the URL with an API
+  setTimeout(() => {
+    // Reset any previous private repo error
+    setPrivateRepoError(undefined);
     
-    // Basic validation
-    if (!url) {
-      setValidationStatus('idle');
-      setValidationMessage('');
-      setPrDetails(null);
-      return;
-    }
-    
-    // Start validation
-    setValidationStatus('validating');
-    
-    // Mock validation - in a real app this would check the URL with an API
-    setTimeout(() => {
-      if (url.includes('github.com') || url.includes('gitlab.com')) {
-        if (url.includes('/pull/') || url.includes('/merge_requests/')) {
+    if (url.includes('github.com') || url.includes('gitlab.com')) {
+      if (url.includes('/pull/') || url.includes('/merge_requests/')) {
+        // Check for private repository access error
+        if (url.includes('private') && url.includes('github.com') && !url.includes('auth=github')) {
+          // Mock private repository access denial for GitHub when not using GitHub auth
+          setValidationStatus('success'); // URL is valid, but will fail on analysis
+          setValidationMessage('PR URL is valid, but this is a private repository');
+          setPrivateRepoError('Cannot access private GitHub repositories with non-GitHub credentials.');
+          
+          // We still provide PR details for the preview, but with a warning
+          setPrDetails({
+            title: 'Private repository (access denied)',
+            repository: repoInfo?.owner + '/' + repoInfo?.repo || 'private/repository',
+            author: 'unknown',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            filesChanged: 0,
+            linesAdded: 0,
+            linesRemoved: 0,
+            branches: {
+              source: 'feature-branch',
+              target: 'main'
+            }
+          });
+        } else {
+          // Normal case - valid URL with access
           setValidationStatus('success');
           setValidationMessage('PR URL is valid');
           
@@ -89,17 +117,18 @@ export default function AnalyzePageSimplified() {
               target: 'main'
             }
           });
-        } else {
-          setValidationStatus('error');
-          setValidationMessage('URL does not appear to be a pull request');
-          setPrDetails(null);
         }
       } else {
         setValidationStatus('error');
-        setValidationMessage('URL must be from GitHub or GitLab');
+        setValidationMessage('URL does not appear to be a pull request');
         setPrDetails(null);
       }
-    }, 1000);
+    } else {
+      setValidationStatus('error');
+      setValidationMessage('URL must be from GitHub or GitLab');
+      setPrDetails(null);
+    }
+  }, 1000);
   };
   
   return (
@@ -134,12 +163,12 @@ export default function AnalyzePageSimplified() {
               validationMessage={validationMessage}
               freeAnalysesUsed={freeAnalysesUsed}
               freeAnalysesTotal={freeAnalysesTotal}
+              privateRepoError={privateRepoError}
             />
             
             {/* PR Preview - only show when we have details */}
             {prDetails && (
               <PrPreviewSection
-                prDetails={prDetails}
                 prUrl={prUrl}
                 repoInfo={repoInfo}
                 prNumber={prNumber}
