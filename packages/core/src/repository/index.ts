@@ -3,6 +3,7 @@
 export { BaseRepositoryService } from './base-repository-service';
 export { RepositoryOperations } from './repository-operations';
 export { PullRequestOperations } from './pull-request-operations';
+export { DataCollectionOperations } from './data-collection-operations';
 export { RepositoryService } from './repository-service';
 
 // Fingerprinting exports
@@ -16,7 +17,16 @@ export type {
   PullRequestDetails,
   PullRequestListOptions,
   PaginatedResponse,
-  IRepositoryService
+  IRepositoryService,
+  PullRequestBasicDetails,
+  AnalysisEligibility,
+  DataCollectionJob,
+  DataCollectionStatusInfo,
+  RepositoryStructure,
+  Dependencies,
+  SecurityInfo,
+  PerformanceIndicators,
+  DataType
 } from './types';
 
 // Error exports

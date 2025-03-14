@@ -2,8 +2,6 @@
 
 import { Header, Footer } from '@/components/layout';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
-import { Button } from '@/components/ui/button';
-import { PrInputSection } from '@/components/analyze/pr-input-section-simplified';
 import { PrPreviewSection } from '@/components/analyze/pr-preview-section';
 import { Repositories } from '@/components/analyze/repositories';
 import { AnalysisOptions } from '@/components/analyze/analysis-options';
@@ -14,7 +12,6 @@ import { useRepositoryAnalysis } from '@/hooks/use-repository-analysis';
 
 export default function AnalyzePage() {
   const [prUrl, setPrUrl] = useState<string>('');
-  const [prDetails, setPrDetails] = useState<any>(null);
   const [validationStatus, setValidationStatus] = useState<'idle' | 'validating' | 'success' | 'error'>('idle');
   const [validationMessage, setValidationMessage] = useState<string>('');
   const [analysisState, setAnalysisState] = useState<'idle' | 'processing' | 'completed' | 'error'>('idle');
@@ -26,8 +23,6 @@ export default function AnalyzePage() {
       const timer = setTimeout(() => {
         setNotification(prev => ({ ...prev, visible: false }));
         
-        // If this was a success notification and analysis is still in processing state,
-        // don't reset the analysis state to avoid button returning to "Analyze PR" too early
         if (notification.type === 'success' && analysisState === 'processing') {
           // Leave the processing state as-is
         } else if (notification.type === 'error') {
@@ -40,10 +35,8 @@ export default function AnalyzePage() {
     }
   }, [notification.visible, notification.type, analysisState]);
   
-  // Use the new repository analysis hook
   const { 
     isLoading, 
-    error, 
     limits, 
     parseRepositoryUrl, 
     parsePullRequestNumber, 
@@ -67,7 +60,6 @@ export default function AnalyzePage() {
     if (!url) {
       setValidationStatus('idle');
       setValidationMessage('');
-      setPrDetails(null);
       return;
     }
     
@@ -85,7 +77,6 @@ export default function AnalyzePage() {
           ? 'URL must be from GitHub or GitLab' 
           : 'URL does not appear to be a pull request'
       );
-      setPrDetails(null);
       return;
     }
     
@@ -153,42 +144,46 @@ export default function AnalyzePage() {
         // Check if reached limit
         if (limits.hasReachedLimit) {
           setValidationStatus('error');
-          // Just set a simple validation message without the full limit explanation
           setValidationMessage('URL validation successful but analysis limit reached');
-          setPrDetails(null);
           return;
         }
       }
       
-      // In a real app, you would fetch PR details from API here
-      // For now, using mock data similar to the original
+      // Set success status
       setValidationStatus('success');
       setValidationMessage('PR URL is valid');
-      
-      setPrDetails({
-        title: 'Update dependencies and fix layout issues',
-        repository: `${repoInfo.owner}/${repoInfo.repo}`,
-        author: 'jane-doe',
-        createdAt: '2025-02-15T10:30:00Z',
-        updatedAt: '2025-02-25T14:22:00Z',
-        filesChanged: 12,
-        linesAdded: 156,
-        linesRemoved: 43,
-        branches: {
-          source: 'feature/dependency-updates',
-          target: 'main'
-        }
-      });
     } catch (error) {
       setValidationStatus('error');
       setValidationMessage(error instanceof Error ? error.message : String(error));
-      setPrDetails(null);
     }
   };
   
   const handleAnalyze = async () => {
+    // DEFENSE 1: Block if no URL or invalid URL
     if (!prUrl || !parseRepositoryUrl(prUrl)) {
-      console.log('Cannot analyze: Invalid PR URL');
+      console.error('Cannot analyze: Invalid PR URL');
+      setNotification({ 
+        visible: true, 
+        message: "Cannot analyze: Invalid PR URL", 
+        type: 'error' 
+      });
+      return;
+    }
+    
+    // DEFENSE 2: Block if already processing
+    if (isLoading || analysisState === 'processing') {
+      console.log('Cannot analyze: Already processing');
+      return;
+    }
+    
+    // DEFENSE 3: Block if reached limit
+    if (hasReachedLimit) {
+      console.error('Cannot analyze: Analysis limit reached');
+      setNotification({ 
+        visible: true, 
+        message: "Analysis limit reached for this repository", 
+        type: 'error' 
+      });
       return;
     }
     
@@ -207,7 +202,6 @@ export default function AnalyzePage() {
       
       if (newCount !== null) {
         // Here you would typically navigate to the results page or show the analysis
-        // For now, just log that the analysis was successful
         console.log(`Analysis count incremented to ${newCount}`);
         
         // Force refresh the limits
@@ -219,9 +213,6 @@ export default function AnalyzePage() {
         }
         
         setAnalysisState('completed');
-        // Use a non-blocking notification instead of alert
-        // You can import and use a toast library like react-hot-toast or a custom notification component
-        // For now, we'll just set a state to show a custom notification
         setNotification({ visible: true, message: "Analysis started successfully! Processing your PR...", type: "success" });
       } else {
         console.error('Analysis returned null but no error was thrown');
@@ -231,14 +222,14 @@ export default function AnalyzePage() {
       }
     } catch (error) {
       console.error("Error during analysis:", error);
-      console.error("Error details:", JSON.stringify(error, null, 2));
       setValidationStatus('error');
       
-      // Check if this is a limit reached error and display a simple message
+      // Check if this is a limit reached error
       if (error instanceof Error && error.message && error.message.includes('limit')) {
-        setValidationMessage(`Analysis limit reached`);
-      } else if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string' && error.message.includes('limit')) {
-        setValidationMessage(`Analysis limit reached`);
+        setValidationMessage('Analysis limit reached');
+      } else if (typeof error === 'object' && error !== null && 'message' in error && 
+                typeof error.message === 'string' && error.message.includes('limit')) {
+        setValidationMessage('Analysis limit reached');
       } else {
         setValidationMessage(error instanceof Error ? error.message : String(error));
       }
@@ -258,9 +249,7 @@ export default function AnalyzePage() {
       const repoInfo = parseRepositoryUrl(prUrl);
       if (repoInfo) {
         console.log('Loading initial limits for:', repoInfo);
-        getAnalysisLimits(repoInfo).then(limits => {
-          console.log('Initial limits loaded:', limits);
-        }).catch(err => {
+        getAnalysisLimits(repoInfo).catch(err => {
           console.error('Error loading initial limits:', err);
         });
       }
@@ -272,7 +261,8 @@ export default function AnalyzePage() {
       {/* Custom notification */}
       {notification.visible && (
         <div 
-          className={`fixed top-16 right-8 z-[1000] p-3 rounded-md shadow-lg transition-all duration-300 transform ${notification.visible ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0'} ${
+          className={`fixed top-16 right-8 z-[1000] p-3 rounded-md shadow-lg transition-all duration-300 transform ${
+            notification.visible ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0'} ${
             notification.type === 'success' 
               ? 'bg-blue-500 dark:bg-blue-600' 
               : 'bg-red-500 dark:bg-red-600'
@@ -316,8 +306,12 @@ export default function AnalyzePage() {
           </p>
         </div>
         
-        {/* Free tier status banner - Keep this as the single source of status information */}
-        <div className={`mb-6 p-3 ${hasReachedLimit ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'} border rounded-lg shadow-sm hover:shadow-md transition-all duration-200`}>
+        {/* Free tier status banner */}
+        <div className={`mb-6 p-3 ${
+          hasReachedLimit 
+            ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' 
+            : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+        } border rounded-lg shadow-sm hover:shadow-md transition-all duration-200`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <div className="h-2.5 w-16 bg-slate-200 dark:bg-slate-600 rounded-full overflow-hidden">
@@ -326,13 +320,19 @@ export default function AnalyzePage() {
                   style={{ width: `${(freeAnalysesUsed / freeAnalysesTotal) * 100}%` }}
                 ></div>
               </div>
-              <span className={`ml-3 text-sm ${hasReachedLimit ? 'text-red-600 dark:text-red-300 font-medium' : 'text-slate-600 dark:text-slate-300'}`}>
+              <span className={`ml-3 text-sm ${
+                hasReachedLimit 
+                  ? 'text-red-600 dark:text-red-300 font-medium' 
+                  : 'text-slate-600 dark:text-slate-300'
+              }`}>
                 {freeTierMessage}
               </span>
             </div>
             <Link
               href="#upgrade"
-              className={`text-xs ${hasReachedLimit ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'} text-white font-medium p-2 rounded-md transition-colors flex items-center gap-1`}
+              className={`text-xs ${
+                hasReachedLimit ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
+              } text-white font-medium p-2 rounded-md transition-colors flex items-center gap-1`}
             >
               <Sparkles className="h-3 w-3 text-amber-300" />
               Upgrade
@@ -385,29 +385,35 @@ export default function AnalyzePage() {
                 )}
               </div>
               
-              {/* Validation feedback - Keep this for non-limit related errors */}
+              {/* Validation feedback */}
               {validationMessage && !validationMessage.includes('limit') && (
-                <p className={`text-sm mt-2 ${validationStatus === 'error' ? "text-red-500 font-medium" : "text-green-500 dark:text-green-400 font-medium"}`}>
+                <p className={`text-sm mt-2 ${
+                  validationStatus === 'error' 
+                    ? "text-red-500 font-medium" 
+                    : "text-green-500 dark:text-green-400 font-medium"
+                }`}>
                   {validationMessage}
                 </p>
               )}
               
-              {/* Submit button */}
+              {/* Submit button - ULTRA DEFENSIVE VERSION */}
               <div className="flex justify-end mt-2">
-                {validationStatus === 'success' && !hasReachedLimit ? (
+                {validationStatus === 'success' && !hasReachedLimit &&
+                 !isLoading && analysisState !== 'processing' ? (
+                  // ONLY show active button if ALL conditions are met
                   <button
                     onClick={handleAnalyze}
-                    disabled={isLoading || analysisState === 'processing'}
-                    className={`inline-flex items-center justify-center px-6 py-3 ${analysisState === 'processing' ? 'bg-blue-400' : 'bg-blue-500 hover:bg-blue-600'} text-white font-medium rounded-md transition-colors text-center`}
+                    className="inline-flex items-center justify-center px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-md transition-colors text-center"
                   >
-                    {analysisState === 'processing' && (
-                      <div className="h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    )}
-                    {analysisState === 'processing' ? 'Processing...' : 'Analyze PR'}
+                    {isLoading ? 'Processing...' : 'Analyze PR'}
                   </button>
                 ) : (
+                  // In ALL other cases, show a disabled button with appropriate message
                   <span className="inline-block px-6 py-3 bg-slate-400 text-white font-medium rounded-md opacity-60 cursor-not-allowed">
-                    {hasReachedLimit ? 'Limit Reached' : 'Analyze PR'}
+                    {hasReachedLimit ? 'Limit Reached' : 
+                     validationStatus !== 'success' ? 'Enter Valid PR URL' :
+                     isLoading || analysisState === 'processing' ? 'Processing...' : 
+                     'Analyze PR'}
                   </span>
                 )}
               </div>
@@ -443,18 +449,10 @@ export default function AnalyzePage() {
         {validationStatus === 'success' && (
           <div className="mb-8 w-full" key={prUrl}>
             <PrPreviewSection 
-              prDetails={null} 
               prUrl={prUrl}
               repoInfo={parseRepositoryUrl(prUrl)}
               prNumber={parsePullRequestNumber(prUrl)}
             />
-          </div>
-        )}
-        
-        {/* Analysis Options - Full Width, only shown when we have details */}
-        {prDetails && !hasReachedLimit && (
-          <div className="mb-8 w-full">
-            <AnalysisOptions />
           </div>
         )}
         
@@ -502,12 +500,12 @@ export default function AnalyzePage() {
             {/* Content with relative positioning to appear above the overlay */}
             <div className="relative z-10">
               <h2 className="text-xl font-bold mb-4 flex items-center">
-              <Sparkles className="h-5 w-5 mr-2 text-amber-300" />
-              Upgrade to Pro
+                <Sparkles className="h-5 w-5 mr-2 text-amber-300" />
+                Upgrade to Pro
               </h2>
               
               <p className="mb-6 text-white/90 dark:text-white">
-              Get unlimited PR analyses, detailed reports, and advanced features
+                Get unlimited PR analyses, detailed reports, and advanced features
               </p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

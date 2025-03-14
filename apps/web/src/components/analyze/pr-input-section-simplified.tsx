@@ -11,6 +11,7 @@ interface PrInputSectionProps {
   validationMessage: string;
   freeAnalysesUsed: number;
   freeAnalysesTotal: number;
+  privateRepoError?: string; // Add this new prop for private repo access errors
 }
 
 export function PrInputSection({ 
@@ -19,7 +20,8 @@ export function PrInputSection({
   validationStatus, 
   validationMessage,
   freeAnalysesUsed,
-  freeAnalysesTotal
+  freeAnalysesTotal,
+  privateRepoError
 }: PrInputSectionProps) {
   const [isPrivateRepo, setIsPrivateRepo] = useState(false);
   
@@ -117,6 +119,24 @@ export function PrInputSection({
                 </div>
               </div>
             )}
+            
+            {/* Private repository access error */}
+            {privateRepoError && (
+              <div className="flex items-start space-x-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 rounded-lg p-4">
+                <AlertCircle className="h-5 w-5 text-red-500 dark:text-red-400 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-red-800 dark:text-red-300">
+                    Private Repository Access Denied
+                  </p>
+                  <p className="text-sm text-red-700 dark:text-red-400 mt-1">
+                    {privateRepoError}
+                  </p>
+                  <p className="text-sm text-red-700 dark:text-red-400 mt-1">
+                    Please sign in with the appropriate platform account to analyze this repository.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         
@@ -153,10 +173,15 @@ export function PrInputSection({
       {/* Submit button */}
       <div className="flex justify-end mt-6">
         <Button 
-          disabled={validationStatus !== 'success'}
-          className="px-8 py-6 text-base font-medium rounded-lg bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700"
+          disabled={validationStatus !== 'success' || !!privateRepoError}
+          className={cn(
+            "px-8 py-6 text-base font-medium rounded-lg",
+            privateRepoError 
+              ? "bg-slate-300 text-slate-500 dark:bg-slate-700 dark:text-slate-400 cursor-not-allowed" 
+              : "bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-700"
+          )}
         >
-          Analyze PR
+          {privateRepoError ? "Access Denied" : "Analyze PR"}
         </Button>
       </div>
     </div>

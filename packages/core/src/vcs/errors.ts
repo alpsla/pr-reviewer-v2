@@ -34,6 +34,7 @@ export type VCSErrorCode =
   // Client errors
   | 'VALIDATION_ERROR'
   | 'MALFORMED_REQUEST'
+  | 'NOT_IMPLEMENTED'
   
   // Generic errors
   | 'API_ERROR'

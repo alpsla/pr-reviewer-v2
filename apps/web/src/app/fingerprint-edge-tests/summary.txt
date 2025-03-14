@@ -1,0 +1,26 @@
+Fingerprint Edge Testing Tool
+==============================
+
+This tool has been created to help test edge cases in the repository fingerprinting system. It allows you to:
+
+1. Test individual repositories to see their generated fingerprints
+2. Compare repositories to verify case sensitivity handling
+3. Test special characters in repository names
+4. Test public/private repository switching
+
+Implementation Details:
+----------------------
+- A completely new route at `/fingerprint-edge-tests` to avoid caching issues
+- UI designed for high readability with proper contrast
+- Direct connection to the fingerprinting API endpoint
+- Quick test buttons for common test cases
+- Detailed result display
+
+Important Test Cases:
+-------------------
+- Case sensitivity: 'test-org/test-repo' vs 'TEST-ORG/TEST-REPO'
+- Different owners: 'test-org/test-repo' vs 'other-org/test-repo' 
+- Special characters in repository names
+- Public/private repository status changes
+
+This tool helps fulfill the requirements in the edge case test plan (FP-7, FP-8, FP-10).

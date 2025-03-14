@@ -170,6 +170,19 @@ export abstract class BaseVCSClient implements VCSClient {
     );
   }
   
+  // Extension methods added by extensions.ts
+  getRepositoryContents(owner: string, repo: string, path: string, ref?: string): Promise<any[]> {
+    throw new VCSError('Method not implemented', this.platform, 'NOT_IMPLEMENTED');
+  }
+  
+  getFileContent(owner: string, repo: string, path: string, ref?: string): Promise<string> {
+    throw new VCSError('Method not implemented', this.platform, 'NOT_IMPLEMENTED');
+  }
+  
+  getRepositoryTree(owner: string, repo: string, ref?: string, recursive?: boolean): Promise<any> {
+    throw new VCSError('Method not implemented', this.platform, 'NOT_IMPLEMENTED');
+  }
+  
   // Abstract methods that must be implemented by specific clients
   abstract getCurrentUser(): Promise<VCSUser>;
   abstract getRepository(owner: string, name: string): Promise<VCSRepository>;

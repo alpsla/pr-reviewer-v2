@@ -26,12 +26,17 @@ export function createRepositoryFingerprint(
   const normalizedOwner = owner.toLowerCase().trim();
   const normalizedName = name.toLowerCase().trim();
   
-  // Create fingerprint string and hash it
+  // Create fingerprint string and hash it 
   const fingerprintString = `${normalizedPlatform}:${normalizedOwner}/${normalizedName}`;
+  
+  // Log fingerprint creation for debugging
+  console.log(`Creating fingerprint for repository: ${fingerprintString}`);
+  
   const hash = createHash('sha256')
     .update(fingerprintString)
     .digest('hex');
   
+  console.log(`Generated fingerprint hash: ${hash.substring(0, 16)}...`);
   return hash;
 }
 

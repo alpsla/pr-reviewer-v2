@@ -217,4 +217,9 @@ export interface VCSClient {
     reset: Date;
     used: number;
   }>;
+  
+  // Extension methods for data collectors - required for data collection operations
+  getRepositoryContents?: (owner: string, repo: string, path: string, ref?: string) => Promise<any[]>;
+  getFileContent?: (owner: string, repo: string, path: string, ref?: string) => Promise<string>;
+  getRepositoryTree?: (owner: string, repo: string, ref?: string, recursive?: boolean) => Promise<any>;
 }

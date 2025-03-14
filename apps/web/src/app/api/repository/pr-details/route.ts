@@ -22,7 +22,7 @@ export async function GET(request: Request) {
       );
     }
     
-    console.log(`Fetching PR details for ${platform}/${owner}/${repo}#${prNumber}`);
+    console.log(`Fetching PR details for ${platform}/${owner}/${repo}#${prNumber} - fixed version`);
     
     // Setup Supabase client
     const cookieStore = cookies();
@@ -124,9 +124,38 @@ export async function GET(request: Request) {
       // Try to get real PR details from the API with improved error handling
       try {
         console.log(`Attempting to fetch complete PR details for ${platform}/${owner}/${repo}#${prNumber}`);
-        if ((platform === 'github' && tokens.github) || (platform === 'gitlab' && tokens.gitlab)) {
+        // Check if we have the right token for this platform
+        const hasMatchingToken = (platform === 'github' && tokens.github) || (platform === 'gitlab' && tokens.gitlab);
+        
+        // For private repositories, we need the matching platform token
+        if (hasMatchingToken) {
           try {
-            // First get the basic PR info
+            // First, check if we're dealing with a private repository
+            console.log('Checking repository access and privacy status...');
+            const accessCheck = await repositoryService.checkRepositoryAccess(
+              platform as any,
+              owner,
+              repo
+            );
+            
+            console.log('Access check results:', {
+              hasAccess: accessCheck.hasAccess,
+              isPrivate: accessCheck.private,
+              permissions: accessCheck.permissions
+            });
+            
+            // Cross-platform access security check
+            if (accessCheck.private && session.user?.app_metadata?.provider !== platform) {
+              console.log('SECURITY BLOCK: Cross-platform access to private repo not allowed');
+              return NextResponse.json({
+                success: false,
+                error: 'PRIVATE_REPOSITORY_ACCESS_DENIED',
+                message: `Cannot access private ${platform} repositories with ${session.user?.app_metadata?.provider} credentials.`
+              }, { status: 403 });
+            }
+            
+            // Now try to get the basic PR info
+            console.log('Fetching basic PR information...');
             const prBasic = await repositoryService.getPullRequest(
               platform as any,
               owner,
@@ -136,149 +165,142 @@ export async function GET(request: Request) {
             
             console.log('Successfully retrieved basic PR details:', { 
               title: prBasic.title,
+              author: prBasic.author?.login,
               created: prBasic.createdAt,
               updated: prBasic.updatedAt
             });
             
-            // Then get complete PR details with files
-            console.log('Fetching files to get accurate stats...');
-            const prComplete = await repositoryService.getPullRequestDetails(
-              platform as any,
-              owner,
-              repo,
-              prNumberInt
-            );
-            
-            // Calculate stats from files
-            const filesChanged = prComplete.files.length;
+            // Then get complete PR details with better error handling
+            console.log('Fetching detailed PR information including files...');
+            let filesChanged = 0;
             let linesAdded = 0;
             let linesRemoved = 0;
+            let branches = {
+              source: prBasic.headRef || 'unknown',
+              target: prBasic.baseRef || 'main'
+            };
             
-            // Calculate total additions and deletions
-            prComplete.files.forEach(file => {
-              linesAdded += file.additions || 0;
-              linesRemoved += file.deletions || 0;
-            });
+            // First, make a direct API call to get the most accurate PR information
+            // This ensures we have the most accurate data for private repositories
+            try {
+              console.log('Making direct API calls for accurate PR stats...');
+              
+              if (platform === 'github' && tokens.github) {
+                // Use GitHub's API directly to get accurate file stats
+                const githubFilesUrl = `https://api.github.com/repos/${owner}/${repo}/pulls/${prNumberInt}/files`;
+                console.log(`Fetching GitHub PR files: ${githubFilesUrl}`);
+                
+                // Use OAuth token for better rate limits and private repo access
+                const fileResponse = await fetch(githubFilesUrl, {
+                  headers: { 'Authorization': `token ${tokens.github}` }
+                });
+                
+                if (fileResponse.ok) {
+                  const files = await fileResponse.json();
+                  filesChanged = files.length;
+                  
+                  // Calculate lines added/removed
+                  files.forEach((file: any) => {
+                    linesAdded += file.additions || 0;
+                    linesRemoved += file.deletions || 0;
+                  });
+                  
+                  console.log(`Directly fetched ${filesChanged} files with ${linesAdded} lines added and ${linesRemoved} removed`);
+                } else {
+                  console.warn(`Failed to fetch PR files: ${fileResponse.status}`);
+                  // Will fall back to the next method if this fails
+                }
+              }
+            } catch (directApiError) {
+              console.warn('Error fetching PR files directly:', directApiError);
+            }
             
-            console.log('Actual PR stats from API:', {
-              filesChanged,
-              linesAdded, 
-              linesRemoved
-            });
+            // If direct API call failed, fall back to our standard method
+            if (filesChanged === 0 && linesAdded === 0 && linesRemoved === 0) {
+              try {
+                console.log('Falling back to standard PR files fetching');
+                const files = await repositoryService.getPullRequestFiles(
+                  platform as any,
+                  owner,
+                  repo,
+                  prNumberInt
+                );
+                
+                filesChanged = files.length;
+                files.forEach(file => {
+                  linesAdded += file.additions || 0;
+                  linesRemoved += file.deletions || 0;
+                });
+                
+                console.log(`Fetched ${filesChanged} files with ${linesAdded} lines added and ${linesRemoved} removed`);
+              } catch (filesError) {
+                console.error('Error getting PR files:', filesError);
+                // We'll use any values we can get from the basic PR info
+              }
+            }
             
-            // Return the actual PR data with accurate stats
+            // Return with the best information we have
             return NextResponse.json({
               success: true,
               prDetails: {
                 title: prBasic.title,
                 repository: `${owner}/${repo}`,
-                author: prBasic.author.login,
-                createdAt: prBasic.createdAt.toISOString(),
-                updatedAt: prBasic.updatedAt.toISOString(),
-                // These are the ACTUAL stats from the PR
+                author: prBasic.author?.login || owner,
+                createdAt: prBasic.createdAt?.toISOString() || new Date().toISOString(),
+                updatedAt: prBasic.updatedAt?.toISOString() || new Date().toISOString(),
                 filesChanged,
                 linesAdded,
                 linesRemoved,
-                branches: {
-                  source: prBasic.headRef,
-                  target: prBasic.baseRef
-                }
+                branches,
+                state: prBasic.state || 'open',
+                isPrivate: accessCheck.private
               }
             });
           } catch (prError) {
-            console.error('Error getting complete PR details:', prError);
-            console.log('Will try simple PR details approach...');
-            
-            // Try just getting PR info without files as fallback
-            const pr = await repositoryService.getPullRequest(
-              platform as any,
-              owner,
-              repo,
-              prNumberInt
-            );
-            
-            // Then get just the files for stats
-            const files = await repositoryService.getPullRequestFiles(
-              platform as any,
-              owner,
-              repo,
-              prNumberInt
-            );
-            
-            // Calculate stats
-            const filesChanged = files.length;
-            let linesAdded = 0;
-            let linesRemoved = 0;
-            
-            files.forEach(file => {
-              linesAdded += file.additions || 0;
-              linesRemoved += file.deletions || 0;
-            });
-            
-            console.log('Using simpler approach - PR stats:', {
-              filesChanged, 
-              linesAdded, 
-              linesRemoved
-            });
-            
-            return NextResponse.json({
-              success: true,
-              prDetails: {
-                title: pr.title,
-                repository: `${owner}/${repo}`,
-                author: pr.author.login,
-                createdAt: pr.createdAt.toISOString(),
-                updatedAt: pr.updatedAt.toISOString(),
-                // Stats from separate files call
-                filesChanged,
-                linesAdded,
-                linesRemoved,
-                branches: {
-                  source: pr.headRef,
-                  target: pr.baseRef
-                }
-              }
-            });
+            console.error('Error getting PR details:', prError);
+            console.log('Falling back to partial info...');
+            throw prError; // Let the outer catch handle this
           }
         }
       } catch (allError) {
         console.error('All PR fetch approaches failed:', allError);
-        // Continue to mock data...
-      }
-      
-      // Otherwise, use a combination of real and mock data
-      // Create more realistic dates for mock data
-      const oneMonthAgo = new Date();
-      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-      
-      const twoWeeksAgo = new Date();
-      twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-      
-      // Try to get specific PR meta data if available
-      let filesChanged = 9;  // Default to the values reported in the issue
-      let linesAdded = 390;
-      let linesRemoved = 81;
-      
-      // Log what we're sending back
-      console.log('Returning mock PR details with realistic dates');
-      
-      return NextResponse.json({
-        success: true,
-        prDetails: {
-          title: `Pull Request #${prNumber} (${owner}/${repo})`,
-          repository: `${owner}/${repo}`,
-          author: repository?.owner || owner,
-          createdAt: oneMonthAgo.toISOString(),
-          updatedAt: twoWeeksAgo.toISOString(),
-          filesChanged: filesChanged,
-          linesAdded: linesAdded,
-          linesRemoved: linesRemoved,
-          branches: {
-            source: 'feature/update',
-            target: repository?.defaultBranch || 'main'
+        console.log('Falling back to mock PR details');
+        
+        // Create more realistic dates for mock data
+        const oneMonthAgo = new Date();
+        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+        
+        const twoWeeksAgo = new Date();
+        twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+        
+        // Use repository information if available to improve mock data
+        const mockTitle = repository ? `PR in ${repository.name}` : `Pull Request #${prNumber}`;
+        const mockAuthor = repository ? repository.owner : owner;
+        const mockBranch = repository ? repository.defaultBranch : 'main';
+        
+        // Log what we're sending back
+        console.log('Returning mock PR details with known repository information');
+        
+        return NextResponse.json({
+          success: true,
+          prDetails: {
+            title: mockTitle,
+            repository: `${owner}/${repo}`,
+            author: mockAuthor,
+            createdAt: oneMonthAgo.toISOString(),
+            updatedAt: twoWeeksAgo.toISOString(),
+            filesChanged: 0, // Unknown
+            linesAdded: 0,   // Unknown
+            linesRemoved: 0, // Unknown
+            branches: {
+              source: 'feature-branch', // Mocked source branch
+              target: mockBranch
+            },
+            state: 'open',
+            isMock: true // Flag to indicate this is mock data
           }
-        }
-      });
+        });
+      }
     } catch (error) {
       console.error('Error generating PR details:', error);
       return NextResponse.json({

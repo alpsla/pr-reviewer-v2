@@ -762,8 +762,15 @@ export function Repositories({ onSelect }: RepositoriesProps) {
       
       {/* Fingerprint Testing Guide */}
       <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 space-y-3">
-        <h3 className="text-sm font-medium text-slate-600 dark:text-slate-300">
-          Test Repository Fingerprinting
+        <h3 className="text-sm font-medium text-slate-600 dark:text-slate-300 flex items-center justify-between">
+          <span>Test Repository Fingerprinting</span>
+          <a
+            href="/fingerprint-edge-tests"
+            target="_blank"
+            className="text-blue-500 hover:text-blue-600 text-xs bg-blue-50 px-2 py-1 rounded"
+          >
+            NEW Edge Test Tool &rarr;
+          </a>
         </h3>
 
         <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md text-xs text-blue-700 dark:text-blue-300 space-y-2">

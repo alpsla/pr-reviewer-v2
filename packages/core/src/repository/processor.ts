@@ -3,14 +3,32 @@ import { VCSPaginatedResponse } from '../vcs/types';
 // Import the interfaces and classes from your refactored structure
 import { RepositoryOperations } from './repository-operations';
 import { PullRequestOperations } from './pull-request-operations';
+import { DataCollectionOperations } from './data-collection-operations';
 import { VCSPlatform } from '../types/platform';
-import { IRepositoryService, PullRequest, Repository, PullRequestFile, PullRequestDetails, PullRequestListOptions } from './types';
+import { 
+  IRepositoryService, 
+  PullRequest, 
+  Repository, 
+  PullRequestFile, 
+  PullRequestDetails, 
+  PullRequestListOptions,
+  PullRequestBasicDetails,
+  AnalysisEligibility,
+  DataCollectionJob,
+  DataCollectionStatusInfo,
+  RepositoryStructure,
+  Dependencies,
+  SecurityInfo,
+  PerformanceIndicators,
+  DataType
+} from './types';
 import { logger } from '../utils/logger';
 
 // Create a combined service that provides the same interface
 class LocalRepositoryService implements IRepositoryService {
   private repoOps: RepositoryOperations;
   private prOps: PullRequestOperations;
+  private dataOps: DataCollectionOperations;
 
   constructor(
     db: DatabaseService,
@@ -19,6 +37,7 @@ class LocalRepositoryService implements IRepositoryService {
   ) {
     this.repoOps = new RepositoryOperations(db, tokens, baseUrls);
     this.prOps = new PullRequestOperations(db, tokens, baseUrls);
+    this.dataOps = new DataCollectionOperations(db, tokens, baseUrls);
   }
 
   // Expose methods from both operations classes
@@ -74,6 +93,39 @@ class LocalRepositoryService implements IRepositoryService {
   
   incrementAnalysisCount(platform: VCSPlatform, owner: string, repo: string, bypassLimit?: boolean): Promise<number> {
     return this.repoOps.incrementAnalysisCount(platform, owner, repo, bypassLimit);
+  }
+
+  // Data collection methods
+  getPullRequestBasicDetails(platform: VCSPlatform, owner: string, repo: string, number: number): Promise<PullRequestBasicDetails> {
+    return this.dataOps.getPullRequestBasicDetails(platform, owner, repo, number);
+  }
+
+  checkAnalysisEligibility(repositoryId: string): Promise<AnalysisEligibility> {
+    return this.dataOps.checkAnalysisEligibility(repositoryId);
+  }
+
+  scheduleDataCollection(repositoryId: string, dataTypes: DataType[]): Promise<DataCollectionJob> {
+    return this.dataOps.scheduleDataCollection(repositoryId, dataTypes);
+  }
+
+  getDataCollectionStatus(repositoryId: string): Promise<DataCollectionStatusInfo> {
+    return this.dataOps.getDataCollectionStatus(repositoryId);
+  }
+
+  getRepositoryStructure(repositoryId: string): Promise<RepositoryStructure | null> {
+    return this.dataOps.getRepositoryStructure(repositoryId);
+  }
+
+  getDependencyInfo(repositoryId: string): Promise<Dependencies | null> {
+    return this.dataOps.getDependencyInfo(repositoryId);
+  }
+
+  getSecurityInfo(repositoryId: string): Promise<SecurityInfo | null> {
+    return this.dataOps.getSecurityInfo(repositoryId);
+  }
+
+  getPerformanceIndicators(repositoryId: string): Promise<PerformanceIndicators | null> {
+    return this.dataOps.getPerformanceIndicators(repositoryId);
   }
 }
 
