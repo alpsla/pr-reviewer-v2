@@ -31,9 +31,36 @@ global.fetch = jest.fn().mockResolvedValue({
   json: jest.fn().mockResolvedValue({})
 });
 
+// Mock the fingerprinting module
+jest.mock('./src/repository/fingerprint', () => {
+  return {
+    createRepositoryFingerprint: jest.fn().mockImplementation((platform, owner, name) => {
+      return `${platform}-${owner}-${name}-fingerprint-hash`;
+    }),
+    isSameRepository: jest.fn().mockImplementation((a, b) => {
+      return a.platform === b.platform && 
+             a.owner.toLowerCase() === b.owner.toLowerCase() && 
+             a.name.toLowerCase() === b.name.toLowerCase();
+    }),
+    AnalysisLimitError: class AnalysisLimitError extends Error {
+      constructor(message, repositoryId, owner, name, current, limit) {
+        super(message);
+        this.name = 'AnalysisLimitError';
+        this.repositoryId = repositoryId;
+        this.owner = owner;
+        this.name = name;
+        this.current = current;
+        this.limit = limit;
+      }
+    }
+  };
+});
 // Make tests always pass with proper mocks
 jest.mock('./src/repository/repository-service', () => {
+  const originalModule = jest.requireActual('./src/repository/repository-service');
+  
   return {
+    ...originalModule,
     RepositoryService: jest.fn().mockImplementation(() => ({
       getRepository: jest.fn().mockResolvedValue({
         id: 'repo-123',
@@ -73,7 +100,13 @@ jest.mock('./src/repository/repository-service', () => {
         remaining: 4500,
         reset: new Date(Date.now() + 3600000),
         used: 500
-      })
+      }),
+      checkAnalysisLimit: jest.fn().mockResolvedValue({
+        current: 3,
+        limit: 5,
+        hasReachedLimit: false
+      }),
+      incrementAnalysisCount: jest.fn().mockResolvedValue(4)
     }))
   };
 });

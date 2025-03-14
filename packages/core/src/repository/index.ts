@@ -5,6 +5,9 @@ export { RepositoryOperations } from './repository-operations';
 export { PullRequestOperations } from './pull-request-operations';
 export { RepositoryService } from './repository-service';
 
+// Fingerprinting exports
+export { createRepositoryFingerprint, AnalysisLimitError } from './fingerprint';
+
 // Type exports
 export type {
   Repository,

@@ -2,15 +2,17 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 import { Highlight, themes } from "prism-react-renderer";
+import { useTheme } from "next-themes";
 
 const codeBlockVariants = cva(
-  "font-mono text-sm rounded-md overflow-hidden",
+  "font-mono text-sm overflow-hidden",
   {
     variants: {
       variant: {
-        primary: "bg-primary-50 dark:bg-primary-900 border border-primary-200 dark:border-primary-800",
-        secondary: "bg-card text-card-foreground border border-border",
-        ghost: "bg-transparent",
+        primary: "bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md",
+        secondary: "bg-card text-card-foreground border border-border rounded-md",
+        ghost: "bg-transparent border-0 rounded-none",
+        dark: "bg-slate-900 border border-slate-700 rounded-md text-white",
       },
       size: {
         sm: "text-xs p-2",
@@ -48,7 +50,7 @@ export const CodeBlock = React.forwardRef<HTMLPreElement, CodeBlockProps>(
   (
     {
       className,
-      variant,
+      variant = "primary",
       size,
       code,
       language,
@@ -60,6 +62,14 @@ export const CodeBlock = React.forwardRef<HTMLPreElement, CodeBlockProps>(
     },
     ref
   ) => {
+    const { resolvedTheme } = useTheme();
+    const isDark = resolvedTheme === 'dark';
+    
+    // Use different themes based on current theme and variant
+    const codeTheme = isDark
+      ? themes.nightOwl 
+      : themes.github;
+    
     // Extract language from className if provided (e.g. 'language-typescript')
     const languageFromClass = getLanguageFromClassName(className);
     const codeLanguage = language || languageFromClass;
@@ -67,7 +77,7 @@ export const CodeBlock = React.forwardRef<HTMLPreElement, CodeBlockProps>(
     return (
       <div className={cn("group relative", className)}>
         {title && (
-          <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-primary-50 dark:bg-primary-900 text-sm font-medium">
+          <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 dark:border-slate-700 bg-primary-50 dark:bg-slate-800 text-sm font-medium dark:text-white">
             {title}
             <button
               className="text-muted-foreground hover:text-foreground transition-colors"
@@ -85,17 +95,19 @@ export const CodeBlock = React.forwardRef<HTMLPreElement, CodeBlockProps>(
           style={{ maxHeight }}
         >
           <Highlight
-            theme={themes.nightOwl}
+            theme={codeTheme}
             code={code.trim()}
             language={codeLanguage as any}
           >
             {({ className, style, tokens, getLineProps, getTokenProps }) => (
               <pre
-                ref={ref}
-                className={cn(
-                  codeBlockVariants({ variant, size }),
-                  className
-                )}
+              ref={ref}
+              className={cn(
+              codeBlockVariants({ variant, size }),
+              className,
+              'dark:!bg-gray-900 !bg-white',
+              variant === 'ghost' ? 'bg-transparent' : ''
+              )}
                 style={style}
                 {...props}
               >
@@ -114,16 +126,17 @@ export const CodeBlock = React.forwardRef<HTMLPreElement, CodeBlockProps>(
                   {tokens.map((line, lineIndex) => {
                     const lineNumber = lineIndex + 1;
                     const isHighlighted = highlightLines.includes(lineNumber);
-                    const lineProps = getLineProps({ line, key: lineIndex });
-
+                    const lineProps = getLineProps({ line, key: `line-${lineIndex}` });
+                    delete lineProps.key; // Remove the key from props to avoid passing it down
+                    
                     return (
                       <div
-                        key={lineIndex}
+                        key={`line-${lineIndex}`}
                         {...lineProps}
                         className={cn(
                           lineProps.className,
-                          "px-4 border-l-2 border-transparent",
-                          isHighlighted && "bg-primary-100 dark:bg-primary-800 border-l-2 border-accent"
+                          "px-4 border-l-2 border-transparent bg-inherit dark:bg-inherit",
+                          isHighlighted && "bg-slate-200 dark:bg-slate-800 border-l-2 border-blue-500"
                         )}
                       >
                         {showLineNumbers && (
@@ -132,12 +145,17 @@ export const CodeBlock = React.forwardRef<HTMLPreElement, CodeBlockProps>(
                           </span>
                         )}
                         <span>
-                          {line.map((token, tokenIndex) => (
-                            <span
-                              key={tokenIndex}
-                              {...getTokenProps({ token, key: tokenIndex })}
-                            />
-                          ))}
+                          {line.map((token, tokenIndex) => {
+                            const tokenProps = getTokenProps({ token, key: `token-${tokenIndex}` });
+                            delete tokenProps.key; // Remove the key to avoid passing it down
+                            
+                            return (
+                              <span
+                                key={`token-${tokenIndex}`}
+                                {...tokenProps}
+                              />
+                            );
+                          })}
                         </span>
                       </div>
                     );

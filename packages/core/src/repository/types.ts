@@ -34,6 +34,12 @@ export interface IRepositoryService {
     reset: Date;
     used: number;
   }>;
+  checkAnalysisLimit(platform: VCSPlatform, owner: string, repo: string): Promise<{
+    current: number;
+    limit: number;
+    hasReachedLimit: boolean;
+  }>;
+  incrementAnalysisCount(platform: VCSPlatform, owner: string, repo: string, bypassLimit?: boolean): Promise<number>;
 }
 
 /**
@@ -57,9 +63,13 @@ export interface Repository {
     push: boolean;
     pull: boolean;
   };
+  analysisCount?: number;
+  freeTierLimit?: number;
   createdAt: Date;
   updatedAt: Date;
   lastSyncedAt?: Date;
+  lastAnalyzedAt?: Date;
+  fingerprint?: string;
 }
 
 /**

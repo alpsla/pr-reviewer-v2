@@ -22,66 +22,71 @@ All pages include a consistent footer with:
 - Contact information
 - Social media links
 
-## Primary User Journeys
+## Updated User Journeys
 
 ### 1. New User Onboarding Flow
 
-The initial experience for users discovering the application.
+The initial journey for users discovering the application.
 
 #### Screens
-1. **Welcome Page**: Entry point for new visitors
-   - Hero section with compelling title and description
-     - Title (e.g., "AI-Powered Code Review")
-     - Short description (e.g., "Get professional code feedback in minutes")
-     - Background image (code-related visuals)
-     - "Join Us" call-to-action button
-   - Value proposition section
-     - Information about free trial option
-     - Key benefits (e.g., "Save time", "Improve code quality", "Learn best practices")
-   - Onboarding slideshow
-     - Step-by-step explanation of the workflow
-     - Visual illustrations of each step
-     - Simple, engaging copy
-   - Social proof section (for future)
-     - Testimonials/feedback from users
-     - Influencer endorsements
-     - Video testimonials
+1. **Welcome Page**: Pure informational, explains value proposition
+   - No direct product access, only information
+   - Describes features, benefits, and workflow
+   - Contains "Get Started" or "Sign In" links to Home page
+   - Multiple information sections with detailed explanations
 
-2. **Authentication**: User account creation
-   - OAuth options (GitHub, GitLab)
-   - Email magic link option
-   - Terms acceptance
+2. **Home Page**: Authentication gateway
+   - Clear sign-in options prominently displayed
+     - GitHub OAuth (recommended)
+     - GitLab OAuth (recommended)
+     - Email authentication
+   - Link back to Welcome page for users who want more information
+   - Persistent header and footer for brand consistency
 
-3. **Onboarding Guide**: Quick introduction to features
-   - How to submit PRs
-   - How to interpret results
-   - Benefits of different subscription tiers
+3. **Authentication Process**:
+   - OAuth provider selection
+   - Provider authentication screen
+   - Account linking/creation
+   - Email verification (for email authentication)
+   - Redirect to Dashboard after successful authentication
+   
+4. **Dashboard**: Entry point to application features
+   - Welcome message for new users
+   - Quick access to analyze new PR
+   - Learning resources and guides
+   - Account status and free usage counter
+   - Premium features preview for free tier users
 
 #### User Steps
-1. User visits welcome page
-2. User explores value proposition and examples
-3. User clicks "Join Us" button
+1. User visits Welcome page to learn about the service
+2. User clicks "Get Started" to proceed to Home page
+3. User selects authentication method (GitHub/GitLab/Email)
 4. User completes authentication process
-5. User is guided through brief onboarding
-6. User is prompted to submit first PR for analysis
+5. User arrives at personalized Dashboard
+6. User initiates their first PR analysis
 
 ### 2. PR Analysis Flow
 
 The core workflow for analyzing a pull request and receiving feedback.
 
 #### Screens
-1. **PR Input**: Form for entering PR URL or selecting from repositories
+1. **Dashboard**: Starting point for authenticated users
+   - "Analyze New PR" button prominently displayed
+   - Previous analyses listed if any exist
+   - Resource usage indicators (used 2/5 free analyses)
+
+2. **PR Input**: Form for entering PR URL or selecting from repositories
    - Clear instructions
    - URL input field with validation
-   - Recent/favorite repositories selector
+   - Repository browser with recent/connected repos
    - Analysis options and settings
 
-2. **Analysis Queue**: Status of analysis in progress
+3. **Analysis Queue**: Status of analysis in progress
    - Progress visualization
    - Estimated completion time
    - Option to cancel analysis
 
-3. **Results View**: Detailed feedback from analysis
+4. **Results View**: Detailed feedback from analysis
    - Summary dashboard with overall metrics
    - Category-based organization with cards for each category:
      - Code Quality
@@ -95,45 +100,63 @@ The core workflow for analyzing a pull request and receiving feedback.
      - Summary metadata (number of issues/warnings/enhancements)
      - Collapsible/expandable interface for multi-level drill-down
      - Lowest level shows specific code examples with issues/recommendations
-   - Additional service offers (full for subscribers, limited for free tier):
-     - Code improvement suggestions
-     - Documentation generation
-     - Test recommendations
-     - Performance optimizations
+   - Additional service offers (full for subscribers, limited for free tier)
 
-4. **Export Options**: Export results to external systems
+5. **Export Options**: Export results to external systems
    - Export to PR comments
    - Download report (PDF/Markdown)
    - Push suggestions to GitHub/GitLab
    - Share results
 
 #### User Steps
-1. User enters PR URL or selects from recent repos
-2. System validates URL and fetches PR metadata
-3. User confirms analysis request
-4. System queues PR for analysis and shows progress
-5. User is notified when analysis is complete
-6. User reviews feedback and suggestions
-7. User applies suggestions or exports results
+1. User navigates to Dashboard
+2. User clicks "Analyze New PR"
+3. User enters PR URL or selects from repositories
+4. System checks repository analysis limits before proceeding
+   - If limit reached, prompts for upgrade
+   - If within limits, proceeds with analysis
+5. System queues PR for analysis and shows progress
+6. User is notified when analysis is complete
+7. User reviews feedback and suggestions
+8. User applies suggestions or exports results
 
-#### Interaction Patterns
-- Show immediate validation when URL is entered
-- Display PR metadata preview before confirmation
-- Show real-time progress updates during analysis
-- Allow filtering/sorting of results by category
-- Enable direct navigation to specific code sections
+#### Repository Analysis Limits
+- Each repository has a limit of 5 free analyses
+- System tracks analysis count per repository
+- Prevents abuse through multiple accounts
+- User can see remaining analyses for each repository
 
-### 3. Home Dashboard Flow (Registered Users)
+### 3. Authentication Flows
 
-The main dashboard for registered users to manage their analyses.
+Different ways users can authenticate with the application.
+
+#### OAuth Flow (GitHub/GitLab)
+1. User clicks "Continue with GitHub/GitLab" on Home page
+2. User is redirected to provider's authorization page
+3. User approves access permissions
+4. User is redirected back to PR Reviewer
+5. System creates/updates user account
+6. User arrives at Dashboard
+
+#### Email Flow
+1. User clicks "Continue with Email" on Home page
+2. User enters email address
+3. System sends magic link to email
+4. User clicks link in email
+5. User is redirected to PR Reviewer with authenticated session
+6. User arrives at Dashboard
+
+### 4. Dashboard Flow (Registered Users)
+
+The main dashboard experience for registered users.
 
 #### Screens
-1. **Home Dashboard**: Overview of user's activity and options
-   - Recent analyses
+1. **Dashboard**: Overview of user's activity and options
+   - Recent analyses with status and timestamps
    - Quick stats and trends
-   - Skill improvement metrics (for subscribers)
+   - Usage metrics (free analyses remaining)
    - Quick actions (New Analysis, View History)
-   - Subscription status and limits
+   - Subscription status and upgrade options
 
 2. **Account Overview**: User profile and settings
    - Profile information
@@ -142,11 +165,11 @@ The main dashboard for registered users to manage their analyses.
    - Skill development trends
 
 #### User Steps
-1. User logs in and is directed to home dashboard
+1. User logs in and is directed to Dashboard
 2. User sees overview of recent activity and metrics
 3. User selects action (new analysis, view history, etc.)
 
-### 4. Subscription Management Flow
+### 5. Subscription Management Flow
 
 How users select and manage their subscription plans.
 
@@ -171,14 +194,14 @@ How users select and manage their subscription plans.
    - Cancellation options
 
 #### User Steps
-1. User navigates to pricing page
+1. User navigates to pricing page from Dashboard
 2. User compares available plans
 3. User selects desired plan
 4. User enters payment information
 5. System processes payment and activates subscription
 6. User receives confirmation and updated account status
 
-### 5. History Review Flow
+### 6. History Review Flow
 
 Reviewing past analyses and their results.
 
@@ -200,133 +223,88 @@ Reviewing past analyses and their results.
    - Developer/team performance comparison
 
 #### User Steps
-1. User navigates to history section
+1. User navigates to history section from Dashboard
 2. System displays list of past analyses
 3. User filters or searches for specific analyses
 4. User selects specific analysis to view
 5. System loads detailed results
 6. User optionally compares with other analyses
 
-### 6. Services Page
-
-Detailed information about the analysis capabilities.
-
-#### Screens
-1. **Services Overview**: Summary of analysis capabilities
-   - Detailed description of analysis capabilities
-   - Language support information 
-   - Use cases and examples
-
-#### User Steps
-1. User navigates to services section
-2. User explores available analysis capabilities
-3. User learns about language support and use cases
-
-### 7. Settings Management Flow
-
-Configuring user preferences and integrations.
-
-#### Screens
-1. **Settings Overview**: Categories of settings
-   - Account settings
-   - Integration settings
-   - Analysis preferences
-   - Notification settings
-
-2. **Account Settings**: User profile information
-   - Profile information from authentication providers
-   - Additional user metadata
-   - Subscription management
-
-3. **Integration Settings**: VCS connections
-   - GitHub integration
-   - GitLab integration
-   - Future provider integrations
-
-4. **Analysis Preferences**: Customization options for analysis
-   - Default analysis settings
-   - Language-specific preferences
-   - Report format preferences
-   - LLM preferences:
-     - Selection of preferred LLM provider from supported options
-     - Default is dynamic evaluation based on performance and cost
-     - Option to prioritize specific models for different analysis types
-
-5. **Notification Settings**: Control over system communications
-   - Email notifications
-   - In-app notifications
-   - Analysis completion alerts
-
-#### User Steps
-1. User navigates to settings
-2. System displays setting categories
-3. User selects specific category
-4. System shows related settings
-5. User modifies settings
-6. System saves and applies changes
-
-## Screen Map
+## Screen Map (Updated)
 
 ### Application Structure
 
 ```
-├── Welcome Page
+├── Welcome Page (Public)
+├── Home Page (Authentication Gateway)
 ├── Auth
-│   ├── Login
-│   ├── Register
+│   ├── OAuth Provider Flows
+│   ├── Email Authentication
 │   └── Password Reset
-├── Onboarding
-├── Home Dashboard (for registered users)
+├── Dashboard (Authenticated)
+│   ├── Overview
+│   ├── Recent Analyses
+│   └── Quick Actions
 ├── PR Analysis
 │   ├── PR Input
 │   ├── Analysis Queue/Progress
 │   └── Results View
 │       ├── Summary
-│       ├── Code Issues
-│       ├── Suggestions
-│       └── Additional Services
-├── Services (detailed capabilities)
-├── Pricing
-│   ├── Plans Comparison
-│   ├── Payment Processing
-│   └── Subscription Management
+│       ├── Category Cards
+│       ├── Detailed Issue Views
+│       └── Export Options
 ├── History
 │   ├── History List
 │   ├── History Detail
 │   └── Trends & Metrics
-└── Settings
-    ├── Account
-    ├── Integrations
-    ├── Analysis Preferences
-    └── Notifications
+├── Account
+│   ├── Profile Settings
+│   ├── Subscription Management
+│   └── Notification Preferences
+└── Help & Resources
+    ├── Documentation
+    ├── FAQs
+    └── Support
 ```
 
 ### Navigation Structure
 
-1. **Primary Navigation** (Header)
-   - Logo/Home (left)
-   - Main navigation menu (center):
-     - PR Analysis
-     - Services
-     - Pricing
-     - History (if authenticated)
-     - Settings (if authenticated)
-   - UI Controls (right):
-     - Language Selection
-     - Theme Toggle
-   - Authentication (far right):
-     - "Join Us" button (if not authenticated)
-     - User Account Menu (if authenticated)
+1. **Public Navigation**
+   - Logo (links to Welcome for unauthenticated, Dashboard for authenticated)
+   - Sign In/Join button
+   - Learn More links
+   - Language/Theme controls
 
-2. **Secondary Navigation** (Tabs within sections)
-   - Results: Summary, Issues, Suggestions, Services
-   - Settings: Account, Integrations, Preferences, Notifications
+2. **Authenticated Navigation**
+   - Logo (links to Dashboard)
+   - Main sections:
+     - Dashboard
+     - Analyze
+     - History
+     - Account
+   - User profile dropdown
+   - Subscription indicator
 
 3. **Contextual Navigation**
    - Breadcrumbs for deep navigation
-   - "Back" links for multi-step processes
+   - Back buttons for multi-step processes
+   - Category tabs in analysis results
 
 ## Interaction Models
+
+### Responsive Navigation
+
+1. **Desktop Navigation**
+   - Full horizontal menu in header
+   - Primary sections: Services, Pricing, About
+   - Authentication button prominently displayed
+   - Language selector and theme toggle accessible
+
+2. **Mobile Navigation**
+   - Collapsible menu triggered by hamburger icon
+   - Slides down below header when activated
+   - Maintains same navigation structure as desktop
+   - Closes automatically after selection
 
 ### Form Inputs and Validation
 
@@ -357,6 +335,20 @@ Configuring user preferences and integrations.
    - Suggest recovery actions
    - Preserve user input when possible
 
+### Theme Mode Consistency
+
+1. **Light/Dark Mode Support**
+   - All components support both light and dark modes
+   - Seamless transitions between modes when toggled
+   - Proper color contrasts maintained in both modes
+   - Form elements maintain consistent styling across modes
+
+2. **Dropdown Component Behavior**
+   - Dropdowns maintain theme consistency even when expanded
+   - Selection indicators visible in both modes
+   - Hover states appropriate to current theme
+   - Z-index management prevents visual artifacts
+
 ### Analysis Results Interaction
 
 1. **Overview and Detail Pattern**
@@ -373,6 +365,28 @@ Configuring user preferences and integrations.
 3. **Filtering and Sorting**
    - Filter by severity, category, file
    - Sort by importance, location, confidence
+
+## Repository Analysis Limits
+
+To prevent abuse while still offering a free tier:
+
+1. **Repository-Based Limits**
+   - Each unique repository is limited to 5 free analyses
+   - System creates a fingerprint of each repository (repo name, owner, structure)
+   - Counters track analyses used per repository
+   - Applies across all user accounts
+
+2. **User Experience**
+   - Users see remaining free analyses for each repository
+   - Clear messaging when approaching or hitting limits
+   - Upgrade prompts when limits are reached
+   - No interruption of analysis flow for analyses within limits
+
+3. **Implementation Details**
+   - Database stores repository fingerprints with analysis counts
+   - System checks limits before starting analysis
+   - Repository information obtained from PR URL or API
+   - Unique identifiers prevent duplicate counting
 
 ## Internationalization
 
@@ -396,30 +410,49 @@ The application will support multiple languages to improve accessibility and ena
 
 ## Priority Screens for Implementation
 
-Based on the core user flow, the following screens should be implemented first:
+Based on the updated user flow, the following screens should be implemented first:
 
 1. **Welcome Page**
-   - Hero section with clear value proposition
-   - Information about free trial
-   - Onboarding slideshow
-   - "Join Us" call-to-action
+   - Purely informational
+   - Links to Home/authentication
 
-2. **PR Input Screen**
-   - Simple form with URL input
-   - Repository selection dropdown
-   - Branch/PR metadata preview
+2. **Home Page**
+   - Authentication gateway
+   - OAuth and email options
 
-3. **Results View**
-   - Summary section with key metrics
-   - Categorized issues list
-   - Code context view with suggestions
+3. **Dashboard**
+   - Starting point for authenticated users
+   - Quick access to features
+   - Usage tracking and history
 
-These screens enable the basic PR analysis workflow for both new and returning users, providing a foundation for testing the core functionality of the application.
+4. **PR Input Screen**
+   - Repository selection options
+   - URL input with validation
+   - Analysis settings
+
+5. **Results View**
+   - Summary dashboard with metrics
+   - Category-based feedback organization
+   - Detailed code suggestions
+
+These screens enable the complete user journey from discovery to using the core features, with proper authentication and analysis limits in place.
+
+## Implementation Progress
+
+### Completed
+- ✅ Basic UI component library implementation
+- ✅ Welcome Page implementation
+- ✅ Home Page implementation
+- ✅ Dark/light mode theming system
+- ✅ Mobile responsive navigation
+- ✅ Form components with proper validation
+- ✅ Demo scheduling page
 
 ## Next Steps
 
-1. Create detailed mockups for priority screens
-2. Implement Welcome Page and PR Input screen components
-3. Design Results View layout and components
-4. Develop navigation patterns between screens
-5. Address Button component rendering issues
+1. Complete authentication integration with OAuth providers
+2. Implement repository analysis tracking system
+3. Build user dashboard for authenticated users
+4. Finalize results view with enhanced features
+5. Create subscription management flows
+6. Integrate core package functionality with UI components

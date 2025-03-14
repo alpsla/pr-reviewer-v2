@@ -118,4 +118,29 @@ export class RepositoryService implements IRepositoryService {
   }> {
     return this.repoOps.getRateLimit(platform);
   }
+  
+  /**
+   * Check if a repository has reached its free tier analysis limit
+   */
+  async checkAnalysisLimit(
+    platform: VCSPlatform,
+    owner: string,
+    repo: string
+  ): Promise<{ current: number; limit: number; hasReachedLimit: boolean }> {
+    return this.repoOps.checkAnalysisLimit(platform, owner, repo);
+  }
+  
+  /**
+   * Increment the analysis count for a repository
+   * 
+   * @throws AnalysisLimitError if the repository has reached its free tier limit
+   */
+  async incrementAnalysisCount(
+    platform: VCSPlatform,
+    owner: string,
+    repo: string,
+    bypassLimit = false
+  ): Promise<number> {
+    return this.repoOps.incrementAnalysisCount(platform, owner, repo, bypassLimit);
+  }
 }

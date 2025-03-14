@@ -63,6 +63,18 @@ class LocalRepositoryService implements IRepositoryService {
   }> {
     return this.repoOps.getRateLimit(platform);
   }
+  
+  checkAnalysisLimit(platform: VCSPlatform, owner: string, repo: string): Promise<{
+    current: number;
+    limit: number;
+    hasReachedLimit: boolean;
+  }> {
+    return this.repoOps.checkAnalysisLimit(platform, owner, repo);
+  }
+  
+  incrementAnalysisCount(platform: VCSPlatform, owner: string, repo: string, bypassLimit?: boolean): Promise<number> {
+    return this.repoOps.incrementAnalysisCount(platform, owner, repo, bypassLimit);
+  }
 }
 
 /**

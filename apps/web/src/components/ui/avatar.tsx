@@ -30,6 +30,7 @@ const avatarVariants = cva(
         warning: "ring-warning ring-opacity-100",
         error: "ring-error ring-opacity-100",
         blue: "ring-blue-500 ring-opacity-100",
+        gold: "ring-amber-400 ring-opacity-100",
       },
     },
     defaultVariants: {
@@ -158,4 +159,4 @@ function getInitials(name: string): string {
     .join("")
     .toUpperCase()
     .substring(0, 2);
-};
+}

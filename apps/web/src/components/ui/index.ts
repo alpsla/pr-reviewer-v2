@@ -1,3 +1,4 @@
+export * from "./dark-mode-button";
 // Media components
 export * from "./video-player";
 export * from "./slideshow";

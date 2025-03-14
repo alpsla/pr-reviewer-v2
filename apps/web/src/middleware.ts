@@ -1,28 +1,68 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 
-export async function middleware(request: NextRequest) {
+// List of routes that require authentication
+const PROTECTED_ROUTES = [
+  '/dashboard-new',
+  '/dashboard',
+  '/analyze',
+  '/results',
+  '/settings',
+  '/account'
+];
+
+// List of routes that should redirect to dashboard if user is authenticated
+const PUBLIC_ONLY_ROUTES = [
+  '/'
+];
+
+// Middleware function to protect routes
+export async function middleware(req: NextRequest) {
+  // Create a Supabase client for the middleware
   const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req: request, res });
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  // If user is signed in and the current path is / redirect the user to /dashboard
-  if (session && request.nextUrl.pathname === '/') {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+  const supabase = createMiddlewareClient({ req, res });
+  
+  // Get the pathname from the URL
+  const { pathname } = req.nextUrl;
+  
+  // Get the session
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  // Check if the user is authenticated
+  const isAuthenticated = !!session;
+  
+  // Check if the route requires authentication
+  const isProtectedRoute = PROTECTED_ROUTES.some(route => 
+    pathname.startsWith(route) || pathname === route
+  );
+  
+  // Check if the route should redirect when authenticated
+  const isPublicOnlyRoute = PUBLIC_ONLY_ROUTES.some(route => 
+    pathname === route
+  );
+  
+  // Redirect unauthenticated users from protected routes to the home page
+  if (isProtectedRoute && !isAuthenticated) {
+    const redirectUrl = new URL('/', req.url);
+    redirectUrl.searchParams.set('redirect_to', pathname);
+    return NextResponse.redirect(redirectUrl);
   }
-
-  // If user is not signed in and the current path starts with /dashboard redirect the user to /
-  if (!session && request.nextUrl.pathname.startsWith('/dashboard')) {
-    return NextResponse.redirect(new URL('/', request.url));
+  
+  // Redirect authenticated users from public-only routes to the dashboard
+  if (isPublicOnlyRoute && isAuthenticated) {
+    const redirectUrl = new URL('/dashboard-new', req.url);
+    return NextResponse.redirect(redirectUrl);
   }
-
+  
+  // Allow the request to continue
   return res;
 }
 
+// Configure the middleware to run on specific paths
 export const config = {
-  matcher: ['/', '/dashboard/:path*'],
+  matcher: [
+    // Match all paths except static files, api routes, and next.js specific routes
+    '/((?!_next/static|_next/image|favicon.ico|images|api|auth/callback).*)',
+  ],
 };

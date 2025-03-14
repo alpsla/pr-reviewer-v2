@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 // Import existing interfaces instead of redefining
-import { VCSPlatform, PullRequest, PRAuthor as PullRequestAuthor } from '../../app/dashboard/pr-analyzer/types';
+import { VCSPlatform, PullRequest, PRAuthor as PullRequestAuthor } from '../../app/_dashboard_old/pr-analyzer/types';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert';
@@ -10,7 +10,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/ca
 import { Badge } from '../../components/ui/badge';
 import { Spinner } from '../../components/ui/spinner';
 import { ExternalLink } from 'lucide-react';
-import { RepositoryService } from '../../app/dashboard/pr-analyzer/repository-service';
+import { RepositoryService } from '../../app/_dashboard_old/pr-analyzer/repository-service';
 
 // Using imported interfaces instead of local definitions
 

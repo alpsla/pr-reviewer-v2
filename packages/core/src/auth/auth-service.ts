@@ -30,13 +30,22 @@ export class AuthService {
     options: Omit<AuthOptions, "scopes"> & { scopes?: GitHubAuthScopes[] } = {},
   ): Promise<AuthResponse> {
     logger.log('Starting GitHub sign-in');
+    
+    // Explicitly include repo, read:user, and user:email scopes to ensure access to private repositories
     const defaultScopes =
       this.config.defaultScopes?.github ??
-      (["read:user", "repo"] as GitHubAuthScopes[]);
+      (["read:user", "repo", "user:email"] as GitHubAuthScopes[]);
+    
+    logger.log('GitHub scopes:', defaultScopes);
+    
     const scopesToUse = options.scopes ?? defaultScopes;
     return this.signInWithProvider<GitHubAuthScopes>(
       "github",
-      options,
+      {
+        ...options,
+        // Ensure token refresh is enabled
+        refreshToken: options.refreshToken !== false
+      },
       scopesToUse
     );
   }
@@ -183,7 +192,7 @@ export class AuthService {
     scopes: T[],
   ): Promise<AuthResponse> {
     try {
-      logger.log('SignInWithProvider:', { provider, options, scopes });
+      logger.log('SignInWithProvider:', { provider, options, scopesRequested: scopes });
 
       const { refreshToken = true } = options;
       const redirectTo = options.redirectTo || (
@@ -194,22 +203,35 @@ export class AuthService {
 
       logger.log('Configured options:', { redirectTo, refreshToken });
 
+      // Add special query parameters based on provider
+      const queryParams: Record<string, string> = {
+        refresh_token: refreshToken ? "true" : "false",
+      };
+      
+      // For GitHub, explicitly add parameters for private repo access
+      if (provider === 'github') {
+        queryParams.allow_signup = 'true';
+      }
+
       const oauthOptions = {
         provider,
         options: {
           redirectTo,
           scopes: scopes.join(" "),
-          queryParams: {
-            refresh_token: refreshToken ? "true" : "false",
-          },
+          queryParams
         },
       };
 
-      logger.log('OAuth request:', oauthOptions);
+      logger.log('OAuth request config:', oauthOptions);
 
+      // Make the OAuth sign-in request
       const result = await this.supabase.auth.signInWithOAuth(oauthOptions);
 
-      logger.log('OAuth response:', result);
+      logger.log('OAuth result received:', {
+        hasData: !!result?.data,
+        hasError: !!result?.error,
+        dataType: result?.data ? (typeof result.data === 'object' ? 'object' : typeof result.data) : 'none'
+      });
 
       if (!result) {
         logger.error('No result from OAuth provider');
@@ -242,8 +264,42 @@ export class AuthService {
         logger.log('Got session from OAuth');
         const sessionData = data.session as AuthSession;
         const userData = data.user as User;
+        
+        // Log token info for debugging
+        logger.debug('Token info:', {
+          hasProviderToken: !!sessionData.provider_token,
+          hasAccessToken: !!sessionData.access_token,
+          providerTokenLength: sessionData.provider_token?.length || 0,
+          expiresAt: sessionData.expires_at,
+          tokenType: sessionData.token_type,
+          provider: userData.app_metadata?.provider,
+          hasMetadataToken: !!userData.user_metadata?.provider_token
+        });
+        
+        // Store provider token in user metadata for easier access later
+        if (sessionData.provider_token && !userData.user_metadata?.provider_token) {
+          try {
+            await this.supabase.auth.updateUser({
+              data: {
+                provider_token: sessionData.provider_token,
+                scopes: scopes.join(' ')
+              }
+            });
+            logger.debug('Updated user metadata with provider token');
+          } catch (updateError) {
+            logger.error('Failed to update user with provider token:', updateError);
+            // Continue anyway - this is not critical
+          }
+        }
+        
         await this.updateUserProfile(userData);
         const user = await this.enhanceUser(userData);
+        
+        // Ensure the provider token is available
+        if (sessionData.provider_token) {
+          user.providerToken = sessionData.provider_token;
+        }
+        
         return {
           user,
           session: sessionData,
@@ -263,19 +319,50 @@ export class AuthService {
 
   private async enhanceUser(user: User): Promise<AuthUser> {
     const provider = user.app_metadata.provider as AuthProvider;
+    
+    // Extract OAuth scopes - check both app_metadata and user_metadata
+    const scopesString = user.app_metadata.scopes || user.user_metadata.scopes;
+    const scopes = scopesString
+      ? typeof scopesString === 'string'
+        ? scopesString.split(" ")
+        : scopesString
+      : [];
+    
+    // Check for tokens in multiple locations
+    let providerToken = user.app_metadata.provider_token;
+    
+    // If no token in app_metadata, check user_metadata
+    if (!providerToken && user.user_metadata?.provider_token) {
+      providerToken = user.user_metadata.provider_token;
+      logger.debug('Found provider token in user_metadata');
+    }
+    
+    // Log the token information for debugging
+    logger.debug('User tokens:', { 
+      hasAppMetadataToken: !!user.app_metadata.provider_token,
+      hasUserMetadataToken: !!user.user_metadata?.provider_token,
+      finalTokenLength: providerToken?.length || 0,
+      scopes
+    });
+    
     const enhancedUser: AuthUser = {
       ...user,
       provider,
       providerUserId: user.id,
-      name: user.user_metadata.full_name,
+      name: user.user_metadata.full_name || user.email?.split('@')[0] || 'Unknown User',
       avatarUrl: user.user_metadata.avatar_url,
-      providerToken: user.app_metadata.provider_token,
-      providerScopes: user.app_metadata.scopes
-        ? user.app_metadata.scopes.split(" ")
-        : [],
+      providerToken: providerToken,
+      providerScopes: scopes,
       auth_provider: provider,
       status: "active",
     };
+
+    // Store whether user has repo scope for GitHub
+    if (provider === 'github') {
+      const hasRepoScope = scopes.includes('repo');
+      const hasReadUserScope = scopes.includes('read:user');
+      logger.debug('GitHub scopes check:', { hasRepoScope, hasReadUserScope, allScopes: scopes });
+    }
 
     return enhancedUser;
   }

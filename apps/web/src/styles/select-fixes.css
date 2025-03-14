@@ -1,0 +1,14 @@
+/* Force light mode styling for select dropdowns */
+select {
+  color-scheme: light !important;
+}
+
+select.dark-select {
+  color-scheme: dark !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .dark select {
+    color-scheme: dark !important;
+  }
+}

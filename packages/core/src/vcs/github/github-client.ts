@@ -63,7 +63,33 @@ export class GitHubClient implements VCSClient {
   async getRepository(owner: string, name: string): Promise<VCSRepository> {
     try {
       const response = await this.octokit.repos.get({ owner, repo: name });
-      return mapGitHubRepository(response.data);
+      
+      // Enhanced logging for debugging
+      console.log('GitHub repository details:', { 
+        id: response.data.id,
+        fullName: response.data.full_name,
+        private: response.data.private,
+        visibility: response.data.visibility,
+        permissions: response.data.permissions,
+        hasAccess: true
+      });
+      
+      // Special handling for public repositories incorrectly marked as private
+      const mappedRepo = mapGitHubRepository(response.data);
+      
+      // For public repos, ensure we always have pull permission
+      if (!mappedRepo.isPrivate) {
+        mappedRepo.permissions.pull = true;
+      }
+      
+      // If we have pull permission but the repo is marked private, it might be a public repo
+      // with incorrect visibility
+      if (mappedRepo.isPrivate && mappedRepo.permissions.pull) {
+        console.log(`Repository ${owner}/${name} is marked as private but we have pull access. ` +
+                    `This might be a public repository incorrectly reported as private.`);
+      }
+      
+      return mappedRepo;
     } catch (error) {
       return this.handleError(error, { owner, repo: name });
     }

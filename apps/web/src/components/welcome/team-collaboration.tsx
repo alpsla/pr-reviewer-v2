@@ -16,7 +16,7 @@ export function TeamCollaboration({ className }: TeamCollaborationProps) {
       
       <div className="container relative z-10 max-w-6xl mx-auto">
         <div className="mx-auto mb-12 max-w-3xl text-center">
-          <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
+          <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl text-slate-800 dark:text-slate-100">
             Built for Teams and Organizations
           </h2>
           <p className="text-lg text-slate-600 dark:text-slate-300">

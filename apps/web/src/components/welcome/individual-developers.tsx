@@ -1,6 +1,7 @@
 import { TrendingUp, BarChart2, Briefcase, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BaseProps } from '@/types';
+import Link from 'next/link';
 
 export interface IndividualDevelopersProps extends BaseProps {}
 
@@ -142,9 +143,11 @@ export function IndividualDevelopers({ className }: IndividualDevelopersProps) {
         
         {/* Call to action */}
         <div className="mt-12 text-center">
-          <Button className="rounded-full px-8 py-6 bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:text-white shadow-lg hover:shadow-xl transition-all duration-300">
-            Start Your Growth Journey
-          </Button>
+          <Link href="/analyze">
+            <Button className="rounded-full px-8 py-6 bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:text-white shadow-lg hover:shadow-xl transition-all duration-300">
+              Start Your Growth Journey
+            </Button>
+          </Link>
         </div>
       </div>
     </section>

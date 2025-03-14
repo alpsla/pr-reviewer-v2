@@ -22,9 +22,9 @@ const nextConfig = {
   },
   // Skip static rendering for these routes to prevent localStorage errors
   output: 'standalone',
+  // App Router is now the default in Next.js 14+
   experimental: {
-    // This ensures client-side components are properly hydrated
-    appDir: true
+    // Using newer features when available
   },
   webpack: (config) => {
     config.resolve.alias = {

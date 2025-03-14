@@ -1,4 +1,11 @@
 {
-  "/pricing/page": "app/pricing/page.js",
-  "/page": "app/page.js"
+  "/analyze/page": "app/analyze/page.js",
+  "/api/repository/list/route": "app/api/repository/list/route.js",
+  "/api/repository/test-token/route": "app/api/repository/test-token/route.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/page": "app/page.js",
+  "/api/repository/limits/route": "app/api/repository/limits/route.js",
+  "/api/debug/repo/route": "app/api/debug/repo/route.js",
+  "/api/repository/pr-details/route": "app/api/repository/pr-details/route.js",
+  "/api/repository/increment-analysis/route": "app/api/repository/increment-analysis/route.js"
 }

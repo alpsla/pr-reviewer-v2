@@ -1,6 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
 
+// Default free tier analysis limit
+const DEFAULT_FREE_TIER_LIMIT = 5;
+
 export class DatabaseService {
   constructor(private readonly supabase: SupabaseClient<Database>) {}
 
@@ -54,15 +57,194 @@ export class DatabaseService {
 
   async createRepository(
     data: Database["public"]["Tables"]["repositories"]["Insert"],
+    options: { upsert?: boolean } = {}
   ) {
-    const { data: repository, error } = await this.supabase
-      .from("repositories")
-      .insert(data)
-      .select()
-      .single();
+    console.log('DatabaseService.createRepository called with:', {
+      owner: data.owner,
+      name: data.name,
+      fingerprint: data.fingerprint,
+      upsert: options.upsert
+    });
+    
+    // Set default values for analysis tracking if not provided
+    const repositoryData = {
+      ...data,
+      analysis_count: data.analysis_count ?? 0,
+      free_tier_analysis_limit: data.free_tier_analysis_limit ?? DEFAULT_FREE_TIER_LIMIT,
+      // Add placeholder for github_id if needed to satisfy the NOT NULL constraint
+      github_id: data.github_id || '0', // Using '0' as a placeholder when no GitHub ID is available
+      // Make sure platform is set or defaulted
+      platform: data.platform || 'github'
+    };
 
-    if (error) throw error;
-    return repository;
+    try {
+      // First check if repository exists by fingerprint to avoid id conflicts
+      if (data.fingerprint) {
+        const { data: existingRepo } = await this.supabase
+          .from("repositories")
+          .select("id, owner, name, fingerprint, analysis_count, free_tier_analysis_limit")
+          .eq("fingerprint", data.fingerprint)
+          .maybeSingle();
+          
+        if (existingRepo) {
+          console.log('Found existing repository by fingerprint, updating instead:', {
+            id: existingRepo.id,
+            owner: existingRepo.owner,
+            name: existingRepo.name,
+            fingerprint: existingRepo.fingerprint
+          });
+          
+          // Update the existing repository while preserving analysis counts
+          const { data: updatedRepo, error } = await this.supabase
+            .from("repositories")
+            .update({
+              ...repositoryData,
+              analysis_count: repositoryData.analysis_count ?? existingRepo.analysis_count,
+              free_tier_analysis_limit: repositoryData.free_tier_analysis_limit ?? existingRepo.free_tier_analysis_limit
+            })
+            .eq("id", existingRepo.id)
+            .select()
+            .single();
+            
+          if (error) {
+            console.error('Error updating existing repository:', error);
+            throw error;
+          }
+          
+          console.log('Repository updated successfully:', {
+            id: updatedRepo.id,
+            owner: updatedRepo.owner,
+            name: updatedRepo.name
+          });
+          
+          return updatedRepo;
+        }
+      }
+      
+      // If there's an ID provided, first check if it exists to avoid primary key conflicts
+      if (data.id) {
+        const { data: existingRepoById } = await this.supabase
+          .from("repositories")
+          .select("id")
+          .eq("id", data.id)
+          .maybeSingle();
+          
+        if (existingRepoById) {
+          console.log('Repository with this ID already exists, updating:', data.id);
+          
+          // Update the existing repository
+          const { data: updatedRepo, error } = await this.supabase
+            .from("repositories")
+            .update(repositoryData)
+            .eq("id", data.id)
+            .select()
+            .single();
+            
+          if (error) {
+            console.error('Error updating repository by ID:', error);
+            throw error;
+          }
+          
+          console.log('Repository updated successfully by ID:', {
+            id: updatedRepo.id,
+            owner: updatedRepo.owner,
+            name: updatedRepo.name
+          });
+          
+          return updatedRepo;
+        }
+      }
+      
+      // Check by owner/name if we should upsert
+      if (options.upsert) {
+        const { data: existingByName } = await this.supabase
+          .from("repositories")
+          .select("id")
+          .eq("owner", data.owner)
+          .eq("name", data.name)
+          .maybeSingle();
+          
+        if (existingByName) {
+          console.log('Repository exists by name, updating:', {
+            owner: data.owner,
+            name: data.name,
+            id: existingByName.id
+          });
+          
+          // Update the existing repository
+          const { data: updatedRepo, error } = await this.supabase
+            .from("repositories")
+            .update(repositoryData)
+            .eq("id", existingByName.id)
+            .select()
+            .single();
+            
+          if (error) {
+            console.error('Error updating repository by name:', error);
+            throw error;
+          }
+          
+          console.log('Repository updated successfully by name:', {
+            id: updatedRepo.id,
+            owner: updatedRepo.owner,
+            name: updatedRepo.name
+          });
+          
+          return updatedRepo;
+        }
+      }
+        
+      // If we get here, create a new repository record
+      console.log('Creating new repository:', {
+        owner: repositoryData.owner,
+        name: repositoryData.name,
+        fingerprint: repositoryData.fingerprint
+      });
+      
+      // Check for duplicate owner/name entries first
+      const { data: duplicateCheck } = await this.supabase
+        .from("repositories")
+        .select('id, name')
+        .eq("owner", repositoryData.owner)
+        .eq("name", repositoryData.name);
+      
+      // If we found duplicates, modify the name to make it unique
+      if (duplicateCheck && duplicateCheck.length > 0) {
+        console.log('Found duplicate owner/name entries, modifying name to be unique:', {
+          owner: repositoryData.owner,
+          name: repositoryData.name,
+          count: duplicateCheck.length
+        });
+        
+        // Append a unique identifier based on timestamp
+        const uniqueSuffix = `-${Date.now().toString().slice(-6)}`;
+        repositoryData.name = `${repositoryData.name}${uniqueSuffix}`;
+        
+        console.log('Modified name to:', repositoryData.name);
+      }
+      
+      const { data: repository, error } = await this.supabase
+        .from("repositories")
+        .insert(repositoryData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error inserting repository:', error);
+        throw error;
+      }
+      
+      console.log('Repository created successfully:', {
+        id: repository.id,
+        owner: repository.owner,
+        name: repository.name
+      });
+      
+      return repository;
+    } catch (error) {
+      console.error('Unexpected error in createRepository:', error);
+      throw error;
+    }
   }
 
   async getRepositoryByOwnerAndName(owner: string, name: string) {
@@ -176,5 +358,75 @@ export class DatabaseService {
 
     if (error) throw error;
     return queue.id;
+  }
+
+  /**
+   * Get repository by fingerprint
+   */
+  async getRepositoryByFingerprint(fingerprint: string) {
+    const { data: repository, error } = await this.supabase
+      .from("repositories")
+      .select()
+      .eq("fingerprint", fingerprint)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "No rows found"
+    return error ? null : repository;
+  }
+
+  /**
+   * Update repository analysis count
+   */
+  async incrementRepositoryAnalysisCount(repositoryId: string): Promise<number> {
+    // First get current analysis count
+    const { data: repository, error: fetchError } = await this.supabase
+      .from("repositories")
+      .select("analysis_count")
+      .eq("id", repositoryId)
+      .single();
+
+    if (fetchError) throw fetchError;
+    
+    const newCount = (repository.analysis_count || 0) + 1;
+    
+    // Update the repository with the new count and last analyzed timestamp
+    const { data: updatedRepo, error: updateError } = await this.supabase
+      .from("repositories")
+      .update({
+        analysis_count: newCount,
+        last_analyzed_at: new Date().toISOString()
+      })
+      .eq("id", repositoryId)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
+    return newCount;
+  }
+
+  /**
+   * Check if repository has reached free tier analysis limit
+   */
+  async checkRepositoryAnalysisLimit(repositoryId: string): Promise<{
+    current: number;
+    limit: number;
+    hasReachedLimit: boolean;
+  }> {
+    const { data: repository, error } = await this.supabase
+      .from("repositories")
+      .select("analysis_count, free_tier_analysis_limit")
+      .eq("id", repositoryId)
+      .single();
+
+    if (error) throw error;
+    
+    const current = repository.analysis_count || 0;
+    const limit = repository.free_tier_analysis_limit || DEFAULT_FREE_TIER_LIMIT;
+    
+    return {
+      current,
+      limit,
+      hasReachedLimit: current >= limit
+    };
   }
 }

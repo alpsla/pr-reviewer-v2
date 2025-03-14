@@ -89,7 +89,7 @@ export function ProvidersMenu() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="hidden md:inline-flex">
+          <Button variant="outline" className="hidden md:inline-flex bg-blue-500 hover:bg-blue-600 text-white border-blue-500">
             Join Us
           </Button>
         </DropdownMenuTrigger>
