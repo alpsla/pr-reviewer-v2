@@ -108,7 +108,7 @@ export class RepositoryError extends Error {
       case PlatformErrorCode.PERMISSION_DENIED:
       case PlatformErrorCode.ACCESS_DENIED:
       case PlatformErrorCode.UNAUTHORIZED:
-        return 'Permission denied. Please check your access rights to this repository.';
+        return 'You don\'t have access to this repository. Please sign out and sign in with an account that has access to this repository.';
       
       case PlatformErrorCode.NOT_IMPLEMENTED:
         return 'This operation is not supported for the selected platform.';
@@ -163,12 +163,12 @@ export function createPermissionDeniedError(
   repo: string,
   pullNumber?: number
 ): RepositoryError {
-  const resource = pullNumber 
-    ? `pull request #${pullNumber} in ${owner}/${repo}`
-    : `repository ${owner}/${repo}`;
+  const message = pullNumber
+    ? `You don't have access to pull request #${pullNumber} in ${owner}/${repo}. Please sign out and sign in with an account that has access.`
+    : `You don't have access to repository ${owner}/${repo}. Please sign out and sign in with an account that has access.`;
     
   return new RepositoryError(
-    `Permission denied for ${resource}`,
+    message,
     PlatformErrorCode.PERMISSION_DENIED,
     { platform, owner, repo, pullNumber }
   );

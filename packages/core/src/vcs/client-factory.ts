@@ -22,8 +22,21 @@ const getVCSClient = (
   // Add token debugging (just show length for security)
   console.log(`Creating ${platform} client with token [length: ${token?.length || 0}]`);
   
-  if (!token) {
-    throw new Error(`Cannot create ${platform} client: No token provided`);
+  // Special handling for public repositories - allow unauthenticated access
+  const isPublicAccessAttempt = !token || token === 'anonymous_access';
+  
+  if (isPublicAccessAttempt) {
+    console.log(`Attempting to create ${platform} client without authentication (for public repositories only)`);
+    
+    // For GitHub, we can instantiate a client without auth for public repos
+    if (platform === 'github') {
+      const githubClient = new GitHubClient('', baseUrl ? { baseUrl } : undefined);
+      initializeVCSExtensions(githubClient);
+      return githubClient;
+    } else {
+      // For GitLab and others, we still require authentication
+      throw new Error(`Cannot create ${platform} client: Authentication required`);
+    }
   }
   
   switch (platform) {
