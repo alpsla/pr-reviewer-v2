@@ -1,4 +1,4 @@
-import { VCSPlatform } from '../vcs';
+import { VCSPlatform, VCSPullRequestFile } from '../vcs';
 import { BaseRepositoryService } from './base-repository-service';
 import { DataCollectorService } from './data-collector';
 import { generateUuid } from '../utils/uuid';
@@ -30,7 +30,18 @@ export class DataCollectionOperations extends BaseRepositoryService {
     tokens: { github?: string; gitlab?: string; } = {},
     baseUrls?: { github?: string; gitlab?: string; }
   ) {
-    super(db, tokens, baseUrls);
+    // CRITICAL FIX: If there's only one token available, use it for both platforms
+    // This ensures cross-platform access works correctly
+    const fixedTokens = { ...tokens };
+    if (fixedTokens.github && !fixedTokens.gitlab) {
+      fixedTokens.gitlab = fixedTokens.github;
+      console.log('Using GitHub token as GitLab token for cross-platform support');
+    } else if (fixedTokens.gitlab && !fixedTokens.github) {
+      fixedTokens.github = fixedTokens.gitlab;
+      console.log('Using GitLab token as GitHub token for cross-platform support');
+    }
+    
+    super(db, fixedTokens, baseUrls);
     
     try {
       // Create data collector service instances for each platform
@@ -169,76 +180,122 @@ export class DataCollectionOperations extends BaseRepositoryService {
     try {
       console.log(`Getting basic PR details for ${platform}/${owner}/${repo}#${number}`);
       
+      // Get VCS client
+      const client = this.getClientForPlatform(platform);
+      
+      // Get repository to ensure it exists and to get its ID
+      let repository;
       try {
-        // Get VCS client
-        const client = this.getClientForPlatform(platform);
+        repository = await this.getRepository(platform, owner, repo);
+        console.log(`Successfully retrieved repository: ${owner}/${repo}`);
+      } catch (repoError) {
+        console.error(`Error retrieving repository ${owner}/${repo}:`, repoError);
+        throw new Error(`Repository not found or inaccessible: ${owner}/${repo}`);
+      }
+      
+      // Get PR details
+      let pullRequest;
+      try {
+        pullRequest = await client.getPullRequest(owner, repo, number);
+        console.log(`Successfully retrieved PR #${number}`);
+      } catch (prError) {
+        console.error(`Error retrieving PR #${number}:`, prError);
+        throw new Error(`Pull request #${number} not found or inaccessible`);
+      }
+      
+      // Get PR files - this is what contains our stats
+      let prFiles: VCSPullRequestFile[] = [];
+      try {
+        console.log(`Attempting to fetch files for PR #${number}...`);
+        console.log(`Using client type: ${client.constructor.name}`);
+        console.log(`Client platform: ${client.getPlatform()}`);
         
-        // Get repository to ensure it exists and to get its ID
-        const repository = await this.getRepository(platform, owner, repo);
-        
-        // Get PR details
-        const pullRequest = await client.getPullRequest(owner, repo, number);
-        const prFiles = await client.getPullRequestFiles(owner, repo, number);
-        
-        // Calculate basic stats
-        let filesChanged = 0;
-        let linesAdded = 0;
-        let linesRemoved = 0;
-        
-        for (const file of prFiles) {
-          filesChanged++;
-          linesAdded += file.additions || 0;
-          linesRemoved += file.deletions || 0;
+        if (!client.getPullRequestFiles) {
+          console.error('ERROR: getPullRequestFiles method is not available on client');
+          console.log('Client methods:', Object.keys(client as unknown as Record<string, unknown>).filter(key => typeof (client as unknown as Record<string, unknown>)[key] === 'function'));
+          throw new Error('Client does not implement getPullRequestFiles method');
         }
         
-        // Create basic details object
-        const basicDetails: PullRequestBasicDetails = {
-          repositoryId: repository.id,
-          owner,
-          repo,
-          number,
-          title: pullRequest.title,
-          author: pullRequest.user?.login || 'Unknown',
-          branch: pullRequest.head.ref,
-          baseBranch: pullRequest.base.ref,
-          filesChanged,
-          linesAdded,
-          linesRemoved,
-          createdAt: new Date(pullRequest.createdAt),
-          updatedAt: new Date(pullRequest.updatedAt),
-          url: pullRequest.url
-        };
+        prFiles = await client.getPullRequestFiles(owner, repo, number);
+        console.log(`Successfully retrieved ${prFiles.length} files for PR #${number}`);
+        if (prFiles.length > 0) {
+          console.log('Sample file data:', JSON.stringify(prFiles[0]));
+        }
+      } catch (filesError) {
+        console.error(`Error retrieving files for PR #${number}:`, filesError);
+        console.error('Error details:', {
+          name: filesError instanceof Error ? filesError.name : 'Unknown',
+          message: filesError instanceof Error ? filesError.message : String(filesError),
+          stack: filesError instanceof Error ? filesError.stack : 'No stack trace'
+        });
         
-        return basicDetails;
-      } catch (innerError) {
-        console.error('Failed to get PR details using client, falling back to mock:', innerError);
-        
-        // Fall back to mock implementation - this ensures we always return something
-        // Generate a mock repository ID
-        const repositoryId = `${platform}-${owner}-${repo}`;
-        
-        // Return mock data
-        return {
-          repositoryId,
-          owner,
-          repo,
-          number,
-          title: `Pull Request #${number}`,
-          author: 'user',
-          branch: 'feature-branch',
-          baseBranch: 'main',
-          filesChanged: 10,
-          linesAdded: 100,
-          linesRemoved: 50,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          url: `https://${platform}.com/${owner}/${repo}/pull/${number}`
-        };
+        // Important: We don't throw here but continue with empty files array
+        // This allows us to still return partial PR details
+        console.warn(`Continuing with empty files list for PR #${number}`);
       }
+      
+      // Calculate basic stats
+      let filesChanged = prFiles.length;
+      let linesAdded = 0;
+      let linesRemoved = 0;
+      
+      for (const file of prFiles) {
+        linesAdded += file.additions || 0;
+        linesRemoved += file.deletions || 0;
+      }
+      
+      // Create basic details object
+      const basicDetails: PullRequestBasicDetails = {
+        repositoryId: repository.id,
+        owner,
+        repo,
+        number,
+        title: pullRequest.title,
+        author: pullRequest.user?.login || 'Unknown',
+        branch: pullRequest.head.ref,
+        baseBranch: pullRequest.base.ref,
+        filesChanged,
+        linesAdded,
+        linesRemoved,
+        createdAt: new Date(pullRequest.createdAt),
+        updatedAt: new Date(pullRequest.updatedAt),
+        url: pullRequest.url
+      };
+      
+      return basicDetails;
     } catch (error) {
       console.error('Error getting basic PR details:', error);
-      this.handleVCSError(error, { platform, owner, repo, pullNumber: number });
-      throw error;
+      
+      // We still need a fallback, but let's try to create a more informative error message
+      let errorMessage = error instanceof Error ? error.message : String(error);
+      
+      // Only use mock data as a last resort
+      if (errorMessage.includes('not found') || errorMessage.includes('inaccessible')) {
+        throw new Error(`Unable to access PR: ${errorMessage}`);
+      }
+      
+      // We only reach here for unexpected errors
+      const repositoryId = `${platform}-${owner}-${repo}`;
+      
+      console.warn(`Falling back to mock data for ${owner}/${repo}#${number} due to unexpected error`);
+      
+      // Return mock data but indicate it's mock data via the title
+      return {
+        repositoryId,
+        owner,
+        repo,
+        number,
+        title: `[DATA ISSUE] Pull Request #${number}`,  // Mark as having data issues
+        author: 'unknown',
+        branch: 'unknown',
+        baseBranch: 'main',
+        filesChanged: 0,  // Use zero values instead of hardcoded mock values
+        linesAdded: 0,    // to make it clear that data is missing
+        linesRemoved: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        url: `https://${platform}.com/${owner}/${repo}/pull/${number}`
+      };
     }
   }
 

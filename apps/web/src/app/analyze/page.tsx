@@ -224,8 +224,22 @@ export default function AnalyzePage() {
       console.error("Error during analysis:", error);
       setValidationStatus('error');
       
-      // Check if this is a limit reached error
-      if (error instanceof Error && error.message && error.message.includes('limit')) {
+      // Determine if this is an access error
+      const isAccessError = 
+        (error instanceof Error && 
+         (error.message.includes("Access denied") || 
+          error.message.includes("access denied") || 
+          error.message.includes("sign out and sign in"))) ||
+        (typeof error === 'object' && error !== null && 'message' in error && 
+         typeof error.message === 'string' && 
+         (error.message.includes("Access denied") || 
+          error.message.includes("access denied") || 
+          error.message.includes("sign out and sign in")));
+      
+      // Check type of error for appropriate message
+      if (isAccessError) {
+        setValidationMessage('Access denied. Please sign out and sign in with an account that has proper permissions.');
+      } else if (error instanceof Error && error.message && error.message.includes('limit')) {
         setValidationMessage('Analysis limit reached');
       } else if (typeof error === 'object' && error !== null && 'message' in error && 
                 typeof error.message === 'string' && error.message.includes('limit')) {
@@ -237,7 +251,9 @@ export default function AnalyzePage() {
       setAnalysisState('error');
       setNotification({ 
         visible: true, 
-        message: `Analysis failed: ${error instanceof Error ? error.message : String(error)}`, 
+        message: isAccessError
+          ? `Sign out and sign in with an account that has proper permissions`
+          : `Analysis failed: ${error instanceof Error ? error.message : String(error)}`, 
         type: 'error' 
       });
     }
@@ -269,14 +285,19 @@ export default function AnalyzePage() {
           }`}
         >
           <div className="flex items-center">
-            {notification.type === 'success' ? (
-              <CheckCircle className="h-4 w-4 text-white mr-2 flex-shrink-0" />
-            ) : (
-              <div className="h-4 w-4 text-white mr-2 flex-shrink-0">❌</div>
-            )}
-            <p className="text-white text-sm font-medium">
-              {notification.message}
-            </p>
+            <div className="h-4 w-4 text-white mr-2 flex-shrink-0">
+              {notification.type === 'success' ? <CheckCircle className="h-4 w-4" /> : '❌'}
+            </div>
+            <div>
+              {notification.type === 'error' && notification.message.includes('Sign out and sign in') ? (
+                <>
+                  <p className="text-white text-sm font-medium">Access denied</p>
+                  <p className="text-white text-xs opacity-90">{notification.message}</p>
+                </>
+              ) : (
+                <p className="text-white text-sm font-medium">{notification.message}</p>
+              )}
+            </div>
             <button 
               onClick={() => setNotification({ ...notification, visible: false })}
               className="ml-3 text-white hover:text-white/90 focus:outline-none transition-colors"

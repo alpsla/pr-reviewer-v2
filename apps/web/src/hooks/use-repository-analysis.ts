@@ -212,21 +212,13 @@ export function useRepositoryAnalysis() {
         }
         
         if (response && response.status === 403 && data && data.error === 'REPOSITORY_ACCESS_ERROR') {
-          // Log the error but continue with the analysis
-          console.log('Repository access error detected - proceeding anyway:', data);
-          console.log('This is likely a cross-platform access issue (e.g., GitLab auth trying to access GitHub repo)');
-          
-          // Return success anyway
-          return 1; // Return a mock success
+          // This is a proper access denied error - throw with appropriate message
+          throw new Error(`Access denied. Please sign out and sign in with an account that has proper permissions.`);
         }
         
         if (response && response.status === 401 && data && data.error === 'AUTHENTICATION_ERROR') {
-          // Log the error but allow the analysis to proceed
-          console.log('Authentication error detected - proceeding anyway:', data);
-          console.log('This is likely a cross-platform access issue (e.g., GitLab auth trying to access GitHub repo)');
-          
-          // Return success anyway
-          return 1; // Return a mock success
+          // This is an authentication error - throw with appropriate message
+          throw new Error(`Access denied. Please sign out and sign in with an account that has proper permissions.`);
         }
         
         throw new Error((data && data.message) || 'Failed to increment analysis count');

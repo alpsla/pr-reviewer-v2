@@ -23,12 +23,50 @@ export class GitHubClient implements VCSClient {
   private platform = 'github' as const;
 
   constructor(token: string, options?: { baseUrl?: string }) {
+    // Validate token
+    if (!token || token.trim() === '') {
+      console.error('GitHub token is empty or invalid');
+      throw new Error('Invalid GitHub token provided: token cannot be empty');
+    }
+    
     console.log(`Initializing GitHub client with token (first 5 chars): ${token.substring(0, 5)}...`);
     console.log(`Token length: ${token.length}, Token type: ${typeof token}`);
-    this.octokit = new Octokit({
-      auth: token,
-      baseUrl: options?.baseUrl || 'https://api.github.com'
-    });
+    
+    try {
+      this.octokit = new Octokit({
+        auth: token,
+        baseUrl: options?.baseUrl || 'https://api.github.com'
+      });
+      console.log('GitHub client initialization successful');
+      
+      // Validate token with a simple API call
+      this.validateToken().catch(error => {
+        console.error('Token validation warning: Unable to verify token validity', error);
+      });
+    } catch (error) {
+      console.error('Error creating GitHub Octokit client:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Validates the token by making a simple API call
+   */
+  private async validateToken(): Promise<void> {
+    try {
+      const response = await this.octokit.users.getAuthenticated();
+      console.log(`Token validated successfully. Authenticated as: ${response.data.login}`);
+      console.log(`Token scopes: ${response.headers['x-oauth-scopes'] || 'none'}`);
+    } catch (error) {
+      console.error('Token validation failed:', error);
+      if (error instanceof RequestError) {
+        console.error('Request error details:', {
+          status: error.status,
+          message: error.message
+        });
+      }
+      throw error;
+    }
   }
 
   /**
@@ -184,14 +222,37 @@ export class GitHubClient implements VCSClient {
    */
   async getPullRequest(owner: string, repo: string, number: number): Promise<VCSPullRequest> {
     try {
+      console.log(`Getting pull request ${owner}/${repo}#${number}`);
       const response = await this.octokit.pulls.get({
         owner,
         repo,
         pull_number: number
       });
       
+      console.log(`PR ${owner}/${repo}#${number} fetched successfully:`, {
+        statusCode: response.status,
+        title: response.data.title,
+        state: response.data.state,
+        user: response.data.user?.login
+      });
+      
       return mapGitHubPR(response.data);
     } catch (error) {
+      console.error(`Error getting PR ${owner}/${repo}#${number}:`, error);
+      
+      // Log detailed error information
+      if (error instanceof RequestError) {
+        console.error('Request error details:', {
+          status: error.status,
+          message: error.message,
+          request: error.request,
+          response: error.response ? {
+          status: error.response.status,
+          data: error.response.data
+          } : 'No response'
+        });
+      }
+      
       return this.handleError(error, { owner, repo, pullNumber: number });
     }
   }
@@ -306,26 +367,83 @@ export class GitHubClient implements VCSClient {
       let allFiles: any[] = [];
       let page = 1;
       let hasNextPage = true;
+      let maxRetries = 3;
+      let retryCount = 0;
       
-      // Fetch all pages of files
-      while (hasNextPage) {
-        console.log(`Fetching PR files page ${page} for ${owner}/${repo}#${pullNumber}`);
-        const response = await this.octokit.pulls.listFiles({
-          owner,
-          repo,
-          pull_number: pullNumber,
-          per_page: 100,
-          page
-        });
-        
-        allFiles = [...allFiles, ...response.data];
-        
-        // Check if there are more pages
-        hasNextPage = !!response.headers.link?.includes('rel="next"');
-        page++;
-        
-        if (hasNextPage) {
-          console.log(`Found next page for PR files: ${owner}/${repo}#${pullNumber}`);
+      // Fetch all pages of files with retry logic
+      while (hasNextPage && retryCount <= maxRetries) {
+        try {
+          console.log(`Fetching PR files page ${page} for ${owner}/${repo}#${pullNumber}`);
+          console.log('API request parameters:', {
+            owner,
+            repo,
+            pull_number: pullNumber,
+            per_page: 100,
+            page
+          });
+          
+          const response = await this.octokit.pulls.listFiles({
+            owner,
+            repo,
+            pull_number: pullNumber,
+            per_page: 100,
+            page
+          });
+          
+          console.log(`API response status: ${response.status}`);
+          console.log(`API response headers:`, response.headers);
+          console.log(`API response data length: ${response.data.length}`);
+          if (response.data.length > 0) {
+            console.log('First file sample:', JSON.stringify(response.data[0]));
+          }
+          
+          allFiles = [...allFiles, ...response.data];
+          
+          // Check if there are more pages
+          hasNextPage = !!response.headers.link?.includes('rel="next"');
+          page++;
+          
+          if (hasNextPage) {
+            console.log(`Found next page for PR files: ${owner}/${repo}#${pullNumber}`);
+          }
+          
+          // Reset retry counter on success
+          retryCount = 0;
+        } catch (pageError) {
+          retryCount++;
+          console.error(`Error fetching page ${page} (attempt ${retryCount}/${maxRetries}):`, pageError);
+          
+          // Log detailed error information for debugging
+          if (pageError instanceof Error) {
+            console.error('Error details:', {
+              name: pageError.name,
+              message: pageError.message,
+              stack: pageError.stack
+            });
+
+            if (pageError instanceof RequestError) {
+              console.error('Request error details:', {
+                status: pageError.status,
+                request: pageError.request,
+                response: pageError.response ? {
+                  url: pageError.response.url,
+                  status: pageError.response.status,
+                  headers: pageError.response.headers,
+                  data: pageError.response.data
+                } : 'No response data'
+              });
+            }
+          }
+          
+          if (retryCount >= maxRetries) {
+            console.error(`Maximum retries reached for page ${page}, continuing with files collected so far`);
+            hasNextPage = false;
+          } else {
+            // Add exponential backoff
+            const backoffMs = Math.pow(2, retryCount) * 500;
+            console.log(`Retrying in ${backoffMs}ms...`);
+            await new Promise(resolve => setTimeout(resolve, backoffMs));
+          }
         }
       }
       
@@ -342,7 +460,17 @@ export class GitHubClient implements VCSClient {
         sha: file.sha || '' // Add SHA to match PullRequestFile interface
       }));
     } catch (error) {
-      return this.handleError(error, { owner, repo, pullNumber });
+      // Critical fix: If we can't get files at all, don't crash but return empty array with proper logging
+      console.error(`Failed to get PR files for ${owner}/${repo}#${pullNumber}:`, error);
+      console.error('Returning empty file list instead of crashing');
+      
+      // If this is a non-recoverable error like authentication, throw it
+      if (error instanceof RequestError && (error.status === 401 || error.status === 403)) {
+        return this.handleError(error, { owner, repo, pullNumber });
+      }
+      
+      // For other errors, return empty array so we at least get some PR metadata
+      return [];
     }
   }
 
@@ -547,17 +675,39 @@ export class GitHubClient implements VCSClient {
   }): never {
     if (error instanceof RequestError) {
       if (error.status === 404) {
-        throw new VCSError(
-          `Resource not found: ${context?.owner ? `${context.owner}/` : ''}${context?.repo || ''} ${context?.pullNumber ? `#${context.pullNumber}` : ''}`,
-          'github',
-          'RESOURCE_NOT_FOUND',
-          { 
-            owner: context?.owner,
-            repo: context?.repo,
-            pullNumber: context?.pullNumber,
-            statusCode: 404
-          }
-        );
+        // Try to determine if this is a "not found" or "no access" error
+        // For public repos that actually don't exist, we should return a clear error
+        // For private repos that the user doesn't have access to, indicate that auth is needed
+        const isLikelyPrivateRepo = error.message.includes('Not Found') && 
+                                 !error.message.includes('no such repository');
+        
+        if (isLikelyPrivateRepo) {
+          console.log('Resource not found - likely a private repository requiring authentication');
+          throw new VCSError(
+            `This appears to be a private repository. Authentication required to access: ${context?.owner ? `${context.owner}/` : ''}${context?.repo || ''} ${context?.pullNumber ? `#${context.pullNumber}` : ''}`,
+            'github',
+            'PERMISSION_DENIED',
+            { 
+              owner: context?.owner,
+              repo: context?.repo,
+              pullNumber: context?.pullNumber,
+              statusCode: 404,
+              requiresAuth: true
+            }
+          );
+        } else {
+          throw new VCSError(
+            `Resource not found: ${context?.owner ? `${context.owner}/` : ''}${context?.repo || ''} ${context?.pullNumber ? `#${context.pullNumber}` : ''}`,
+            'github',
+            'RESOURCE_NOT_FOUND',
+            { 
+              owner: context?.owner,
+              repo: context?.repo,
+              pullNumber: context?.pullNumber,
+              statusCode: 404
+            }
+          );
+        }
       }
       
       if (error.status === 403 && error.message.includes('rate limit')) {

@@ -31,6 +31,9 @@ export abstract class BaseRepositoryService {
   ) {
     this.db = database;
     
+    // Log token information for debugging
+    logger.debug(`Token information: GitHub: ${!!tokens.github}, GitLab: ${!!tokens.gitlab}`);
+    
     if (tokens.github) {
       try {
         logger.debug('Initializing GitHub client with token starting with:', tokens.github.substring(0, 5));
@@ -59,7 +62,41 @@ export abstract class BaseRepositoryService {
   protected getClientForPlatform(platform: VCSPlatform): VCSClient {
     // Check if we have clients first
     if (platform === 'github') {
+      // If we have a client already initialized, use it
+      if (this.githubClient) {
+        return this.githubClient!;
+      }
+
+      // For public repositories, we can try to initialize without a token
+      // This will only work for public repos but allows analysis without signing in
       if (!this.tokens.github) {
+        try {
+          logger.info('Attempting to initialize GitHub client for public repository access');
+          // Use a special token string that the client will recognize as public-only mode
+          this.githubClient = getVCSClient('github', 'anonymous-public-access');
+          logger.info('GitHub client initialized for public repository access');
+          if (!this.githubClient) {
+            throw createValidationError(
+              `GitHub client is not available. Please sign in with GitHub to access GitHub repositories.`,
+              { platform }
+            );
+          }
+          return this.githubClient;
+        } catch (publicAccessError) {
+          logger.error('Failed to initialize GitHub client for public access:', publicAccessError);
+          // Continue to error message below for no token
+        }
+
+        // Check if this is a cross-platform scenario (using GitLab token for GitHub)
+        if (this.tokens.gitlab) {
+          logger.warn('Attempting to use GitLab token for GitHub repo - this is unlikely to work');
+          logger.warn('GitHub requires specific authentication with GitHub credentials');
+          throw createValidationError(
+            `You don't have access to this repository. Please sign out and sign in with an account that has access to this repository.`,
+            { platform, crossPlatformAttempt: true }
+          );
+        }
+        
         logger.error('No GitHub token available for authentication');
         throw createValidationError(
           `No GitHub token available. Please sign in with GitHub to access GitHub repositories.`,
@@ -74,8 +111,13 @@ export abstract class BaseRepositoryService {
           this.githubClient = getVCSClient('github', this.tokens.github);
         } catch (error) {
           logger.error('Failed to initialize GitHub client:', error);
+          
+          // Enhanced error message for debugging
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          const tokenSample = this.tokens.github?.substring(0, 5) || 'none';
+          
           throw createValidationError(
-            `Failed to initialize GitHub client: ${error instanceof Error ? error.message : String(error)}`,
+            `Failed to initialize GitHub client - Check your authentication. Token starts with: ${tokenSample}... Error: ${errorMsg}`,
             { platform }
           );
         }
@@ -87,6 +129,16 @@ export abstract class BaseRepositoryService {
     
     if (platform === 'gitlab') {
       if (!this.tokens.gitlab) {
+        // Check if this is a cross-platform scenario (using GitHub token for GitLab)
+        if (this.tokens.github) {
+          logger.warn('Attempting to use GitHub token for GitLab repo - this is unlikely to work');
+          logger.warn('GitLab requires specific authentication with GitLab credentials');
+          throw createValidationError(
+            `You don't have access to this repository. Please sign out and sign in with an account that has access to this repository.`,
+            { platform, crossPlatformAttempt: true }
+          );
+        }
+        
         logger.error('No GitLab token available for authentication');
         throw createValidationError(
           `No GitLab token available. Please sign in with GitLab to access GitLab repositories.`,

@@ -23,6 +23,17 @@ export function PrPreviewSection({ prUrl, repoInfo, prNumber }: PrPreviewSection
   const fetchPrBasicDetails = async () => {
     if (!repoInfo || !prNumber) return;
     
+    // Check for recent error to prevent excessive retries
+    const errorKey = `${repoInfo.platform}/${repoInfo.owner}/${repoInfo.repo}/${prNumber}_error_time`;
+    const lastErrorTime = localStorage.getItem(errorKey);
+    const now = Date.now();
+    
+    // If we had a fetch error in the last 30 seconds, don't try again
+    if (lastErrorTime && (now - parseInt(lastErrorTime)) < 30000) {
+      console.log('Skipping PR details fetch due to recent error');
+      return;
+    }
+    
     setLoading(true);
     setError(null);
     
@@ -42,6 +53,16 @@ export function PrPreviewSection({ prUrl, repoInfo, prNumber }: PrPreviewSection
       if (!response.ok) {
         const errorData = await response.json();
         console.error('API returned error status:', response.status, errorData);
+        
+        // Check for cross-platform authentication error
+        const isCrossPlatformError = 
+          errorData.message?.includes('Cross-platform authentication') ||
+          errorData.errorCode === 'CROSS_PLATFORM_AUTH_ERROR';
+          
+        if (isCrossPlatformError) {
+          throw new Error('Cross-platform authentication not supported. Please connect with the appropriate platform.');
+        }
+        
         throw new Error(errorData.message || 'Failed to fetch PR details');
       }
       
@@ -60,13 +81,35 @@ export function PrPreviewSection({ prUrl, repoInfo, prNumber }: PrPreviewSection
           !backgroundCollectionStarted
         ) {
           startBackgroundDataCollection(data.details.repositoryId);
+        } else if (
+          data.details.filesChanged === 0 &&
+          data.details.linesAdded === 0 &&
+          data.details.linesRemoved === 0
+        ) {
+          console.warn('Not starting background data collection due to missing PR metrics');
         }
       } else {
         throw new Error('No PR details returned from API');
       }
     } catch (err) {
       console.error('Error fetching PR basic details:', err);
-      setError(err instanceof Error ? err.message : String(err));
+      
+      // Check for cross-platform auth error
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      const isCrossPlatformError = errorMsg.includes('Cross-platform authentication');
+      
+      if (isCrossPlatformError) {
+        // Special handling for cross-platform errors
+        setError('Cross-platform authentication error');
+      } else {
+        setError(errorMsg);
+      }
+      
+      // Store the error timestamp to prevent excessive retries
+      if (repoInfo && prNumber) {
+        const errorKey = `${repoInfo.platform}/${repoInfo.owner}/${repoInfo.repo}/${prNumber}_error_time`;
+        localStorage.setItem(errorKey, Date.now().toString());
+      }
     } finally {
       setLoading(false);
     }
@@ -124,10 +167,10 @@ export function PrPreviewSection({ prUrl, repoInfo, prNumber }: PrPreviewSection
     
     // If we have repoInfo and prNumber, try to fetch
     if (repoInfo && prNumber) {
-      // Add a small delay to ensure UI is updated
+      // Add a delay to ensure UI is updated and to prevent too-frequent API calls
       const fetchTimeout = setTimeout(() => {
         fetchPrBasicDetails();
-      }, 100);
+      }, 1000); // Increase delay to 1 second to prevent constant refreshing
       
       return () => clearTimeout(fetchTimeout);
     }
@@ -159,7 +202,20 @@ export function PrPreviewSection({ prUrl, repoInfo, prNumber }: PrPreviewSection
       
       {error && (
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mt-4">
-          <p className="text-red-700 dark:text-red-300">{error}</p>
+          {error === 'Cross-platform authentication error' ? (
+            <div className="flex items-start">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-red-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div>
+                <p className="text-red-700 dark:text-red-300 font-medium">Cross-Platform Authentication Error</p>
+                <p className="text-red-600 dark:text-red-400 mt-1">You're signed in with GitLab but trying to access a GitHub repository. Cross-platform access is not supported at this time.</p>
+                <p className="text-red-600 dark:text-red-400 mt-1">Please sign in with a GitHub account to analyze GitHub repositories.</p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-red-700 dark:text-red-300">{error}</p>
+          )}
         </div>
       )}
       
@@ -207,32 +263,46 @@ export function PrPreviewSection({ prUrl, repoInfo, prNumber }: PrPreviewSection
             </div>
             
             <div className="space-y-3">
-              {/* Files Changed */}
-              <div className="flex items-center text-sm">
-                <FileDiff className="mr-2 h-4 w-4 text-slate-500 dark:text-slate-400" />
-                <span className="text-slate-500 dark:text-slate-400 mr-2">Files Changed:</span>
-                <span className="font-medium text-slate-800 dark:text-slate-200">
-                  {prDetails.filesChanged.toLocaleString()}
-                </span>
-              </div>
-              
-              {/* Lines Added */}
-              <div className="flex items-center text-sm">
-                <PlusCircle className="mr-2 h-4 w-4 text-green-500" />
-                <span className="text-slate-500 dark:text-slate-400 mr-2">Lines Added:</span>
-                <span className="font-medium text-green-600 dark:text-green-400">
-                  {prDetails.linesAdded.toLocaleString()}
-                </span>
-              </div>
-              
-              {/* Lines Removed */}
-              <div className="flex items-center text-sm">
-                <MinusCircle className="mr-2 h-4 w-4 text-red-500" />
-                <span className="text-slate-500 dark:text-slate-400 mr-2">Lines Removed:</span>
-                <span className="font-medium text-red-600 dark:text-red-400">
-                  {prDetails.linesRemoved.toLocaleString()}
-                </span>
-              </div>
+              {prDetails.filesChanged === 0 && prDetails.linesAdded === 0 && prDetails.linesRemoved === 0 ? (
+                <div className="p-3 rounded-md bg-amber-50 border border-amber-200 dark:bg-amber-900/20 dark:border-amber-800 text-amber-700 dark:text-amber-300 flex items-center mt-2 mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <div className="flex-1">
+                    <span className="font-medium block mb-1">Access Denied</span>
+                    <span className="block mb-3">You don't have access to this repository. Please sign out and sign in with an account that has access to this repository.</span>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Files Changed */}
+                  <div className="flex items-center text-sm">
+                    <FileDiff className="mr-2 h-4 w-4 text-slate-500 dark:text-slate-400" />
+                    <span className="text-slate-500 dark:text-slate-400 mr-2">Files Changed:</span>
+                    <span className="font-medium text-slate-800 dark:text-slate-200">
+                      {prDetails.filesChanged.toLocaleString()}
+                    </span>
+                  </div>
+                  
+                  {/* Lines Added */}
+                  <div className="flex items-center text-sm">
+                    <PlusCircle className="mr-2 h-4 w-4 text-green-500" />
+                    <span className="text-slate-500 dark:text-slate-400 mr-2">Lines Added:</span>
+                    <span className="font-medium text-green-600 dark:text-green-400">
+                      {prDetails.linesAdded.toLocaleString()}
+                    </span>
+                  </div>
+                  
+                  {/* Lines Removed */}
+                  <div className="flex items-center text-sm">
+                    <MinusCircle className="mr-2 h-4 w-4 text-red-500" />
+                    <span className="text-slate-500 dark:text-slate-400 mr-2">Lines Removed:</span>
+                    <span className="font-medium text-red-600 dark:text-red-400">
+                      {prDetails.linesRemoved.toLocaleString()}
+                    </span>
+                  </div>
+                </>
+              )}
               
               {/* Branches */}
               <div className="flex items-center text-sm">

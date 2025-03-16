@@ -49,27 +49,32 @@ export class EnhancedRepositoryService extends RepositoryService {
   ): Promise<PullRequestBasicDetails> {
     try {
       // @ts-ignore - We know this method exists in the parent class
-      return await super.getPullRequestBasicDetails(platform, owner, repo, number);
+      const details = await super.getPullRequestBasicDetails(platform, owner, repo, number);
+      
+      // Log success for debugging
+      console.log(`Successfully retrieved PR details for ${owner}/${repo}#${number}`);
+      console.log(`Stats: ${details.filesChanged} files, +${details.linesAdded} -${details.linesRemoved} lines`);
+      
+      return details;
     } catch (error) {
       console.error('Error in getPullRequestBasicDetails, using fallback implementation:', error);
       
-      // Create a fallback implementation so we can still get basic PR details
       // Generate a repository ID
       const repositoryId = `${platform}-${owner}-${repo}`;
       
-      // Return mock data
+      // Return minimal mock data with zeros for metrics
       return {
         repositoryId,
         owner,
         repo,
         number,
-        title: `Pull Request #${number}`,
-        author: 'user',
-        branch: 'feature-branch',
+        title: `[ERROR] Unable to fetch PR #${number}`,
+        author: 'unknown',
+        branch: 'unknown',
         baseBranch: 'main',
-        filesChanged: 10,
-        linesAdded: 100,
-        linesRemoved: 50,
+        filesChanged: 0,   // Use zeros instead of mock values
+        linesAdded: 0,     // to indicate missing data
+        linesRemoved: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
         url: `https://${platform}.com/${owner}/${repo}/pull/${number}`
