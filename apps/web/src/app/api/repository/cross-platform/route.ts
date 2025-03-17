@@ -1,7 +1,7 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { createRepositoryFingerprint } from '@pr-reviewer/core';
+import { createRepositoryFingerprint } from '@/lib/repository-utils';
 
 // Ensure this route is always dynamic and not statically generated
 export const dynamic = 'force-dynamic';

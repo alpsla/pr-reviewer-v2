@@ -200,6 +200,7 @@ export interface VCSPaginatedResponse<T> {
 
 // Client interface
 export interface VCSClient {
+  // Core methods
   getPlatform(): VCSPlatform;
   getCurrentUser(): Promise<VCSUser>;
   getRepository(owner: string, name: string): Promise<VCSRepository>;
@@ -217,6 +218,9 @@ export interface VCSClient {
     reset: Date;
     used: number;
   }>;
+  
+  // Configuration methods
+  setBaseUrl?(baseUrl: string): void;
   
   // Extension methods for data collectors - required for data collection operations
   getRepositoryContents?: (owner: string, repo: string, path: string, ref?: string) => Promise<any[]>;

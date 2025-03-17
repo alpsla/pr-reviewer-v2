@@ -1,5 +1,5 @@
 import { RepositoryService, DatabaseService } from '@pr-reviewer/core';
-import type { VCSPlatform, DataCollectionStatusInfo } from '@pr-reviewer/core';
+import type { VCSPlatform, DataCollectionStatusInfo } from '@/types/vcs';
 
 /**
  * These interfaces represent the data collection types needed for the PR review application.
@@ -8,6 +8,7 @@ import type { VCSPlatform, DataCollectionStatusInfo } from '@pr-reviewer/core';
  */
 
 export interface PullRequestBasicDetails {
+  isPrivate?: boolean;
   repositoryId: string;
   owner: string;
   repo: string;
@@ -34,7 +35,13 @@ export class EnhancedRepositoryService extends RepositoryService {
     tokens: { github?: string; gitlab?: string; } = {},
     baseUrls?: { github?: string; gitlab?: string; }
   ) {
-    super(db, tokens, baseUrls);
+    // Ignore baseUrls if the parent constructor doesn't support it
+    super(db, tokens);
+    
+    // Store baseUrls manually if needed
+    if (baseUrls) {
+      (this as any).baseUrls = baseUrls;
+    }
   }
 
   /**

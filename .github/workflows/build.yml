@@ -12,11 +12,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
-      - name: Install pnpm globally
-        run: npm install -g pnpm@10.6.3
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 7  # Adjust this to your desired pnpm version
       - name: Verify pnpm installation
         run: pnpm --version
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --ignore-scripts
       - name: Build
-        run: npm run build
+        run: pnpm run build

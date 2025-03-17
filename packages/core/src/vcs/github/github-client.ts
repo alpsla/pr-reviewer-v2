@@ -70,6 +70,22 @@ export class GitHubClient implements VCSClient {
   }
 
   /**
+   * Set a new base URL for the client
+   */
+  setBaseUrl(baseUrl: string): void {
+    try {
+      this.octokit = new Octokit({
+        auth: (this.octokit.auth as any).token,
+        baseUrl
+      });
+      console.log(`GitHub client base URL set to: ${baseUrl}`);
+    } catch (error) {
+      console.error('Error setting GitHub client base URL:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Returns the platform identifier
    */
   getPlatform(): 'github' {

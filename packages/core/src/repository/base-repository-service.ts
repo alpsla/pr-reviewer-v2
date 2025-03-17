@@ -37,7 +37,11 @@ export abstract class BaseRepositoryService {
     if (tokens.github) {
       try {
         logger.debug('Initializing GitHub client with token starting with:', tokens.github.substring(0, 5));
-        this.githubClient = getVCSClient('github', tokens.github, baseUrls?.github);
+        this.githubClient = getVCSClient('github', tokens.github);
+        // Pass baseUrl separately if needed
+        if (baseUrls?.github) {
+          this.githubClient.setBaseUrl?.(baseUrls.github);
+        }
         logger.debug('GitHub client initialized successfully');
       } catch (error) {
         logger.error('Error initializing GitHub client:', error);
@@ -49,7 +53,11 @@ export abstract class BaseRepositoryService {
     if (tokens.gitlab) {
       try {
         logger.debug('Initializing GitLab client with token starting with:', tokens.gitlab.substring(0, 5));
-        this.gitlabClient = getVCSClient('gitlab', tokens.gitlab, baseUrls?.gitlab);
+        this.gitlabClient = getVCSClient('gitlab', tokens.gitlab);
+        // Pass baseUrl separately if needed
+        if (baseUrls?.gitlab) {
+          this.gitlabClient.setBaseUrl?.(baseUrls.gitlab);
+        }
         logger.debug('GitLab client initialized successfully');
       } catch (error) {
         logger.error('Error initializing GitLab client:', error);

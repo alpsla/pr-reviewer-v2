@@ -32,12 +32,29 @@ export class GitLabClient implements VCSClient {
   }
   
   /**
+   * Set a new base URL for the client
+   */
+  setBaseUrl(baseUrl: string): void {
+    try {
+      // Re-create the GitLab client with the new base URL
+      this.gitlab = new GitlabOriginal({
+        token: (this.gitlab as any)._token,
+        host: baseUrl
+      }) as unknown as Gitlab;
+      console.log(`GitLab client base URL set to: ${baseUrl}`);
+    } catch (error) {
+      console.error('Error setting GitLab client base URL:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get the platform identifier
    */
   getPlatform(): VCSPlatform {
     return 'gitlab';
   }
-  
+
   /**
    * Get the authenticated user
    */

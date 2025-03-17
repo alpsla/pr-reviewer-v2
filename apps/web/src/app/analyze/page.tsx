@@ -9,8 +9,12 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Sparkles, CheckCircle, Zap, Shield, Clock } from 'lucide-react';
 import { useRepositoryAnalysis } from '@/hooks/use-repository-analysis';
+import { RepositoryAccessError } from '@/components/repository-access';
+import { useAuth } from '@/context/auth-context';
 
 export default function AnalyzePage() {
+  // Get user info from auth context
+  const { user } = useAuth();
   const [prUrl, setPrUrl] = useState<string>('');
   const [validationStatus, setValidationStatus] = useState<'idle' | 'validating' | 'success' | 'error'>('idle');
   const [validationMessage, setValidationMessage] = useState<string>('');
@@ -229,16 +233,32 @@ export default function AnalyzePage() {
         (error instanceof Error && 
          (error.message.includes("Access denied") || 
           error.message.includes("access denied") || 
-          error.message.includes("sign out and sign in"))) ||
+          error.message.includes("sign in") ||
+          error.message.includes("Cannot access private repository") ||
+          error.message.includes("private repository") ||
+          error.message.includes("PRIVATE_REPOSITORY_ACCESS_DENIED") ||
+          error.message.includes("ACCESS_DENIED") ||
+          error.message.includes("Authentication required") ||
+          error.message.includes("insufficient permissions"))) ||
         (typeof error === 'object' && error !== null && 'message' in error && 
          typeof error.message === 'string' && 
          (error.message.includes("Access denied") || 
           error.message.includes("access denied") || 
-          error.message.includes("sign out and sign in")));
+          error.message.includes("sign in") ||
+          error.message.includes("Cannot access private repository") ||
+          error.message.includes("private repository") ||
+          error.message.includes("PRIVATE_REPOSITORY_ACCESS_DENIED") ||
+          error.message.includes("ACCESS_DENIED") ||
+          error.message.includes("Authentication required") ||
+          error.message.includes("insufficient permissions")));
       
       // Check type of error for appropriate message
       if (isAccessError) {
-        setValidationMessage('Access denied. Please sign out and sign in with an account that has proper permissions.');
+        if (validationMessage.toLowerCase().includes('private')) {
+          setValidationMessage('Access denied. This is a private repository. Please sign in with an account that has proper permissions.');
+        } else {
+          setValidationMessage('Access denied. Please sign in with an account that has proper permissions.');
+        }
       } else if (error instanceof Error && error.message && error.message.includes('limit')) {
         setValidationMessage('Analysis limit reached');
       } else if (typeof error === 'object' && error !== null && 'message' in error && 
@@ -252,7 +272,9 @@ export default function AnalyzePage() {
       setNotification({ 
         visible: true, 
         message: isAccessError
-          ? `Sign out and sign in with an account that has proper permissions`
+          ? validationMessage.toLowerCase().includes('private') 
+            ? `Access denied to private repository. Sign in with an account that has proper permissions`
+            : `Access denied. Sign in with an account that has proper permissions`
           : `Analysis failed: ${error instanceof Error ? error.message : String(error)}`, 
         type: 'error' 
       });
@@ -286,10 +308,21 @@ export default function AnalyzePage() {
         >
           <div className="flex items-center">
             <div className="h-4 w-4 text-white mr-2 flex-shrink-0">
-              {notification.type === 'success' ? <CheckCircle className="h-4 w-4" /> : '❌'}
+              {notification.type === 'success' ? <CheckCircle className="h-4 w-4" /> : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="15" y1="9" x2="9" y2="15" />
+                  <line x1="9" y1="9" x2="15" y2="15" />
+                </svg>
+              )}
             </div>
             <div>
-              {notification.type === 'error' && notification.message.includes('Sign out and sign in') ? (
+              {notification.type === 'error' && (
+                notification.message.toLowerCase().includes('sign in') || 
+                notification.message.toLowerCase().includes('access denied') ||
+                notification.message.toLowerCase().includes('authentication required') ||
+                notification.message.toLowerCase().includes('permissions')
+              ) ? (
                 <>
                   <p className="text-white text-sm font-medium">Access denied</p>
                   <p className="text-white text-xs opacity-90">{notification.message}</p>
@@ -407,14 +440,37 @@ export default function AnalyzePage() {
               </div>
               
               {/* Validation feedback */}
-              {validationMessage && !validationMessage.includes('limit') && (
-                <p className={`text-sm mt-2 ${
-                  validationStatus === 'error' 
-                    ? "text-red-500 font-medium" 
-                    : "text-green-500 dark:text-green-400 font-medium"
-                }`}>
-                  {validationMessage}
-                </p>
+              {validationMessage && !validationMessage.includes('limit') && validationStatus !== 'success' && (
+                <div className="mt-2">
+                  {validationStatus === 'error' && 
+                   (validationMessage.toLowerCase().includes('access denied') ||
+                    validationMessage.toLowerCase().includes('private repository')) ? (
+                    <RepositoryAccessError
+                      error={validationMessage}
+                      isPrivate={validationMessage.toLowerCase().includes('private')}
+                      platform={parseRepositoryUrl(prUrl)?.platform as 'github' | 'gitlab'}
+                      owner={parseRepositoryUrl(prUrl)?.owner}
+                      repo={parseRepositoryUrl(prUrl)?.repo}
+                      currentUser={{
+                        username: user?.email?.split('@')[0] || user?.user_metadata?.preferred_username || user?.user_metadata?.user_name || user?.user_metadata?.name,
+                        provider: user?.app_metadata?.provider
+                      }}
+                      onRetry={() => {
+                        if (prUrl) {
+                          handlePrUrlChange(prUrl);
+                        }
+                      }}
+                    />
+                  ) : (
+                    <p className={`text-sm ${
+                      validationStatus === 'error' 
+                        ? "text-red-500 font-medium" 
+                        : "text-green-500 dark:text-green-400 font-medium"
+                    }`}>
+                      {validationMessage}
+                    </p>
+                  )}
+                </div>
               )}
               
               {/* Submit button - ULTRA DEFENSIVE VERSION */}

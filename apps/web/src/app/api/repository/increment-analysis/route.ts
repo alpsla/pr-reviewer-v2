@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { RepositoryService, AnalysisLimitError, RepositoryError } from '@/lib/repository';
 import { DatabaseService } from '@/lib/database';
+import { createRepositoryFingerprint } from '@/lib/repository-utils';
 
 // Ensure this route is always dynamic and not statically generated
 export const dynamic = 'force-dynamic';
@@ -104,7 +105,6 @@ export async function POST(request: Request) {
     const dbService = new DatabaseService(supabase);
     
     // Generate a fingerprint for tracking
-    const { createRepositoryFingerprint } = await import('@pr-reviewer/core');
     const fingerprint = createRepositoryFingerprint(platform as any, owner, repo);
     
     // Special handling for test repositories
@@ -228,8 +228,8 @@ export async function POST(request: Request) {
         console.log('Using enhanced cross-platform access flow');
         
         // Generate fingerprint (without passing isPrivate as parameter here)
-        // Since we're importing directly from the package, we need to stick to the original signature
-        const { createRepositoryFingerprint } = await import('@pr-reviewer/core');
+        // We can use our local createRepositoryFingerprint function 
+        
         
         // For cross-platform access, we'll try to determine if the repo is private
         let isPrivate = false;
@@ -282,7 +282,7 @@ export async function POST(request: Request) {
         
         // Generate fingerprint for tracking
         const fingerprint = createRepositoryFingerprint(platform as any, owner, repo);
-        console.log(`Generated fingerprint for public cross-platform access: ${fingerprint.substring(0, 16)}...`);
+          console.log(`Generated fingerprint for public cross-platform access: ${fingerprint.substring(0, 16)}...`);
         
         // Create/update a repository entry with enhanced metadata
         const timestamp = new Date().toISOString();
@@ -479,9 +479,9 @@ export async function POST(request: Request) {
           return NextResponse.json({
             success: false,
             error: 'ANALYSIS_LIMIT_REACHED',
-            message: incrementError.message,
-            current: incrementError.current,
-            limit: incrementError.limit
+            message: incrementError instanceof Error ? incrementError.message : 'Analysis limit reached',
+            current: typeof incrementError === 'object' && incrementError !== null && 'current' in incrementError ? (incrementError as any).current : undefined,
+            limit: typeof incrementError === 'object' && incrementError !== null && 'limit' in incrementError ? (incrementError as any).limit : undefined
           }, { status: 403 });
         }
         
