@@ -13,16 +13,19 @@ importers:
         version: 42.1.0
       '@octokit/core':
         specifier: 4.2.4
-        version: 4.2.4
+        version: 4.2.4(encoding@0.1.13)
       '@octokit/request-error':
         specifier: 3.0.3
         version: 3.0.3
       '@octokit/rest':
         specifier: 19.0.13
-        version: 19.0.13
+        version: 19.0.13(encoding@0.1.13)
       '@supabase/supabase-js':
         specifier: ^2.39.3
         version: 2.48.1
+      encoding:
+        specifier: ^0.1.13
+        version: 0.1.13
       react:
         specifier: ^18.2.0
         version: 18.3.1
@@ -1435,6 +1438,9 @@ packages:
   emoji-regex@9.2.2:
     resolution: {integrity: sha512-L18DaJsXSUk2+42pv8mLs5jJT2hqFkFE4j21wOmgbUqsZ2hL72NsUU785g9RXgo3s0ZNgVl42TiHp3ZtOv/Vyg==}
 
+  encoding@0.1.13:
+    resolution: {integrity: sha512-ETBauow1T35Y/WZMkio9jiM0Z5xjHHmJ4XmjZOq1l/dXz3lr2sRn87nJy20RupqSh1F2m3HHPSp8ShIPQJrJ3A==}
+
   end-of-stream@1.4.4:
     resolution: {integrity: sha512-+uw1inIHVPQoaVuHzRyXd21icM+cnt4CzD5rW+NC1wjOUSTOs+Te7FOv7AhN7vS9x/oIyhLP5PR1H+phQAHu5Q==}
 
@@ -1704,6 +1710,10 @@ packages:
   human-signals@2.1.0:
     resolution: {integrity: sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==}
     engines: {node: '>=10.17.0'}
+
+  iconv-lite@0.6.3:
+    resolution: {integrity: sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==}
+    engines: {node: '>=0.10.0'}
 
   ignore@5.3.2:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
@@ -2431,6 +2441,9 @@ packages:
 
   safe-buffer@5.2.1:
     resolution: {integrity: sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==}
+
+  safer-buffer@2.1.2:
+    resolution: {integrity: sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==}
 
   scheduler@0.25.0:
     resolution: {integrity: sha512-xFVuu11jh+xcO7JOAGJNOXld8/TcEHK/4CituBUeUb5hqxJLj9YuemAEuvm9gQ/+pgXYfbQuqAkiYu+u7YEsNA==}
@@ -3488,11 +3501,11 @@ snapshots:
 
   '@octokit/auth-token@3.0.4': {}
 
-  '@octokit/core@4.2.4':
+  '@octokit/core@4.2.4(encoding@0.1.13)':
     dependencies:
       '@octokit/auth-token': 3.0.4
-      '@octokit/graphql': 5.0.6
-      '@octokit/request': 6.2.8
+      '@octokit/graphql': 5.0.6(encoding@0.1.13)
+      '@octokit/request': 6.2.8(encoding@0.1.13)
       '@octokit/request-error': 3.0.3
       '@octokit/types': 9.3.2
       before-after-hook: 2.2.3
@@ -3506,9 +3519,9 @@ snapshots:
       is-plain-object: 5.0.0
       universal-user-agent: 6.0.1
 
-  '@octokit/graphql@5.0.6':
+  '@octokit/graphql@5.0.6(encoding@0.1.13)':
     dependencies:
-      '@octokit/request': 6.2.8
+      '@octokit/request': 6.2.8(encoding@0.1.13)
       '@octokit/types': 9.3.2
       universal-user-agent: 6.0.1
     transitivePeerDependencies:
@@ -3516,19 +3529,19 @@ snapshots:
 
   '@octokit/openapi-types@18.1.1': {}
 
-  '@octokit/plugin-paginate-rest@6.1.2(@octokit/core@4.2.4)':
+  '@octokit/plugin-paginate-rest@6.1.2(@octokit/core@4.2.4(encoding@0.1.13))':
     dependencies:
-      '@octokit/core': 4.2.4
+      '@octokit/core': 4.2.4(encoding@0.1.13)
       '@octokit/tsconfig': 1.0.2
       '@octokit/types': 9.3.2
 
-  '@octokit/plugin-request-log@1.0.4(@octokit/core@4.2.4)':
+  '@octokit/plugin-request-log@1.0.4(@octokit/core@4.2.4(encoding@0.1.13))':
     dependencies:
-      '@octokit/core': 4.2.4
+      '@octokit/core': 4.2.4(encoding@0.1.13)
 
-  '@octokit/plugin-rest-endpoint-methods@7.2.3(@octokit/core@4.2.4)':
+  '@octokit/plugin-rest-endpoint-methods@7.2.3(@octokit/core@4.2.4(encoding@0.1.13))':
     dependencies:
-      '@octokit/core': 4.2.4
+      '@octokit/core': 4.2.4(encoding@0.1.13)
       '@octokit/types': 10.0.0
 
   '@octokit/request-error@3.0.3':
@@ -3537,23 +3550,23 @@ snapshots:
       deprecation: 2.3.1
       once: 1.4.0
 
-  '@octokit/request@6.2.8':
+  '@octokit/request@6.2.8(encoding@0.1.13)':
     dependencies:
       '@octokit/endpoint': 7.0.6
       '@octokit/request-error': 3.0.3
       '@octokit/types': 9.3.2
       is-plain-object: 5.0.0
-      node-fetch: 2.7.0
+      node-fetch: 2.7.0(encoding@0.1.13)
       universal-user-agent: 6.0.1
     transitivePeerDependencies:
       - encoding
 
-  '@octokit/rest@19.0.13':
+  '@octokit/rest@19.0.13(encoding@0.1.13)':
     dependencies:
-      '@octokit/core': 4.2.4
-      '@octokit/plugin-paginate-rest': 6.1.2(@octokit/core@4.2.4)
-      '@octokit/plugin-request-log': 1.0.4(@octokit/core@4.2.4)
-      '@octokit/plugin-rest-endpoint-methods': 7.2.3(@octokit/core@4.2.4)
+      '@octokit/core': 4.2.4(encoding@0.1.13)
+      '@octokit/plugin-paginate-rest': 6.1.2(@octokit/core@4.2.4(encoding@0.1.13))
+      '@octokit/plugin-request-log': 1.0.4(@octokit/core@4.2.4(encoding@0.1.13))
+      '@octokit/plugin-rest-endpoint-methods': 7.2.3(@octokit/core@4.2.4(encoding@0.1.13))
     transitivePeerDependencies:
       - encoding
 
@@ -4230,6 +4243,10 @@ snapshots:
 
   emoji-regex@9.2.2: {}
 
+  encoding@0.1.13:
+    dependencies:
+      iconv-lite: 0.6.3
+
   end-of-stream@1.4.4:
     dependencies:
       once: 1.4.0
@@ -4571,6 +4588,10 @@ snapshots:
       resolve-alpn: 1.2.1
 
   human-signals@2.1.0: {}
+
+  iconv-lite@0.6.3:
+    dependencies:
+      safer-buffer: 2.1.2
 
   ignore@5.3.2: {}
 
@@ -5157,9 +5178,11 @@ snapshots:
       - '@babel/core'
       - babel-plugin-macros
 
-  node-fetch@2.7.0:
+  node-fetch@2.7.0(encoding@0.1.13):
     dependencies:
       whatwg-url: 5.0.0
+    optionalDependencies:
+      encoding: 0.1.13
 
   node-int64@0.4.0: {}
 
@@ -5399,6 +5422,8 @@ snapshots:
       queue-microtask: 1.2.3
 
   safe-buffer@5.2.1: {}
+
+  safer-buffer@2.1.2: {}
 
   scheduler@0.25.0: {}
 

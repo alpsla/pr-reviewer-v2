@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isPublicRepository } from '@/lib/repository-access';
+import { VCSPlatform } from '@/lib/repository-utils';
 
 // Ensure this route is always dynamic and not statically generated
 export const dynamic = 'force-dynamic';
@@ -25,16 +26,19 @@ export async function GET(request: Request) {
       );
     }
     
-    console.log(`[ROUTER] Routing PR details request for ${platform}/${owner}/${repo}#${prNumber}`);
+    // Validate platform and ensure it's a valid VCSPlatform type
+    const validatedPlatform: VCSPlatform = platform === 'gitlab' ? 'gitlab' : 'github';
+    
+    console.log(`[ROUTER] Routing PR details request for ${validatedPlatform}/${owner}/${repo}#${prNumber}`);
     
     // Check if the repository is public
-    const isPublic = await isPublicRepository(platform, owner, repo);
+    const isPublic = await isPublicRepository(validatedPlatform, owner, repo);
     console.log(`Repository ${owner}/${repo} is ${isPublic ? 'public' : 'not publicly accessible'}`);
     
     // Redirect to the appropriate endpoint
     const targetEndpoint = isPublic
-      ? `/api/repository/public/pr-details?platform=${platform}&owner=${owner}&repo=${repo}&prNumber=${prNumber}`
-      : `/api/repository/private/pr-details?platform=${platform}&owner=${owner}&repo=${repo}&prNumber=${prNumber}`;
+      ? `/api/repository/public/pr-details?platform=${validatedPlatform}&owner=${owner}&repo=${repo}&prNumber=${prNumber}`
+      : `/api/repository/private/pr-details?platform=${validatedPlatform}&owner=${owner}&repo=${repo}&prNumber=${prNumber}`;
     
     console.log(`Routing to ${isPublic ? 'public' : 'private'} endpoint`);
     
@@ -49,7 +53,10 @@ export async function GET(request: Request) {
     const repo = searchParams.get('repo');
     const prNumber = searchParams.get('prNumber');
     
-    const privateEndpoint = `/api/repository/private/pr-details?platform=${platform}&owner=${owner}&repo=${repo}&prNumber=${prNumber}`;
+    // Use a default platform if none is provided
+    const validatedPlatform = platform === 'gitlab' ? 'gitlab' : 'github';
+    
+    const privateEndpoint = `/api/repository/private/pr-details?platform=${validatedPlatform}&owner=${owner}&repo=${repo}&prNumber=${prNumber}`;
     return Response.redirect(new URL(privateEndpoint, request.url));
   }
 }

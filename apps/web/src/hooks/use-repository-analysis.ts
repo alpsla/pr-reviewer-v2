@@ -200,16 +200,21 @@ export function useRepositoryAnalysis() {
       
       if (!response || !response.ok) {
         if (response && response.status === 403 && data && data.error === 'ANALYSIS_LIMIT_REACHED') {
-          // Special handling for limit reached
-          if (data && data.current !== undefined && data.limit !== undefined) {
-            setLimits({
-              current: data.current,
-              limit: data.limit,
-              hasReachedLimit: true
-            });
+        // Special handling for limit reached
+        if (data && data.current !== undefined && data.limit !== undefined) {
+        setLimits({
+        current: data.current,
+        limit: data.limit,
+        hasReachedLimit: true
+        });
+          
+          // Return null but don't throw an error - the UI will handle this case
+            console.warn(`Analysis limit reached: ${data.current}/${data.limit}`);
+              setError(`Repository '${owner}/${repo}' has reached the free tier analysis limit (${data.current}/${data.limit})`);
+              setIsLoading(false);
+              return null;
+            }
           }
-          throw new Error((data && data.message) || 'Analysis limit reached');
-        }
         
         if (response && response.status === 403 && data && data.error === 'REPOSITORY_ACCESS_ERROR') {
           // This is a proper access denied error - throw with appropriate message

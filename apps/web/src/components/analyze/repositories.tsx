@@ -108,9 +108,9 @@ export function Repositories({ onSelect }: RepositoriesProps) {
           if (updatedLimits) {
             // Update the repository in state with new limits
             const updatedRepo = {
-              ...repo,
-              analysisCount: updatedLimits.current,
-              analysisLimit: updatedLimits.limit
+            ...repo,
+            analysisCount: updatedLimits.current || 0,
+            analysisLimit: updatedLimits.limit || 5
             };
             
             // Update recentRepositories and olderRepositories
@@ -154,9 +154,9 @@ export function Repositories({ onSelect }: RepositoriesProps) {
           if (updatedLimits) {
             // Update the repository in state with new limits
             const updatedRepo = {
-              ...repo,
-              analysisCount: updatedLimits.current,
-              analysisLimit: updatedLimits.limit
+            ...repo,
+            analysisCount: updatedLimits.current || 0,
+            analysisLimit: updatedLimits.limit || 5
             };
             
             // Update recentRepositories and olderRepositories
@@ -455,7 +455,7 @@ export function Repositories({ onSelect }: RepositoriesProps) {
                     <div className="flex items-center text-xs">
                       <BarChart className="h-3 w-3 mr-1 text-slate-400" />
                       <span>
-                        {repo.analysisCount}/{repo.analysisLimit}
+                      {repo.analysisCount !== undefined ? repo.analysisCount : 0}/{repo.analysisLimit !== undefined ? repo.analysisLimit : 5}
                       </span>
                     </div>
                   </div>
@@ -467,7 +467,7 @@ export function Repositories({ onSelect }: RepositoriesProps) {
                     {/* Analysis stats */}
                     <div className="flex items-center justify-between text-xs text-slate-500">
                       <span>Analysis count:</span>
-                      <span className="font-medium">{repo.analysisCount} of {repo.analysisLimit}</span>
+                      <span className="font-medium">{repo.analysisCount !== undefined ? repo.analysisCount : 0} of {repo.analysisLimit !== undefined ? repo.analysisLimit : 5}</span>
                     </div>
                     
                     {/* Platform info */}
@@ -543,7 +543,7 @@ export function Repositories({ onSelect }: RepositoriesProps) {
                     <div className="flex items-center text-xs">
                       <BarChart className="h-3 w-3 mr-1 text-slate-400" />
                       <span>
-                        {repo.analysisCount}/{repo.analysisLimit}
+                        {repo.analysisCount !== undefined ? repo.analysisCount : 0}/{repo.analysisLimit !== undefined ? repo.analysisLimit : 5}
                       </span>
                     </div>
                   </div>
@@ -555,7 +555,7 @@ export function Repositories({ onSelect }: RepositoriesProps) {
                     {/* Analysis stats */}
                     <div className="flex items-center justify-between text-xs text-slate-500">
                       <span>Analysis count:</span>
-                      <span className="font-medium">{repo.analysisCount} of {repo.analysisLimit}</span>
+                      <span className="font-medium">{repo.analysisCount !== undefined ? repo.analysisCount : 0} of {repo.analysisLimit !== undefined ? repo.analysisLimit : 5}</span>
                     </div>
                     
                     {/* Platform info */}

@@ -227,15 +227,23 @@ export function PrPreviewSection({ prUrl, repoInfo, prNumber }: PrPreviewSection
       
       {error && (
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mt-4">
-          {error.includes('Cross-platform authentication') ? (
+          {error.toLowerCase().includes('cross-platform authentication') ? (
             <div className="flex items-start">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-red-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
               <div>
                 <p className="text-red-700 dark:text-red-300 font-medium">Cross-Platform Authentication Error</p>
-                <p className="text-red-600 dark:text-red-400 mt-1">You're signed in with GitLab but trying to access a GitHub repository. Cross-platform access is not supported at this time.</p>
-                <p className="text-red-600 dark:text-red-400 mt-1">Please sign in with a GitHub account to analyze GitHub repositories.</p>
+                <p className="text-red-600 dark:text-red-400 mt-1">You're signed in with a different platform than the repository you're trying to access.</p>
+                <p className="text-red-600 dark:text-red-400 mt-1">Please sign in with a {repoInfo?.platform === 'github' ? 'GitHub' : 'GitLab'} account to analyze this repository.</p>
+                <div className="mt-3">
+                  <a href="/api/auth/logout" className="px-3 py-1 bg-red-100 hover:bg-red-200 dark:bg-red-800/30 dark:hover:bg-red-700/30 text-red-700 dark:text-red-300 rounded-md text-sm font-medium transition-colors inline-block mr-2">
+                    Sign Out
+                  </a>
+                  <a href={`/api/auth/login/${repoInfo?.platform === 'github' ? 'github' : 'gitlab'}`} className="px-3 py-1 bg-red-100 hover:bg-red-200 dark:bg-red-800/30 dark:hover:bg-red-700/30 text-red-700 dark:text-red-300 rounded-md text-sm font-medium transition-colors inline-block">
+                    Sign In with {repoInfo?.platform === 'github' ? 'GitHub' : 'GitLab'}
+                  </a>
+                </div>
               </div>
             </div>
           ) : error.toLowerCase().includes('private repository') || 
@@ -303,14 +311,20 @@ export function PrPreviewSection({ prUrl, repoInfo, prNumber }: PrPreviewSection
               <div className="flex items-center text-sm">
                 <GitBranch className="mr-2 h-4 w-4 text-slate-500 dark:text-slate-400" />
                 <span className="text-slate-500 dark:text-slate-400 mr-2">Repository:</span>
-                <span className="font-medium text-slate-800 dark:text-slate-200">{prDetails.owner}/{prDetails.repo}</span>
+                <span className="font-medium text-slate-800 dark:text-slate-200">
+                  {prDetails.owner && prDetails.repo ? 
+                    `${prDetails.owner}/${prDetails.repo}` : 
+                    'Unknown Repository'}
+                </span>
               </div>
               
               {/* Author */}
               <div className="flex items-center text-sm">
                 <User className="mr-2 h-4 w-4 text-slate-500 dark:text-slate-400" />
                 <span className="text-slate-500 dark:text-slate-400 mr-2">Author:</span>
-                <span className="font-medium text-slate-800 dark:text-slate-200">{prDetails.author}</span>
+                <span className="font-medium text-slate-800 dark:text-slate-200">
+                  {prDetails.author || 'Unknown Author'}
+                </span>
               </div>
               
               {/* Created */}
@@ -350,7 +364,7 @@ export function PrPreviewSection({ prUrl, repoInfo, prNumber }: PrPreviewSection
                     <FileDiff className="mr-2 h-4 w-4 text-slate-500 dark:text-slate-400" />
                     <span className="text-slate-500 dark:text-slate-400 mr-2">Files Changed:</span>
                     <span className="font-medium text-slate-800 dark:text-slate-200">
-                      {prDetails.filesChanged.toLocaleString()}
+                      {(prDetails.filesChanged !== undefined ? prDetails.filesChanged : 0).toLocaleString()}
                     </span>
                   </div>
                   
@@ -359,7 +373,7 @@ export function PrPreviewSection({ prUrl, repoInfo, prNumber }: PrPreviewSection
                     <PlusCircle className="mr-2 h-4 w-4 text-green-500" />
                     <span className="text-slate-500 dark:text-slate-400 mr-2">Lines Added:</span>
                     <span className="font-medium text-green-600 dark:text-green-400">
-                      {prDetails.linesAdded.toLocaleString()}
+                      {(prDetails.linesAdded !== undefined ? prDetails.linesAdded : 0).toLocaleString()}
                     </span>
                   </div>
                   
@@ -368,7 +382,7 @@ export function PrPreviewSection({ prUrl, repoInfo, prNumber }: PrPreviewSection
                     <MinusCircle className="mr-2 h-4 w-4 text-red-500" />
                     <span className="text-slate-500 dark:text-slate-400 mr-2">Lines Removed:</span>
                     <span className="font-medium text-red-600 dark:text-red-400">
-                      {prDetails.linesRemoved.toLocaleString()}
+                      {(prDetails.linesRemoved !== undefined ? prDetails.linesRemoved : 0).toLocaleString()}
                     </span>
                   </div>
                 </>
@@ -379,7 +393,8 @@ export function PrPreviewSection({ prUrl, repoInfo, prNumber }: PrPreviewSection
                 <GitBranch className="mr-2 h-4 w-4 text-slate-500 dark:text-slate-400" />
                 <span className="text-slate-500 dark:text-slate-400 mr-2">Branches:</span>
                 <span className="font-medium text-slate-800 dark:text-slate-200">
-                  {prDetails.branch} → {prDetails.baseBranch}
+                  {prDetails.branch || 'Unknown Branch'} → 
+                  {prDetails.baseBranch || 'Unknown Base Branch'}
                 </span>
               </div>
             </div>

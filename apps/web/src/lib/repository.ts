@@ -4,6 +4,7 @@
  */
 
 import { DatabaseService } from './database';
+import { DEFAULT_FREE_TIER_ANALYSIS_LIMIT, getAnalysisLimit } from '@/config/limits';
 
 export class AnalysisLimitError extends Error {
   current: number;
@@ -60,10 +61,11 @@ export class RepositoryService {
     console.log('RepositoryService.incrementAnalysisCount called:', platform, owner, repo);
     
     if (!bypassLimit) {
+      const limit = getAnalysisLimit(platform, owner, repo);
       throw new AnalysisLimitError(
-        `Repository '${owner}/${repo}' has reached the free tier analysis limit (5/5)`,
-        5, 
-        5
+        `Repository '${owner}/${repo}' has reached the free tier analysis limit (${limit}/${limit})`,
+        limit, 
+        limit
       );
     }
     
@@ -85,15 +87,16 @@ export class RepositoryService {
   async checkAnalysisLimit(platform: string, owner: string, repo: string): Promise<any> {
     console.log('RepositoryService.checkAnalysisLimit called:', platform, owner, repo);
     
-    // Mock implementation - returns fake limit data
+    // Mock implementation - returns limits based on configuration
+    const limit = getAnalysisLimit(platform, owner, repo);
     return {
       current: 3,
-      limit: 5,
+      limit: limit,
       hasReachedLimit: false,
       owner,
       repo,
       platform,
-      remainingAnalyses: 2
+      remainingAnalyses: limit - 3
     };
   }
 

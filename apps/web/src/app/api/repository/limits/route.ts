@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { RepositoryService } from '@/lib/repository';
 import { DatabaseService } from '@/lib/database';
+import { DEFAULT_FREE_TIER_ANALYSIS_LIMIT, getAnalysisLimit } from '@/config/limits';
 
 // Ensure this route is always dynamic and not statically generated
 export const dynamic = 'force-dynamic';
@@ -103,7 +104,7 @@ export async function GET(request: Request) {
           
           // Return the limits
           const current = existingRepo.analysis_count || 0;
-          const limit = existingRepo.free_tier_analysis_limit || 5;
+          const limit = existingRepo.free_tier_analysis_limit || getAnalysisLimit(platform, owner, repo);
           
           return NextResponse.json({
             success: true,
@@ -115,11 +116,12 @@ export async function GET(request: Request) {
           });
         } else {
           // No repository yet, return default limits
+          const configuredLimit = getAnalysisLimit(platform, owner, repo);
           return NextResponse.json({
             success: true,
             limits: {
               current: 0,
-              limit: 5,
+              limit: configuredLimit,
               hasReachedLimit: false
             }
           });
@@ -127,11 +129,12 @@ export async function GET(request: Request) {
       } catch (error) {
         console.error('Error processing test repository limits:', error);
         // Return default limits even on error for test repositories
+        const configuredLimit = getAnalysisLimit(platform, owner, repo);
         return NextResponse.json({
           success: true,
           limits: {
             current: 0,
-            limit: 5,
+            limit: configuredLimit,
             hasReachedLimit: false
           }
         });
@@ -159,11 +162,12 @@ export async function GET(request: Request) {
       
       // Return default limits if there's an error
       console.log('Error in repository limits, returning default limits');
+      const configuredLimit = getAnalysisLimit(platform, owner, repo);
       return NextResponse.json({
         success: true,
         limits: {
           current: 0,
-          limit: 5,
+          limit: configuredLimit,
           hasReachedLimit: false
         }
       });
@@ -175,7 +179,7 @@ export async function GET(request: Request) {
       success: true,
       limits: {
         current: 0,
-        limit: 5,
+        limit: DEFAULT_FREE_TIER_ANALYSIS_LIMIT,
         hasReachedLimit: false
       }
     });

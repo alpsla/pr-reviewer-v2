@@ -137,11 +137,25 @@ export async function GET(
         });
         
         console.log(`Fetching data collection status for repository ID: ${result.details.repositoryId}...`);
-        dataCollectionStatus = await repositoryService.getDataCollectionStatus(
-          result.details.repositoryId
-        );
+        
+        try {
+          dataCollectionStatus = await repositoryService.getDataCollectionStatus(
+            result.details.repositoryId
+          );
+        } catch (collectionError) {
+          // Just log the error and continue - data collection status is not critical
+          console.warn('Error fetching data collection status:', collectionError);
+          
+          // Create a fallback status
+          dataCollectionStatus = {
+            status: 'unknown',
+            progress: 0,
+            message: 'Data collection status unavailable',
+            error: collectionError instanceof Error ? collectionError.message : 'Unknown error'
+          };
+        }
       } catch (error) {
-        console.warn('Error fetching data collection status:', error);
+        console.warn('Error creating repository service:', error);
         // Continue anyway - data collection status is not critical
       }
     }
