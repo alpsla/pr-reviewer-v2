@@ -1,11 +1,12 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { RepositoryService, createRepositoryFingerprint } from '@/lib/repository';
+import { RepositoryService } from '@/lib/repository'
+import { createRepositoryFingerprint } from '@/lib/repository-utils';
 import { DatabaseService } from '@/lib/database';
 
-// Import the VCSPlatform type
-import type { VCSPlatform } from '@pr-reviewer/core';
+// Import the VCSPlatform type from our local types
+import type { VCSPlatform } from '@/types/vcs';
 
 // Create simplified versions of the debug tools directly
 
