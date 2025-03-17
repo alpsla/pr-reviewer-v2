@@ -19,6 +19,6 @@ jobs:
       - name: Verify pnpm installation
         run: pnpm --version
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --ignore-scripts
       - name: Build
         run: pnpm run build
