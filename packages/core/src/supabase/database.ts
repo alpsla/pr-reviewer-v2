@@ -1,5 +1,8 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+
 import type { Database } from "./types";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+
 
 // Default free tier analysis limit
 const DEFAULT_FREE_TIER_LIMIT = 5;
@@ -14,7 +17,7 @@ export class DatabaseService {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {throw error};
     return user;
   }
 
@@ -25,7 +28,7 @@ export class DatabaseService {
       .eq("id", id)
       .single();
 
-    if (error) throw error;
+    if (error) {throw error};
     return user;
   }
 
@@ -36,7 +39,7 @@ export class DatabaseService {
       .eq("github_id", githubId)
       .single();
 
-    if (error) throw error;
+    if (error) {throw error};
     return user;
   }
 
@@ -51,7 +54,7 @@ export class DatabaseService {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {throw error};
     return user;
   }
 
@@ -59,7 +62,7 @@ export class DatabaseService {
     data: Database["public"]["Tables"]["repositories"]["Insert"],
     options: { upsert?: boolean } = {}
   ) {
-    console.log('DatabaseService.createRepository called with:', {
+    logger.info('DatabaseService.createRepository called with:', {
       owner: data.owner,
       name: data.name,
       fingerprint: data.fingerprint,
@@ -255,7 +258,7 @@ export class DatabaseService {
       .eq("name", name)
       .single();
 
-    if (error) throw error;
+    if (error) {throw error}
     return repository;
   }
 
@@ -268,7 +271,7 @@ export class DatabaseService {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {throw error}
     return pullRequest;
   }
 
@@ -279,7 +282,7 @@ export class DatabaseService {
       .eq("id", id)
       .single();
 
-    if (error) throw error;
+    if (error) {throw error}
     return pullRequest;
   }
 
@@ -291,7 +294,7 @@ export class DatabaseService {
       .eq("number", number)
       .single();
 
-    if (error) throw error;
+    if (error) {throw error}
     return pullRequest;
   }
 
@@ -307,7 +310,7 @@ export class DatabaseService {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {throw error}
     return job;
   }
 
@@ -319,7 +322,7 @@ export class DatabaseService {
       .order("created_at")
       .limit(1);
 
-    if (error) throw error;
+    if (error) {throw error}
     return jobs[0] || null;
   }
 
@@ -340,7 +343,7 @@ export class DatabaseService {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {throw error};
     return pr.id;
   }
 
@@ -356,7 +359,7 @@ export class DatabaseService {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {throw error}
     return queue.id;
   }
 
@@ -370,7 +373,7 @@ export class DatabaseService {
       .eq("fingerprint", fingerprint)
       .single();
 
-    if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "No rows found"
+    if (error && error.code !== 'PGRST116') {throw error} // PGRST116 is "No rows found"
     return error ? null : repository;
   }
 
@@ -385,7 +388,7 @@ export class DatabaseService {
       .eq("id", repositoryId)
       .single();
 
-    if (fetchError) throw fetchError;
+    if (fetchError) {throw fetchError}
     
     const newCount = (repository.analysis_count || 0) + 1;
     
@@ -400,7 +403,7 @@ export class DatabaseService {
       .select()
       .single();
 
-    if (updateError) throw updateError;
+    if (updateError) {throw updateError}
     return newCount;
   }
 
@@ -418,7 +421,7 @@ export class DatabaseService {
       .eq("id", repositoryId)
       .single();
 
-    if (error) throw error;
+    if (error) {throw error}
     
     const current = repository.analysis_count || 0;
     const limit = repository.free_tier_analysis_limit || DEFAULT_FREE_TIER_LIMIT;
@@ -440,7 +443,7 @@ export class DatabaseService {
       .eq("id", id)
       .single();
 
-    if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "No rows found"
+    if (error && error.code !== 'PGRST116') {throw error} // PGRST116 is "No rows found"
     return error ? null : repository;
   }
 
@@ -459,7 +462,7 @@ export class DatabaseService {
     
     const { data: jobs, error } = await query;
 
-    if (error) throw error;
+    if (error) {throw error}
     return jobs || [];
   }
 
@@ -473,7 +476,7 @@ export class DatabaseService {
       .eq("repository_id", repositoryId)
       .single();
 
-    if (error && error.code !== 'PGRST116') throw error;
+    if (error && error.code !== 'PGRST116') {throw error}
     return error ? null : data;
   }
 
@@ -487,7 +490,7 @@ export class DatabaseService {
       .eq("repository_id", repositoryId)
       .single();
 
-    if (error && error.code !== 'PGRST116') throw error;
+    if (error && error.code !== 'PGRST116') {throw error}
     return error ? null : data;
   }
 
@@ -501,7 +504,7 @@ export class DatabaseService {
       .eq("repository_id", repositoryId)
       .single();
 
-    if (error && error.code !== 'PGRST116') throw error;
+    if (error && error.code !== 'PGRST116') {throw error}
     return error ? null : data;
   }
 
@@ -515,7 +518,7 @@ export class DatabaseService {
       .eq("repository_id", repositoryId)
       .single();
 
-    if (error && error.code !== 'PGRST116') throw error;
+    if (error && error.code !== 'PGRST116') {throw error}
     return error ? null : data;
   }
 
@@ -600,3 +603,10 @@ export class DatabaseService {
     return job;
   }
 }
+
+  export function createDatabaseService() {
+    //eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { supabase } = require('./supabase/client');;
+    return new DatabaseService(supabase);
+  }
+

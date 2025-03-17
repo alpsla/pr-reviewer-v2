@@ -1,184 +1,74 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
-import { DatabaseService } from '@/lib/database';
-import { EnhancedRepositoryService } from '@/lib/enhanced-repository';
-import { analyzePullRequest, RepositoryVisibility } from '@/lib/visibility-helpers';
+// src/app/api/prs/[owner]/[repo]/[number]/basic-details/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { EnhancedRepositoryService } from '../../../../../../../lib/enhanced-repository';
+import { DatabaseService } from '../../../../../../../lib/database';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
-// Ensure this route is always dynamic and not statically generated
-export const dynamic = 'force-dynamic';
-
-/**
- * Get basic details for a pull request using the smart PR analysis service
- * 
- * This implements the proactive approach that checks repository visibility first,
- * then handles authentication requirements appropriately.
- */
+// In your API route file
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { owner: string; repo: string; number: string } }
 ) {
+  console.log('API route called with params:', params);
   try {
-    const { owner, repo, number } = params;
-    const searchParams = new URL(request.url).searchParams;
-    const platform = searchParams.get('platform') || 'github';
+    // Create database service directly
+    console.log('Creating database service...');
+    const supabase = createClientComponentClient();
+    const db = new DatabaseService(supabase);
+    console.log('Database service created');
     
-    console.log(`Smart PR details request for ${platform}/${owner}/${repo}#${number}`);
+    // Create enhanced repository service
+    console.log('Creating enhanced repository service...');
+    const repoService = new EnhancedRepositoryService(db, {});
+    console.log('Enhanced repository service created');
     
-    // Setup Supabase client
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    // Extract parameters
+    const { owner, repo } = params;
+    const prNumber = parseInt(params.number, 10);
+    console.log('Parsed parameters:', { owner, repo, prNumber });
     
-    // Get the authenticated user's session
-    const { data: { session } } = await supabase.auth.getSession();
+    // Determine platform
+    const url = new URL(request.url);
+    const platform = url.searchParams.get('platform') || 'github';
+    console.log('Platform:', platform);
     
-    // Log session information (excluding sensitive data)
-    console.log('Session information:', {
-      hasSession: !!session,
-      hasUser: !!session?.user,
-      hasProviderToken: !!session?.provider_token,
-      provider: session?.user?.app_metadata?.provider || 'unknown'
-    });
-    
-    // Extract authentication token for the appropriate platform
-    let accessToken = null;
-    
-    if (session) {
-      // First check the most common token locations
-      const provider_token = session.provider_token;
-      const user_metadata = session.user?.user_metadata || {};
-      
-      if (platform === 'github') {
-        accessToken = provider_token || 
-                     user_metadata.provider_token || 
-                     user_metadata.github_token || 
-                     user_metadata.access_token;
-      } else if (platform === 'gitlab') {
-        accessToken = provider_token || 
-                     user_metadata.provider_token || 
-                     user_metadata.gitlab_token || 
-                     user_metadata.access_token;
-      }
-      
-      // If token still not found, check identity_data
-      if (!accessToken && session.user?.identities && session.user.identities.length > 0) {
-        const identity = session.user.identities[0];
-        if (identity.identity_data && typeof identity.identity_data === 'object') {
-          accessToken = identity.identity_data.access_token;
-        }
-      }
-      
-      // Log token availability (without exposing the actual token)
-      console.log(`${platform} token available:`, !!accessToken);
-    }
-    
-    // Use the Smart PR Analysis Service to check visibility and fetch appropriate data
-    const result = await analyzePullRequest(
+    // Get PR basic details
+    console.log('Calling getPullRequestBasicDetails...');
+    const prDetails = await repoService.getPullRequestBasicDetails(
       platform as 'github' | 'gitlab',
       owner,
       repo,
-      parseInt(number),
-      accessToken
+      prNumber
     );
+    console.log('PR details returned:', JSON.stringify(prDetails, null, 2));
     
-    // Handle different result scenarios
-    if (!result.success) {
-      // Determine the appropriate status code based on the error
-      let statusCode = 400;
-      
-      switch(result.errorCode) {
-        case 'REPOSITORY_NOT_FOUND':
-          statusCode = 404;
-          break;
-        case 'AUTHENTICATION_REQUIRED':
-        case 'AUTHENTICATION_FAILED':
-        case 'PERMISSION_DENIED':
-          statusCode = 403;
-          break;
-        case 'PR_NOT_FOUND':
-          statusCode = 404;
-          break;
-        default:
-          statusCode = 500;
-      }
-      
-      // Create appropriate message for the UI
-      let userMessage = result.error;
-      
-      // Add more context for private repositories
-      if (result.visibility === RepositoryVisibility.PRIVATE && result.requiresAuth) {
-        userMessage = `This is a private ${platform} repository. Please sign in with an account that has proper permissions.`;
-      }
-      
-      return NextResponse.json(
-        { 
-          success: false, 
-          message: userMessage,
-          errorCode: result.errorCode,
-          visibility: result.visibility,
-          requiresAuth: result.requiresAuth
-        },
-        { status: statusCode }
-      );
-    }
-    
-    // If we got here, we have successful PR details
-    console.log('Successfully retrieved PR details using smart analysis');
-    
-    // Create database service to check data collection status if needed
+    // Get data collection status
+    console.log('Calling getDataCollectionStatus...');
     let dataCollectionStatus = null;
-    
-    if (result.details && result.details.repositoryId) {
-      try {
-        const db = new DatabaseService(supabase);
-        const repositoryService = new EnhancedRepositoryService(db, {
-          github: platform === 'github' ? accessToken : undefined,
-          gitlab: platform === 'gitlab' ? accessToken : undefined
-        });
-        
-        console.log(`Fetching data collection status for repository ID: ${result.details.repositoryId}...`);
-        
-        try {
-          dataCollectionStatus = await repositoryService.getDataCollectionStatus(
-            result.details.repositoryId
-          );
-        } catch (collectionError) {
-          // Just log the error and continue - data collection status is not critical
-          console.warn('Error fetching data collection status:', collectionError);
-          
-          // Create a fallback status
-          dataCollectionStatus = {
-            status: 'unknown',
-            progress: 0,
-            message: 'Data collection status unavailable',
-            error: collectionError instanceof Error ? collectionError.message : 'Unknown error'
-          };
-        }
-      } catch (error) {
-        console.warn('Error creating repository service:', error);
-        // Continue anyway - data collection status is not critical
-      }
+    try {
+      dataCollectionStatus = await repoService.getDataCollectionStatus(prDetails.repositoryId);
+      console.log('Data collection status:', JSON.stringify(dataCollectionStatus, null, 2));
+    } catch (statusError) {
+      console.error('Error getting data collection status:', statusError);
     }
     
-    // Return the successful result with PR details and optional data collection status
-    return NextResponse.json({
-      success: true,
-      details: result.details,
-      visibility: result.visibility,
+    // Prepare response
+    const response = {
+      prDetails,
       dataCollectionStatus
-    });
+    };
+    console.log('Sending response:', JSON.stringify(response, null, 2));
     
+    return NextResponse.json(response);
   } catch (error) {
-    // Handle unexpected errors
-    console.error('Unexpected error in smart PR details route:', error);
-    
+    console.error('Error in API route:', error);
     return NextResponse.json(
       { 
-        success: false, 
-        message: error instanceof Error ? error.message : 'An unexpected error occurred',
-        errorCode: 'UNEXPECTED_ERROR'
+        error: 'Failed to get PR details',
+        message: error instanceof Error ? error.message : String(error)
       },
       { status: 500 }
     );
   }
 }
+

@@ -5,7 +5,15 @@
 /**
  * Types of data that can be collected
  */
-export type DataType = 'structure' | 'dependencies' | 'security' | 'performance';
+enum DataType {
+  BASIC = 'basic',
+  FILES = 'files',
+  COMMITS = 'commits',
+  SECURITY = 'security',
+  PERFORMANCE = 'performance',
+  DEPENDENCIES = 'dependencies',
+  STRUCTURE = 'structure'
+}
 
 /**
  * Data collection job status
@@ -34,11 +42,14 @@ export interface DataCollectionJob {
  */
 export interface DataCollectionStatusInfo {
   repositoryId: string;
-  status: DataCollectionStatus;
+  status: DataCollectionStatus | 'unknown';
   completionPercentage: number;
   collectedDataTypes: DataType[];
   pendingDataTypes: DataType[];
   lastUpdated: Date;
+  error?: string;
+  message?: string;
+  progress?: number;
 }
 
 /**
