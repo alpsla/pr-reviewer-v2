@@ -20,6 +20,7 @@
     "test:fixed": "jest --config jest.config.testing.js",
     "test:skip-failing": "jest --config jest.skip-failing.js",
     "test:watch": "jest --watch",
+    "esbuild": "^0.20.0",
     "test:coverage": "jest --coverage"
   },
   "tsup": {
