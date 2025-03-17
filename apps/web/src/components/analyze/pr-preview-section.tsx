@@ -20,126 +20,93 @@ export function PrPreviewSection({ prUrl, repoInfo, prNumber }: PrPreviewSection
   const [prDetails, setPrDetails] = useState<PullRequestBasicDetails | null>(null);
   const [backgroundCollectionStarted, setBackgroundCollectionStarted] = useState<boolean>(false);
   
-  const fetchPrBasicDetails = async () => {
-    if (!repoInfo || !prNumber) return;
+  // In your PR preview section component
+async function fetchPrBasicDetails(prUrl: string): Promise<PullRequestBasicDetails> {
+  console.log('fetchPrBasicDetails called with URL:', prUrl);
+  try {
+    // Parse the PR URL
+    console.log('Parsing PR URL...');
+    const { platform, owner, repo, number } = parsePrUrl(prUrl);
+    console.log('Parsed PR URL:', { platform, owner, repo, number });
     
-    // Check for recent error to prevent excessive retries
-    const errorKey = `${repoInfo.platform}/${repoInfo.owner}/${repoInfo.repo}/${prNumber}_error_time`;
-    const lastErrorTime = localStorage.getItem(errorKey);
-    const now = Date.now();
-    
-    // If we had a fetch error in the last 30 seconds, don't try again
-    if (lastErrorTime && (now - parseInt(lastErrorTime)) < 30000) {
-      console.log('Skipping PR details fetch due to recent error');
-      return;
+    if (!platform || !owner || !repo || !number) {
+      console.error('Invalid PR URL format');
+      throw new Error('Invalid PR URL format');
     }
     
-    setLoading(true);
-    setError(null);
+    // Call the API
+    const apiUrl = `/api/prs/${owner}/${repo}/${number}/basic-details?platform=${platform}`;
+    console.log('Calling API:', apiUrl);
     
-    try {
-      console.log('Fetching PR basic details from Smart PR Service:', {
-        platform: repoInfo.platform,
-        owner: repoInfo.owner,
-        repo: repoInfo.repo,
-        prNumber
-      });
-      
-      // Call the new smart PR service API
-      const response = await fetch(
-        `/api/prs/${repoInfo.owner}/${repoInfo.repo}/${prNumber}/basic-details?platform=${repoInfo.platform}`
-      );
-      
-      const data = await response.json();
-      console.log('Smart PR service API response:', data);
-      
-      if (!response.ok) {
-        // This is the new error format from the smart PR service
-        if (data.errorCode && data.message) {
-          console.error(`API error: ${data.errorCode} - ${data.message}`);
-          
-          // Handle specific error types from the Smart PR service
-          if (data.errorCode === 'AUTHENTICATION_REQUIRED' || 
-              data.errorCode === 'PERMISSION_DENIED' || 
-              data.errorCode === 'AUTHENTICATION_FAILED' || 
-              data.visibility === 'private') {
-            throw new Error(`This is a private repository. Please sign in with an account that has access permission.`);
-          }
-          
-          throw new Error(data.message);
-        }
-        
-        throw new Error(data.message || 'Failed to fetch PR details');
-      }
-      
-      if (data.success && data.details) {
-        console.log('Setting PR details from smart PR service response');
-        setPrDetails(data.details);
-        
-        // Check if there's an existing data collection status
-        // If the API returned dataCollectionStatus, use it
-        if (data.dataCollectionStatus) {
-          console.log('Data collection already in progress:', data.dataCollectionStatus);
-          setBackgroundCollectionStarted(true);
-        }
-        // Otherwise, start background data collection if needed
-        else if (
-          data.details.filesChanged > 0 &&
-          data.details.linesAdded > 0 &&
-          data.details.linesRemoved > 0 &&
-          !backgroundCollectionStarted &&
-          data.details.repositoryId
-        ) {
-          startBackgroundDataCollection(data.details.repositoryId);
-        } else if (
-          data.details.filesChanged === 0 &&
-          data.details.linesAdded === 0 &&
-          data.details.linesRemoved === 0
-        ) {
-          console.warn('Not starting background data collection due to missing PR metrics');
-        }
-      } else {
-        throw new Error('No PR details returned from API');
-      }
-    } catch (err) {
-      console.error('Error fetching PR basic details:', err);
-      
-      // Check for access denied error patterns
-      const errorMsg = err instanceof Error ? err.message : String(err);
-      
-      const isAccessDeniedError = 
-        errorMsg.includes('private repository') ||
-        errorMsg.includes('access permission') ||
-        errorMsg.includes('Authentication required') ||
-        errorMsg.includes('AUTHENTICATION_REQUIRED') ||
-        errorMsg.includes('PERMISSION_DENIED') ||
-        errorMsg.includes('AUTHENTICATION_FAILED') ||
-        errorMsg.includes('ACCESS_DENIED') ||
-        errorMsg.includes('access denied') ||
-        errorMsg.includes('permission');
-      
-      const isCrossPlatformError = errorMsg.includes('Cross-platform authentication');
-      
-      if (isAccessDeniedError) {
-        // Access denied error - show special UI
-        setError(`Access denied. This is a private repository. Please sign in with an account that has proper permissions.`);
-      } else if (isCrossPlatformError) {
-        // Special handling for cross-platform errors
-        setError('Cross-platform authentication error');
-      } else {
-        setError(errorMsg);
-      }
-      
-      // Store the error timestamp to prevent excessive retries
-      if (repoInfo && prNumber) {
-        const errorKey = `${repoInfo.platform}/${repoInfo.owner}/${repoInfo.repo}/${prNumber}_error_time`;
-        localStorage.setItem(errorKey, Date.now().toString());
-      }
-    } finally {
-      setLoading(false);
+    const response = await fetch(apiUrl);
+    console.log('API response status:', response.status);
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('API error:', errorData);
+      throw new Error(errorData.message || 'Failed to fetch PR details');
     }
-  };
+    
+    const data = await response.json();
+    console.log('API response data:', data);
+    
+    if (!data || !data.prDetails) {
+      console.error('No PR details in response');
+      throw new Error('No PR details returned from API');
+    }
+    
+    console.log('Returning PR details:', data.prDetails);
+    return data.prDetails;
+  } catch (error) {
+    console.error('Error in fetchPrBasicDetails:', error);
+    throw error;
+  }
+}
+
   
+
+function parsePrUrl(url: string): { platform: string; owner: string; repo: string; number: string } {
+  console.log('Parsing URL:', url);
+  try {
+    const urlObj = new URL(url);
+    console.log('URL object:', urlObj);
+    
+    const pathParts = urlObj.pathname.split('/').filter(Boolean);
+    console.log('Path parts:', pathParts);
+    
+    // GitHub URL format: github.com/owner/repo/pull/number
+    if (urlObj.hostname === 'github.com' && pathParts.length >= 4 && pathParts[2] === 'pull') {
+      const result = {
+        platform: 'github',
+        owner: pathParts[0],
+        repo: pathParts[1],
+        number: pathParts[3]
+      };
+      console.log('Parsed as GitHub PR:', result);
+      return result;
+    }
+    
+    // GitLab URL format: gitlab.com/owner/repo/-/merge_requests/number
+    if (urlObj.hostname === 'gitlab.com' && pathParts.length >= 5 && pathParts[3] === 'merge_requests') {
+      const result = {
+        platform: 'gitlab',
+        owner: pathParts[0],
+        repo: pathParts[1],
+        number: pathParts[4]
+      };
+      console.log('Parsed as GitLab PR:', result);
+      return result;
+    }
+    
+    console.error('Unsupported PR URL format');
+    throw new Error('Unsupported PR URL format');
+  } catch (error) {
+    console.error('Error parsing PR URL:', error);
+    return { platform: '', owner: '', repo: '', number: '' };
+  }
+}
+
+
   const startBackgroundDataCollection = async (repositoryId: string) => {
     if (backgroundCollectionStarted) return;
     
@@ -194,7 +161,7 @@ export function PrPreviewSection({ prUrl, repoInfo, prNumber }: PrPreviewSection
     if (repoInfo && prNumber) {
       // Add a delay to ensure UI is updated and to prevent too-frequent API calls
       const fetchTimeout = setTimeout(() => {
-        fetchPrBasicDetails();
+        fetchPrBasicDetails(prUrl);
       }, 1000); // Increase delay to 1 second to prevent constant refreshing
       
       return () => clearTimeout(fetchTimeout);
@@ -265,7 +232,7 @@ export function PrPreviewSection({ prUrl, repoInfo, prNumber }: PrPreviewSection
                 </p>
                 <div className="mt-3">
                   <button 
-                    onClick={() => fetchPrBasicDetails()}
+                    onClick={() => fetchPrBasicDetails(prUrl)}
                     className="px-3 py-1 bg-red-100 hover:bg-red-200 dark:bg-red-800/30 dark:hover:bg-red-700/30 text-red-700 dark:text-red-300 rounded-md text-sm font-medium transition-colors">
                     Try Again
                   </button>
