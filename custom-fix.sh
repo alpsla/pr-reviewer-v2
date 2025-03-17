@@ -1,0 +1,234 @@
+#!/bin/bash
+set -e
+
+echo "🔧 Manual direct syntax fix for smart-pr-service.ts"
+echo "============================================="
+
+# Create backup
+cd "$(dirname "$0")/packages/core"
+cp src/repository/visibility/smart-pr-service.ts src/repository/visibility/smart-pr-service.ts.bak-manual
+echo "✅ Created backup of smart-pr-service.ts"
+
+# Write the fixed file
+cat > src/repository/visibility/smart-pr-service.ts << 'EOL'
+/**
+ * Smart PR Service
+ * 
+ * Provides an intelligent PR analysis workflow that:
+ * 1. Checks repository visibility before attempting access
+ * 2. Handles authentication requirements appropriately
+ * 3. Returns clear, actionable results for the UI
+ */
+
+import { VCSPlatform } from '../../types/platform';
+import { RepositoryVisibility, checkRepositoryVisibility } from './visibility-service';
+import { PullRequestDetails, PullRequestBasicDetails } from '../types';
+import { DataCollectionOperations } from '../data-collection-operations';
+import { createBasicClient } from '../../vcs/client-factory';
+
+/**
+ * Result of a smart PR analysis attempt
+ */
+export interface SmartPrAnalysisResult {
+  success: boolean;
+  details?: PullRequestBasicDetails;
+  error?: string;
+  errorCode?: string;
+  requiresAuth: boolean;
+  visibility: RepositoryVisibility;
+  exists: boolean;
+  platform: VCSPlatform;
+  owner: string;
+  repo: string;
+  prNumber: number;
+  repositoryId?: string;
+}
+
+/**
+ * Smart PR analysis that checks visibility first and handles authentication appropriately
+ */
+export async function analyzePullRequest(
+  platform: VCSPlatform,
+  owner: string,
+  repo: string,
+  prNumber: number,
+  accessToken?: string
+): Promise<SmartPrAnalysisResult> {
+  console.log(`Starting smart PR analysis for: ${platform}/${owner}/${repo}#${prNumber}`);
+  
+  try {
+    // First, check repository visibility - this doesn't require authentication
+    const visibilityResult = await checkRepositoryVisibility(platform, owner, repo);
+    
+    // Basic result structure
+    const result: SmartPrAnalysisResult = {
+      success: false,
+      requiresAuth: false,
+      visibility: visibilityResult.visibility,
+      exists: visibilityResult.exists,
+      platform,
+      owner,
+      repo,
+      prNumber
+    };
+    
+    // Case 1: Repository doesn't exist
+    if (!visibilityResult.exists) {
+      result.error = `Repository '${owner}/${repo}' not found`;
+      result.errorCode = 'REPOSITORY_NOT_FOUND';
+      return result;
+    }
+    
+    // Case 2: Private repository but no access token
+    if (visibilityResult.visibility === RepositoryVisibility.PRIVATE && !accessToken) {
+      result.error = `Repository '${owner}/${repo}' is private and requires authentication`;
+      result.errorCode = 'AUTHENTICATION_REQUIRED';
+      result.requiresAuth = true;
+      return result;
+    }
+    
+    // At this point, we either have:
+    // 1. A public repository, or
+    // 2. A private repository with an access token
+    
+    try {
+      // If we have a token, use it regardless of visibility
+      if (accessToken) {
+        console.log(`Using access token for ${platform} to fetch PR data`);
+        
+        // Create a properly configured client with authentication
+        const client = createBasicClient(platform, accessToken);
+        
+        // Create data operations with this client
+        const dataOps = new DataCollectionOperations(client);
+        
+        // Try to retrieve PR data
+        const prDetails = await dataOps.getPullRequestBasicDetails(platform, owner, repo, prNumber);
+        
+        // Success!
+        result.success = true;
+        result.details = prDetails;
+        return result;
+      } else if (visibilityResult.visibility === RepositoryVisibility.PUBLIC) {
+        // For public repositories, try without token
+        console.log(`Accessing public repository ${platform}/${owner}/${repo} without authentication`);
+        
+        // Create a client without authentication
+        const client = createBasicClient(platform);
+        
+        // Create data operations with this client
+        const dataOps = new DataCollectionOperations(client);
+        
+        // Try to retrieve PR data
+        const prDetails = await dataOps.getPullRequestBasicDetails(platform, owner, repo, prNumber);
+        
+        // Success!
+        result.success = true;
+        result.details = prDetails;
+        return result;
+      }
+      
+      // This should not happen, but handle it just in case
+      result.error = 'Unable to access repository data';
+      result.errorCode = 'UNKNOWN_ACCESS_ERROR';
+      return result;
+      
+    } catch (fetchError) {
+      console.error('Error fetching PR details:', fetchError);
+      
+      // Handle permission errors even with token
+      if ((fetchError as any).status === 403 || 
+          ((fetchError as any).message && 
+           typeof (fetchError as any).message === 'string' && 
+           (fetchError as any).message.toLowerCase().includes('permission'))) {
+        
+        result.error = `You don't have sufficient permissions to access ${owner}/${repo}`;
+        result.errorCode = 'PERMISSION_DENIED';
+        result.requiresAuth = true;
+        return result;
+      }
+      
+      // Handle 404 errors for PR not found
+      if ((fetchError as any).status === 404 || 
+          ((fetchError as any).message && 
+           typeof (fetchError as any).message === 'string' && 
+           (fetchError as any).message.toLowerCase().includes('not found'))) {
+        
+        result.error = `Pull request #${prNumber} not found in repository ${owner}/${repo}`;
+        result.errorCode = 'PR_NOT_FOUND';
+        return result;
+      }
+      
+      // Handle authentication errors
+      if ((fetchError as any).status === 401 || 
+          ((fetchError as any).message && 
+           typeof (fetchError as any).message === 'string' && 
+           ((fetchError as any).message.toLowerCase().includes('authentication') || 
+            (fetchError as any).message.toLowerCase().includes('unauthorized')))) {
+        
+        result.error = `Authentication required to access ${owner}/${repo}`;
+        result.errorCode = 'AUTHENTICATION_FAILED';
+        result.requiresAuth = true;
+        return result;
+      }
+      
+      // General error case
+      result.error = `Error fetching PR data: ${(fetchError as any).message || 'Unknown error'}`; 
+      result.errorCode = 'FETCH_ERROR';
+      return result;
+    }
+    
+  } catch (error) {
+    // Handle unexpected errors in the visibility check or elsewhere
+    console.error('Unexpected error in analyzePullRequest:', error);
+    
+    return {
+      success: false,
+      error: `Analysis failed: ${(error as any).message || 'Unknown error'}`,
+      errorCode: 'ANALYSIS_ERROR',
+      requiresAuth: false,
+      visibility: RepositoryVisibility.UNKNOWN,
+      exists: false,
+      platform,
+      owner,
+      repo,
+      prNumber
+    };
+  }
+}
+EOL
+
+echo "✅ Fixed smart-pr-service.ts with proper parentheses"
+
+# Now let's fix the client-factory.ts issues
+if [ -f "src/vcs/client-factory.ts" ]; then
+  echo "Fixing client-factory.ts token issues..."
+  cp src/vcs/client-factory.ts src/vcs/client-factory.ts.bak
+  
+  # Replace undefined tokens with empty strings
+  sed -i '' 's/token);/token || "");/g' src/vcs/client-factory.ts
+  
+  echo "✅ Fixed client-factory.ts token issues"
+fi
+
+# Fix the github-client.ts token property error
+if [ -f "src/vcs/github/github-client.ts" ]; then
+  echo "Fixing github-client.ts token property error..."
+  cp src/vcs/github/github-client.ts src/vcs/github/github-client.ts.bak
+  
+  # Add type assertion to the auth object
+  sed -i '' 's/auth: this.octokit.auth.token/auth: (this.octokit.auth as any).token/g' src/vcs/github/github-client.ts
+  
+  echo "✅ Fixed github-client.ts token property error"
+fi
+
+# Try to build
+echo -e "\nBuilding core package with fixes..."
+npm run build || pnpm run build
+
+# Try building web app
+echo -e "\nBuilding web app..."
+cd "$(dirname "$0")/apps/web"
+npm run build || pnpm run build
+
+echo "Build process complete."
