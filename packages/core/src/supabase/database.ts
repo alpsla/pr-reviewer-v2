@@ -2,6 +2,14 @@
 import type { Database } from "./types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+// Simple logger implementation
+const logger = {
+  info: (message: string, ...args: any[]) => console.info(message, ...args),
+  error: (message: string, ...args: any[]) => console.error(message, ...args),
+  warn: (message: string, ...args: any[]) => console.warn(message, ...args),
+  debug: (message: string, ...args: any[]) => console.debug(message, ...args)
+};
+
 
 
 // Default free tier analysis limit
@@ -62,7 +70,7 @@ export class DatabaseService {
     data: Database["public"]["Tables"]["repositories"]["Insert"],
     options: { upsert?: boolean } = {}
   ) {
-    logger.info('DatabaseService.createRepository called with:', {
+    console.info('DatabaseService.createRepository called with:', {
       owner: data.owner,
       name: data.name,
       fingerprint: data.fingerprint,
@@ -606,7 +614,7 @@ export class DatabaseService {
 
   export function createDatabaseService() {
     //eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { supabase } = require('./supabase/client');;
+    const { supabase } = require('./client');
     return new DatabaseService(supabase);
   }
 

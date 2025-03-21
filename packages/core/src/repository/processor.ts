@@ -3,7 +3,7 @@ import { VCSPaginatedResponse } from '../vcs/types';
 // Import the interfaces and classes from your refactored structure
 import { RepositoryOperations } from './repository-operations';
 import { PullRequestOperations } from './pull-request-operations';
-import { DataCollectionOperations } from './data-collection-operations';
+import { DataCollectionOperations, DataType as DCDataType } from './data-collection-operations';
 import { VCSPlatform } from '../types/platform';
 import { 
   IRepositoryService, 
@@ -104,7 +104,7 @@ class LocalRepositoryService implements IRepositoryService {
     return this.dataOps.checkAnalysisEligibility(repositoryId);
   }
 
-  scheduleDataCollection(repositoryId: string, dataTypes: DataType[]): Promise<DataCollectionJob> {
+  scheduleDataCollection(repositoryId: string, dataTypes: any[]): Promise<DataCollectionJob> {
     return this.dataOps.scheduleDataCollection(repositoryId, dataTypes);
   }
 

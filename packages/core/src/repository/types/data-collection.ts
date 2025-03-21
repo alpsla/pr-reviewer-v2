@@ -5,7 +5,7 @@
 /**
  * Types of data that can be collected
  */
-enum DataType {
+export enum DataType {
   BASIC = 'basic',
   FILES = 'files',
   COMMITS = 'commits',

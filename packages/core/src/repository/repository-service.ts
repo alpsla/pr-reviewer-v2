@@ -4,13 +4,13 @@
  * This is a compatibility layer to provide the interface expected by tests
  * after the refactoring of repository service into smaller files.
  */
-import { DataCollectionOperations } from './data-collection-operations';
+import { DataCollectionOperations, DataType as DCDataType } from './data-collection-operations';
 import { PullRequestOperations } from './pull-request-operations';
 import { RepositoryOperations } from './repository-operations';
-import { DataCollectionOperations } from './data-collection-operations';
 import { DatabaseService } from '../supabase/database';
+import { DataCollectionStatus } from './types/data-collection';
 
-import type {
+import {
   Repository,
   PullRequest,
   PullRequestFile,
@@ -202,7 +202,7 @@ export class RepositoryService implements IRepositoryService {
    */
   async scheduleDataCollection(
     repositoryId: string,
-    dataTypes: DataType[]
+    dataTypes: any[]
   ): Promise<DataCollectionJob> {
     try {
       return await this.dataOps.scheduleDataCollection(repositoryId, dataTypes);
@@ -240,20 +240,20 @@ export class RepositoryService implements IRepositoryService {
       // Use the correct DataType enum values
       // Replace these with your actual enum values
       const collectedDataTypes = [
-        DataType.BASIC,
-        DataType.FILES,
-        DataType.COMMITS
+        DCDataType.BASIC,
+        DCDataType.FILES,
+        DCDataType.COMMITS
       ];
       
       const pendingDataTypes = [
-        DataType.SECURITY,
-        DataType.PERFORMANCE
+        DCDataType.SECURITY,
+        DCDataType.PERFORMANCE
       ];
       
       // Create status object
       const status: DataCollectionStatusInfo = {
         repositoryId,
-        status: repository?.data_collection_status || 'completed',
+        status: (repository?.data_collection_status as DataCollectionStatus) || 'completed',
         completionPercentage: 60, // 3/5 = 60%
         collectedDataTypes,
         pendingDataTypes,

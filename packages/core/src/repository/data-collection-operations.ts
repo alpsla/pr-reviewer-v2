@@ -3,7 +3,10 @@ export enum DataType {
   STRUCTURE = 'structure',
   DEPENDENCIES = 'dependencies',
   SECURITY = 'security',
-  PERFORMANCE = 'performance'
+  PERFORMANCE = 'performance',
+  BASIC = 'basic',
+  FILES = 'files',
+  COMMITS = 'commits'
 }
 
 // Local imports first
@@ -20,7 +23,6 @@ import {
   PerformanceIndicators,
   Repository
 } from './types';
-
 // External imports
 // eslint-disable-next-line import/no-relative-parent-imports
 import { VCSPlatform } from '../types/platform';
@@ -73,6 +75,7 @@ export class DataCollectionOperations extends BaseRepositoryService {
       // Still continue even if data collector service fails to initialize
       // This ensures other functions will still work
     }
+    
   }
 
   /**
@@ -360,93 +363,35 @@ export class DataCollectionOperations extends BaseRepositoryService {
   }
 
   /**
-  * Get data collection status for a repository
-  */
+   * Get data collection status for a repository
+   */
+  /**
+ * Get data collection status for a repository
+ */
   public async getDataCollectionStatus(repositoryId: string): Promise<DataCollectionStatusInfo> {
     try {
-      if (!repositoryId) {
-        return {
-          repositoryId: 'unknown',
-          status: 'failed',
-          completionPercentage: 0,
-          collectedDataTypes: [],
-          pendingDataTypes: [],
-          lastUpdated: new Date(),
-          error: 'Missing repository ID'
-        };
-      }
-      
-      console.log(`Getting data collection status for repository: ${repositoryId}`);
-      
       // Get repository by ID
-      let repository = null;
-      try {
-        if (this.db && typeof this.db.getRepository === 'function') {
-          repository = await this.db.getRepository(repositoryId);
-        }
-      } catch (repoError) {
-        console.error(`Error retrieving repository ${repositoryId}:`, repoError);
-        // Continue with null repository
-      }
+      const repository = await this.db.getRepository(repositoryId);
       
       if (!repository) {
-        console.warn(`Repository not found: ${repositoryId}, returning default status`);
-        return {
-          repositoryId,
-          status: 'unknown',
-          completionPercentage: 0,
-          collectedDataTypes: [],
-          pendingDataTypes: [],
-          lastUpdated: new Date(),
-          message: 'Repository data not available'
-        };
+        throw new Error(`Repository not found: ${repositoryId}`);
       }
       
       // Initialize activeJobs with an empty array
-      const activeJobs: any[] = [];
+      let activeJobs: any[] = [];
       
       // Try to get pending or processing jobs if the method exists
       try {
         // Check if the method exists before calling it
-        if (this.db && typeof this.db.getDataCollectionJobsByRepository === 'function') {
-          const jobs = await this.db.getDataCollectionJobsByRepository(
+        if (typeof this.db.getDataCollectionJobsByRepository === 'function') {
+          activeJobs = await this.db.getDataCollectionJobsByRepository(
             repositoryId,
             ['pending', 'processing']
           );
-          activeJobs.push(...jobs);
         } else {
           console.log('getDataCollectionJobsByRepository not implemented, using empty jobs array');
-          // Fallback: Try to use a generic query method if available
-          if (this.db && typeof this.db.query === 'function') {
-            try {
-              const jobs = await this.db.query(
-                'data_collection_jobs',
-                { repository_id: repositoryId, status: ['pending', 'processing'] }
-              );
-              
-              if (jobs && Array.isArray(jobs)) {
-                activeJobs.push(...jobs);
-              }
-            } catch (dbError) {
-              console.error('Error querying data collection jobs:', dbError);
-            }
-          } else if (this.db && typeof this.db.queryJobs === 'function') {
-            try {
-              const jobs = await this.db.queryJobs({
-                table: 'data_collection_jobs',
-                filters: {
-                  repository_id: repositoryId,
-                  status: ['pending', 'processing']
-                }
-              });
-              
-              if (jobs && Array.isArray(jobs)) {
-                activeJobs.push(...jobs);
-              }
-            } catch (dbError) {
-              console.error('Error querying data collection jobs:', dbError);
-            }
-          }
+          // Since we can't access private supabase property, we'll skip this fallback
+          // and just use an empty array for activeJobs
         }
       } catch (jobsError) {
         console.error('Error getting data collection jobs:', jobsError);
@@ -483,28 +428,9 @@ export class DataCollectionOperations extends BaseRepositoryService {
         // Ensure job.dataTypes exists before trying to use it
         const jobDataTypes = job.dataTypes || job.data_types || [];
         if (Array.isArray(jobDataTypes)) {
-          jobDataTypes.forEach((type: string) => {
-            let dataType: DataType | null = null;
-            
-            switch(type) {
-              case 'structure':
-                dataType = DataType.STRUCTURE;
-                break;
-              case 'dependencies':
-                dataType = DataType.DEPENDENCIES;
-                break;
-              case 'security':
-                dataType = DataType.SECURITY;
-                break;
-              case 'performance':
-                dataType = DataType.PERFORMANCE;
-                break;
-            }
-            
-            if (dataType && !collectedDataTypes.includes(dataType) && !pendingDataTypes.includes(dataType)) {
-              pendingDataTypes.push(dataType);
-            }
-          });
+          pendingDataTypes.push(...jobDataTypes.filter(
+            (dt: DataType) => !collectedDataTypes.includes(dt) && !pendingDataTypes.includes(dt)
+          ));
         }
       }
       
@@ -513,30 +439,17 @@ export class DataCollectionOperations extends BaseRepositoryService {
         completionPercentage = 100;
       } else {
         // Calculate percentage based on completed vs total
-        const allDataTypes = [...new Set([...collectedDataTypes, ...pendingDataTypes])];
-        if (allDataTypes.length > 0) {
-          completionPercentage = Math.round((collectedDataTypes.length / allDataTypes.length) * 100);
-        }
+        const totalDataTypes = [...new Set([...collectedDataTypes, ...pendingDataTypes])];
+        completionPercentage = Math.round((collectedDataTypes.length / totalDataTypes.length) * 100);
       }
       
-      // Determine status based on jobs and completion
-      let status: 'pending' | 'processing' | 'completed' | 'failed' | 'unknown' = 'completed';
-      if (activeJobs.length > 0) {
-        const processingJobs = activeJobs.filter(job => job.status === 'processing');
-        status = processingJobs.length > 0 ? 'processing' : 'pending';
-      } else if (repository.data_collection_status) {
-        status = repository.data_collection_status;
-      }
-      
-      // Create result
       return {
         repositoryId,
-        status,
+        status: repository.data_collection_status || 'completed',
         completionPercentage,
         collectedDataTypes,
         pendingDataTypes,
-        lastUpdated: repository.last_data_collection ? new Date(repository.last_data_collection) : new Date(),
-        progress: completionPercentage
+        lastUpdated: repository.last_data_collection ? new Date(repository.last_data_collection) : new Date()
       };
     } catch (error) {
       console.error('Error getting data collection status:', error);
@@ -550,9 +463,10 @@ export class DataCollectionOperations extends BaseRepositoryService {
         pendingDataTypes: [],
         lastUpdated: new Date(),
         error: error instanceof Error ? error.message : String(error)
-      };
+      } as DataCollectionStatusInfo; // Use type assertion if error property isn't in the interface
     }
   }
+  
 
 
   /**

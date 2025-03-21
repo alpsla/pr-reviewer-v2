@@ -96,6 +96,8 @@ export interface Repository {
   lastSyncedAt?: Date;
   lastAnalyzedAt?: Date;
   fingerprint?: string;
+  data_collection_status?: string;
+  last_data_collection?: string | Date;
 }
 
 /**
@@ -196,6 +198,8 @@ export type {
   RepositoryStructure,
   Dependencies,
   SecurityInfo,
-  PerformanceIndicators,
-  DataType
+  PerformanceIndicators
 };
+
+// Export DataType as a value
+export { DataType } from './types/data-collection';

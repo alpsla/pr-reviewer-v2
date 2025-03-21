@@ -12,9 +12,9 @@ import {
   RepositoryStructure,
   Dependencies,
   SecurityInfo,
-  PerformanceIndicators,
-  DataType
+  PerformanceIndicators
 } from './types';
+import { DataType } from './data-collection-operations';
 
 /**
  * Get basic PR details (primary tier data)
@@ -90,8 +90,8 @@ export async function getDataCollectionStatusMock(
     repositoryId,
     status: 'processing',
     completionPercentage: 50,
-    collectedDataTypes: ['structure'],
-    pendingDataTypes: ['dependencies', 'security', 'performance'],
+    collectedDataTypes: [DataType.STRUCTURE],
+    pendingDataTypes: [DataType.DEPENDENCIES, DataType.SECURITY, DataType.PERFORMANCE],
     lastUpdated: new Date()
   };
 }
